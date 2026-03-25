@@ -13,7 +13,7 @@ logger = get_logger(__name__)
 
 VALID_TYPES = frozenset({
     "new_application", "hired", "message", "payment",
-    "dispute", "review_request", "kyc_update", "job_alert",
+    "dispute", "review", "review_request", "kyc_update", "job_alert",
 })
 
 
@@ -91,5 +91,3 @@ async def notify_dispute_opened(fundi_id: str, booking_id: str):
         body="The client has raised a dispute. KaziX admin will review within 24 hours.",
         action_url="/worker-hires.html",
     )
-    
-    
