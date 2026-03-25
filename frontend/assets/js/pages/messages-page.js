@@ -1,4 +1,5 @@
-import { apiRequest, escapeHtml } from '../api/client.js';
+import { escapeHtml } from '../api/client.js';
+import { listMessages, sendMessage } from '../api/messages.js';
 import { requireAuth } from '../auth/session.js';
 
 const state = {
@@ -167,7 +168,7 @@ function updateHeader() {
 }
 
 async function loadThread(bookingId) {
-  const response = await apiRequest(`/v1/messages?booking_id=${encodeURIComponent(bookingId)}&limit=200`);
+  const response = await listMessages({ booking_id: bookingId, limit: 200 });
   state.thread = response?.data || [];
   state.selectedBookingId = bookingId;
 
@@ -180,7 +181,7 @@ async function loadThread(bookingId) {
 }
 
 async function loadConversations() {
-  const response = await apiRequest('/v1/messages?limit=200');
+  const response = await listMessages({ limit: 200 });
   const rows = response?.data || [];
   state.conversations = mapConversations(rows);
 
@@ -229,13 +230,10 @@ window.sendMessage = async () => {
   }
 
   try {
-    const created = await apiRequest('/v1/messages', {
-      method: 'POST',
-      body: {
-        booking_id: selected.bookingId,
-        recipient_id: selected.partnerId,
-        body: text,
-      },
+    const created = await sendMessage({
+      booking_id: selected.bookingId,
+      recipient_id: selected.partnerId,
+      body: text,
     });
     input.value = '';
 

@@ -1,4 +1,5 @@
-import { apiRequest, escapeHtml, formatTimeAgo } from '../api/client.js';
+import { escapeHtml, formatTimeAgo } from '../api/client.js';
+import { listNotifications, markNotificationRead } from '../api/notifications.js';
 
 const state = {
   notifications: [],
@@ -130,7 +131,7 @@ function render() {
 }
 
 async function loadNotifications() {
-  const data = await apiRequest('/v1/notifications?limit=200');
+  const data = await listNotifications({ limit: 200 });
   state.notifications = (data?.data || []).slice();
   render();
 }
@@ -169,7 +170,7 @@ window.openNotification = async (eventOrElement) => {
   const actionUrl = card.dataset.url || '';
 
   try {
-    await apiRequest(`/v1/notifications/${notificationId}/read`, { method: 'PATCH' });
+    await markNotificationRead(notificationId);
     const item = state.notifications.find((n) => n.id === notificationId);
     if (item) item.is_read = true;
     updateBadges();
@@ -187,7 +188,7 @@ window.markAllRead = async () => {
   if (unread.length === 0) return;
 
   await Promise.allSettled(
-    unread.map((id) => apiRequest(`/v1/notifications/${id}/read`, { method: 'PATCH' })),
+    unread.map((id) => markNotificationRead(id)),
   );
   state.notifications = state.notifications.map((n) => ({ ...n, is_read: true }));
   render();
