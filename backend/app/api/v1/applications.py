@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import FundiUser
 from app.core.supabase import get_admin_client
 from app.core.logging import get_logger
+from app.services.notifications import notify_new_application
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -40,7 +41,8 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser):
 
     try:
         # Verify job exists and is open
-        result = admin.table("jobs").select("id, status, client_id").eq("id", body.job_id).single().execute()
+        # We also need the client_id and title for notification
+        result = admin.table("jobs").select("id, status, client_id, title").eq("id", body.job_id).single().execute()
         job = result.data
         
         if not job:
@@ -69,6 +71,21 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser):
         insert_result = admin.table("applications").insert(data).execute()
         application = insert_result.data[0]
         
+        # Notify the client (best-effort)
+        try:
+            # We need the fundi's name
+            fundi_profile = admin.table("profiles").select("full_name").eq("id", user.user_id).single().execute()
+            fundi_name = fundi_profile.data["full_name"] if fundi_profile.data else "A fundi"
+            
+            await notify_new_application(
+                job_title=job["title"],
+                client_id=job["client_id"],
+                fundi_name=fundi_name,
+                job_id=job["id"],
+            )
+        except Exception as notify_exc:
+            logger.warning("Failed to fire new application notification", error=str(notify_exc))
+
         logger.info("Application submitted", job_id=body.job_id, fundi_id=user.user_id)
         return application
 

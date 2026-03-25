@@ -48,7 +48,9 @@ KaziX/
 
 ## 🚀 Getting Started
 
-Since this is a static frontend project, you can simply open `frontend/pages/index.html` in any modern web browser to view the application.
+### Frontend (Static)
+
+You can open `frontend/pages/index.html` in any modern web browser, or serve the folder with a local HTTP server.
 
 ```bash
 # Clone the repository
@@ -57,8 +59,27 @@ git clone https://github.com/your-username/kazix.git
 # Navigate to the directory
 cd kazix
 
-# Open the frontend landing page
-open frontend/pages/index.html
+# Serve frontend pages locally (example)
+python3 -m http.server 3000 --directory frontend
+```
+
+### Backend (Local Python)
+
+```bash
+cd backend
+cp .env.example .env
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Backend (Docker Compose)
+
+```bash
+# from repo root
+cp .env.example .env
+docker compose up --build
 ```
 
 ## 🇰🇪 Built for Kenya

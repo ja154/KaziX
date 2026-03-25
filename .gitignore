@@ -1,6 +1,8 @@
 # Dependency directories
 node_modules/
 jspm_packages/
+venv/
+.venv/
 
 # Environment variables
 .env
@@ -30,3 +32,7 @@ yarn-debug.log*
 yarn-error.log*
 logs/
 *.log
+
+# Python cache
+__pycache__/
+*.py[cod]

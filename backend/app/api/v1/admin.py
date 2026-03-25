@@ -205,6 +205,29 @@ async def resolve_dispute(dispute_id: str, body: ResolveDisputeRequest, admin_us
             "resolved_at":  datetime.utcnow().isoformat(),
         }).eq("id", dispute_id).execute()
 
+        # Fetch booking details for notification
+        booking_result = (
+            client.table("bookings")
+            .select("client_id, fundi_id, jobs!job_id(title)")
+            .eq("id", dispute_result.data["booking_id"])
+            .single()
+            .execute()
+        )
+        if booking_result.data:
+            bk = booking_result.data
+            job_title = bk["jobs"]["title"] if bk.get("jobs") else "Job"
+            
+            # Notify both parties
+            import asyncio
+            for uid in [bk["client_id"], bk["fundi_id"]]:
+                asyncio.create_task(create_notification(
+                    user_id=uid,
+                    type_="dispute",
+                    title="Dispute Resolved ✅",
+                    body=f"The dispute on '{job_title}' has been resolved: {body.resolution}.",
+                    action_url="/dispute.html" if uid == bk["client_id"] else "/worker-hires.html",
+                ))
+
         # Update booking escrow if a release direction was specified
         if body.release_to:
             escrow_status = "released" if body.release_to == "fundi" else "refunded"
