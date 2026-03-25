@@ -1,4 +1,5 @@
-import { apiRequest, escapeHtml, formatTimeAgo } from '../api/client.js';
+import { escapeHtml, formatTimeAgo } from '../api/client.js';
+import { submitReview, listUserReviews } from '../api/reviews.js';
 import { requireAuth } from '../auth/session.js';
 
 const state = {
@@ -201,18 +202,15 @@ window.submitReview = async () => {
   const wouldHireAgain = !!document.querySelector('.modal input[type="checkbox"]')?.checked;
 
   try {
-    await apiRequest('/v1/reviews', {
-      method: 'POST',
-      body: {
-        booking_id: state.pending.booking_id,
-        rating: state.mainRating,
-        comment,
-        quality: state.subRatings.quality || null,
-        punctuality: state.subRatings.punctuality || null,
-        communication: state.subRatings.communication || null,
-        value_for_money: state.subRatings.value_for_money || null,
-        would_hire_again: wouldHireAgain,
-      },
+    await submitReview({
+      booking_id: state.pending.booking_id,
+      rating: state.mainRating,
+      comment,
+      quality: state.subRatings.quality || null,
+      punctuality: state.subRatings.punctuality || null,
+      communication: state.subRatings.communication || null,
+      value_for_money: state.subRatings.value_for_money || null,
+      would_hire_again: wouldHireAgain,
     });
 
     window.closeReviewModal();
@@ -226,7 +224,7 @@ window.submitReview = async () => {
 };
 
 async function loadReceivedReviews() {
-  const response = await apiRequest(`/v1/reviews/${encodeURIComponent(state.currentUserId)}`);
+  const response = await listUserReviews(state.currentUserId);
   const rows = response?.data || [];
   const summary = response?.summary || { count: 0, average: 0, breakdown: {} };
   renderSummary(summary);
