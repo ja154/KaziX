@@ -255,32 +255,7 @@ body.app{height:100vh;overflow:hidden}
   </div>
 </div>
 
-<script>
-function sendMessage() {
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if (!text) return;
-  const msgs = document.getElementById('chatMessages');
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble outgoing';
-  bubble.style.animation = 'slideUp 0.25s ease both';
-  bubble.innerHTML = `<div class="bubble-avatar">🏠</div><div><div class="bubble-content">${text}</div><div class="bubble-time">Just now</div></div>`;
-  msgs.appendChild(bubble);
-  input.value = '';
-  msgs.scrollTop = msgs.scrollHeight;
-}
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
-function selectConv(name) {
-  document.querySelectorAll('.conv-item').forEach(c => c.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  event.currentTarget.classList.remove('unread');
-  event.currentTarget.querySelector('.ci-unread-badge')?.remove();
-}
-document.getElementById('chatMessages').scrollTop = 99999;
-</script>
-<script type="module" src="../assets/js/pages/messages-page.js"></script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>

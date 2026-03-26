@@ -279,19 +279,7 @@
   </div>
 </div>
 
-<script>
-function openHireModal(name, amount) {
-  document.getElementById('hiree').textContent = name;
-  document.getElementById('hireAmount').value = amount.replace(',','');
-  document.getElementById('hireModal').classList.add('open');
-}
-function closeHireModal() { document.getElementById('hireModal').classList.remove('open'); }
-function confirmHire() {
-  closeHireModal();
-  alert('✅ M-Pesa STK push sent to +254 712 345 678. Check your phone to complete payment and confirm the booking.');
-  location.href = 'my-hires.html';
-}
-</script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>

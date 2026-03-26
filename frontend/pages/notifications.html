@@ -246,41 +246,7 @@
   </main>
 </div>
 
-<script>
-function filterNotifs(type, el) {
-  document.querySelectorAll('.nf-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  const items = document.querySelectorAll('.notif-item');
-  let visible = 0;
-  items.forEach(item => {
-    const show = type === 'all' || item.dataset.type === type;
-    item.style.display = show ? 'flex' : 'none';
-    if (show) visible++;
-  });
-  document.getElementById('emptyState').style.display = visible === 0 ? 'block' : 'none';
-}
-function dismiss(btn) {
-  const item = btn.closest('.notif-item');
-  item.style.transition = 'all .3s';
-  item.style.opacity = '0';
-  item.style.maxHeight = item.offsetHeight + 'px';
-  setTimeout(() => {
-    item.style.maxHeight = '0';
-    item.style.padding = '0';
-    item.style.margin = '0';
-    item.style.border = 'none';
-  }, 200);
-  setTimeout(() => item.remove(), 500);
-}
-function markAllRead() {
-  document.querySelectorAll('.notif-item.unread').forEach(item => {
-    item.classList.remove('unread');
-    item.querySelector('.unread-indicator')?.remove();
-  });
-  document.querySelector('.ni-badge').textContent = '0';
-}
-</script>
-<script type="module" src="../assets/js/pages/notifications-page.js"></script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>

@@ -310,34 +310,7 @@ textarea.f-input{resize:vertical;min-height:110px;line-height:1.6}
   </main>
 </div>
 
-<script>
-function selectReason(el) {
-  document.querySelectorAll('.reason-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-  el.querySelector('input').checked = true;
-}
-function submitDispute() {
-  if (!confirm('Submit this dispute to KaziX admin? Escrow will be frozen until resolution.')) return;
-  document.querySelector('.dispute-layout').innerHTML = `
-    <div style="grid-column:1/-1;text-align:center;padding:3rem 2rem">
-      <div style="font-size:3rem;margin-bottom:1rem">⚖️</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-.04em;margin-bottom:.75rem">Dispute Submitted</div>
-      <div style="color:var(--muted);font-size:.95rem;max-width:480px;margin:0 auto 2rem;line-height:1.7">Your dispute has been submitted. KaziX admin will review the case and contact both you and Mary Akinyi within <strong style="color:var(--ink)">24 hours</strong>. Escrow of KES 3,200 is frozen until resolution.</div>
-      <div style="display:inline-flex;flex-direction:column;gap:.5rem;text-align:left;background:var(--cream);border-radius:6px;padding:1.25rem 1.5rem;margin-bottom:2rem;font-size:.82rem">
-        <div>📋 Dispute ref: <strong>DSP-2024-0041</strong></div>
-        <div>🔒 Escrow frozen: <strong style="color:var(--saffron)">KES 3,200</strong></div>
-        <div>⏱ Response by: <strong>Within 24 hours</strong></div>
-        <div>📱 You'll be notified by SMS and in-app</div>
-      </div>
-      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-        <a href="my-hires.html" style="padding:.9rem 2rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:.875rem;border-radius:2px;text-decoration:none">Back to My Hires</a>
-        <a href="messages.html" style="padding:.9rem 2rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:.875rem;border-radius:2px;text-decoration:none;border:1.5px solid var(--ink)">Message Mary</a>
-      </div>
-    </div>`;
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-</script>
-<script type="module" src="../assets/js/pages/dispute-page.js"></script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>

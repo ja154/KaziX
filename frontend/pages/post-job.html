@@ -392,32 +392,6 @@
   <span>Built for Kenya 🇰🇪 · <a href="#">Powered by M-Pesa</a></span>
 </div>
 
-<script>
-let currentStep = 1;
-function goStep(n) {
-  document.getElementById('step'+currentStep).classList.remove('active');
-  document.getElementById('snode'+currentStep).classList.remove('active');
-  document.getElementById('snode'+currentStep).classList.add('done');
-  currentStep = n;
-  document.getElementById('step'+n).classList.add('active');
-  document.getElementById('snode'+n).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-function selectTrade(el) {
-  document.querySelectorAll('.trade-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
-function selectUrgency(el,type) {
-  document.querySelectorAll('.urgency-option').forEach(o => o.classList.remove('selected','normal'));
-  el.classList.add('selected');
-  if(type==='normal') el.classList.add('normal');
-}
-function submitJob() {
-  document.getElementById('step4').classList.remove('active');
-  document.querySelectorAll('.step-node').forEach(n => { n.classList.remove('active'); n.classList.add('done'); });
-  document.getElementById('successState').classList.add('show');
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-</script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 </body>
 </html>

@@ -230,19 +230,7 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.6}
     </div>
   </div>
 </div>
-<script>
-var currentBtn=null;
-function openApply(title){document.getElementById('applyJobName').textContent=title;document.getElementById('applyModal').classList.add('open')}
-function submitApply(){
-  var bid=document.getElementById('bidInput').value;
-  if(!bid){alert('Please enter your bid');return}
-  document.getElementById('applyModal').classList.remove('open');
-  document.getElementById('bidInput').value='';
-  document.getElementById('coverInput').value='';
-}
-document.getElementById('applyModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})
-document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventListener('click',function(){if(this.textContent==='←'||this.textContent==='→')return;document.querySelectorAll('.pg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')})})
-</script>
+<script type="module" src="../assets/js/bootstrap.js"></script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="worker-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
