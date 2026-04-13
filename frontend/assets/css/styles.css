@@ -59,9 +59,12 @@ body.app{display:flex;flex-direction:column}
 }
 
 .topnav .logo,
-footer .logo,
-.footer .logo {
+footer:not(.footer) .logo {
   color: #F5F0E8 !important;
+}
+
+.footer .logo {
+  color: var(--ink) !important;
 }
 
 .topnav-right{display:flex;align-items:center;gap:1.25rem}
