@@ -95,7 +95,23 @@
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar" id="navUserAvatar">KX</div><span class="user-name" id="navUserName">My account</span></div>
+    <div class="user-menu-container">
+      <div class="user-chip" id="userChipToggle"><div class="user-avatar" id="navUserAvatar">KX</div><span class="user-name" id="navUserName">My account</span></div>
+      <div class="user-menu-dropdown" id="userMenuDropdown">
+        <div class="user-menu-header">
+          <div class="user-menu-name" id="userMenuName">My account</div>
+          <div class="user-menu-status">
+            <span class="status-indicator"></span>
+            <span>Logged in</span>
+          </div>
+        </div>
+        <div class="user-menu-body">
+          <a href="#" class="user-menu-item" onclick="window.location.href = window.KazixProfile.roleHomePath(localStorage.getItem('kazix_role') || 'client'); return false;">View Profile</a>
+          <a href="#" class="user-menu-item" onclick="window.location.href = 'client-profile.html'; return false;">Settings</a>
+          <button class="user-menu-item logout" onclick="window.KazixProfile.logout()">Logout</button>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 <div class="app-shell">

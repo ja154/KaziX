@@ -41,7 +41,7 @@ nav{
 
 .hero{
   padding:4.5rem 6% 5rem;
-  background:linear-gradient(135deg,#0D0D0D 0%,#24313D 55%,#2C3E50 100%);
+  background:var(--ink);
   color:var(--cream);
   position:relative;
   overflow:hidden;
@@ -178,23 +178,57 @@ nav{
 .cta h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem}
 .cta p{color:rgba(245,240,232,0.7);max-width:460px}
 
-.footer{
-  padding:2.5rem 6%;
-  border-top:1px solid var(--border);
+footer{
+  background:var(--ink);
+  color:var(--cream);
+  padding:3rem 6% 2rem;
   display:grid;
-  grid-template-columns:2fr 1fr 1fr;
-  gap:2rem;
+  grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:2.5rem;
 }
 
-.footer h4{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:0.8rem}
-.footer a{color:var(--muted);text-decoration:none;font-size:0.85rem;display:block;margin-bottom:0.5rem}
-.footer a:hover{color:var(--ink)}
+.footer-brand .logo{display:block;margin-bottom:0.75rem}
+.footer-brand p{font-size:0.85rem;color:rgba(245,240,232,0.5);line-height:1.7;max-width:280px}
+.footer-col h4{
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:0.82rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.45);
+  margin-bottom:1rem;
+}
+
+.footer-col ul{list-style:none}
+.footer-col ul li{margin-bottom:0.6rem}
+.footer-col ul a{
+  color:rgba(245,240,232,0.7);
+  text-decoration:none;
+  font-size:0.875rem;
+  transition:color 0.2s;
+}
+
+.footer-col ul a:hover{color:var(--saffron)}
+
+.footer-bottom{
+  background:var(--ink);
+  border-top:1px solid rgba(245,240,232,0.08);
+  padding:1.25rem 6%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  font-size:0.78rem;
+  color:rgba(245,240,232,0.35);
+}
+
+.footer-bottom a{color:var(--saffron);text-decoration:none}
 
 @media(max-width:1024px){
   .hero-grid{grid-template-columns:1fr}
   .stats,.steps,.categories{grid-template-columns:repeat(2,1fr)}
   .testimonials{grid-template-columns:1fr}
-  .footer{grid-template-columns:1fr 1fr}
+  footer{grid-template-columns:1fr 1fr}
 }
 
 @media(max-width:720px){
@@ -203,7 +237,8 @@ nav{
   .hero-actions{flex-direction:column;align-items:flex-start}
   .stats,.steps,.categories{grid-template-columns:1fr}
   .cta{padding:2rem}
-  .footer{grid-template-columns:1fr}
+  footer{grid-template-columns:1fr}
+  .footer-bottom{flex-direction:column;align-items:flex-start}
 }
 </style>
 </head>
@@ -289,25 +324,40 @@ nav{
   </div>
 </section>
 
-<footer class="footer">
-  <div>
+<footer>
+  <div class="footer-brand">
     <a href="index.html" class="logo">Kazi<span>X</span></a>
-    <p style="color:var(--muted);max-width:360px;margin-top:0.6rem">Kenya's marketplace for skilled workers. Verified fundis, transparent pricing, and escrow protection.</p>
+    <p>Kenya's marketplace for skilled workers. Verified fundis, transparent pricing, and escrow protection.</p>
   </div>
-  <div>
+  <div class="footer-col">
     <h4>Platform</h4>
-    <a href="find-workers.html">Find Workers</a>
-    <a href="post-job.html">Post a Job</a>
-    <a href="for-pros.html">For Pros</a>
-    <a href="how-it-works.html">How It Works</a>
+    <ul>
+      <li><a href="find-workers.html">Find Workers</a></li>
+      <li><a href="post-job.html">Post a Job</a></li>
+      <li><a href="for-pros.html">For Pros</a></li>
+      <li><a href="how-it-works.html">How It Works</a></li>
+    </ul>
   </div>
-  <div>
+  <div class="footer-col">
+    <h4>Company</h4>
+    <ul>
+      <li><a href="about.html">About Us</a></li>
+      <li><a href="careers.html">Careers</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
     <h4>Support</h4>
-    <a href="help-centre.html">Help Centre</a>
-    <a href="dispute.html">Disputes</a>
-    <a href="privacy.html">Privacy Policy</a>
-    <a href="terms.html">Terms</a>
+    <ul>
+      <li><a href="help-centre.html">Help Centre</a></li>
+      <li><a href="dispute.html">Disputes</a></li>
+      <li><a href="privacy.html">Privacy Policy</a></li>
+      <li><a href="terms.html">Terms</a></li>
+    </ul>
   </div>
 </footer>
+<div class="footer-bottom">
+  <span>© 2025 KaziX Ltd. All rights reserved.</span>
+  <span>Built for Kenya 🇰🇪 · <a href="#">Powered by M-Pesa</a></span>
+</div>
 </body>
 </html>

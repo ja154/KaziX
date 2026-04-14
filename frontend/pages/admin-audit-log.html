@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Audit Log - KaziX Admin</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+<style>
+  .filters-row{display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+  .filter-field{display:flex;flex-direction:column;gap:0.35rem;flex:1;min-width:150px}
+  .filter-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+  .filter-input{padding:0.65rem 0.85rem;border:1.5px solid var(--border);border-radius:2px;background:white;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--ink);outline:none;transition:border-color 0.2s}
+  .filter-input:focus{border-color:var(--ink)}
+
+  .audit-table{width:100%;border-collapse:collapse;font-size:0.85rem}
+  .audit-table th{text-align:left;padding:0.75rem 1rem;background:var(--cream);border:1px solid var(--border);font-weight:700;color:var(--ink);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase}
+  .audit-table td{padding:0.85rem 1rem;border-bottom:1px solid var(--border)}
+  .audit-table tbody tr:hover{background:rgba(245,166,35,0.08)}
+
+  .badge-action{display:inline-flex;align-items:center;gap:0.3rem;padding:0.2rem 0.6rem;border-radius:3px;background:var(--cream);font-size:0.75rem;font-weight:700}
+  .badge-create{background:rgba(27,107,58,0.12);color:var(--green)}
+  .badge-update{background:rgba(245,166,35,0.12);color:#A1610C}
+  .badge-delete{background:rgba(192,57,43,0.14);color:var(--rust)}
+
+  .timestamp{color:var(--muted);font-size:0.82rem;font-family:monospace}
+  .admin-name{font-weight:600;color:var(--ink)}
+
+  .empty-state{text-align:center;padding:3rem 1.5rem;background:var(--cream);border-radius:6px;color:var(--muted)}
+  .empty-state-icon{font-size:2.5rem;margin-bottom:0.75rem}
+
+  @media(max-width:800px){
+    .filters-row{flex-direction:column}
+    .filter-field{min-width:100%}
+    .audit-table{font-size:0.78rem}
+    .audit-table th,.audit-table td{padding:0.5rem 0.75rem}
+  }
+</style>
+</head>
+<body data-admin-active="audit-log">
+<main class="main" data-admin-main>
+  <div class="admin-header">
+    <div>
+      <div class="page-title">Audit Log</div>
+      <div class="page-sub">Track all system changes and administrative actions.</div>
+    </div>
+    <div class="admin-actions">
+      <button class="btn" onclick="exportAuditLog()">📥 Export Log</button>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-row">
+    <div class="filter-field">
+      <label class="filter-label">Action</label>
+      <select class="filter-input" id="filterAction" onchange="applyFilters()">
+        <option value="">All Actions</option>
+        <option value="create">Create</option>
+        <option value="update">Update</option>
+        <option value="delete">Delete</option>
+        <option value="view">View</option>
+      </select>
+    </div>
+    <div class="filter-field">
+      <label class="filter-label">Admin</label>
+      <input type="text" class="filter-input" id="filterAdmin" placeholder="Filter by admin..." onchange="applyFilters()">
+    </div>
+    <div class="filter-field">
+      <label class="filter-label">Date Range</label>
+      <input type="date" class="filter-input" id="filterDate" onchange="applyFilters()">
+    </div>
+    <div class="filter-field">
+      <label class="filter-label">&nbsp;</label>
+      <button class="btn" onclick="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Audit Log Table -->
+  <section class="panel">
+    <div class="panel-body" style="overflow-x:auto">
+      <table class="audit-table" id="auditTable">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Admin</th>
+            <th>Action</th>
+            <th>Resource</th>
+            <th>Details</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+        <tbody id="auditBody">
+          <!-- Example rows -->
+          <tr>
+            <td><span class="timestamp">2026-04-14 14:32:18</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-update">⚙️ Update</span></td>
+            <td>Settings: Platform Fees</td>
+            <td>Changed client fee from 5% to 4.5%</td>
+            <td>192.168.1.100</td>
+          </tr>
+          <tr>
+            <td><span class="timestamp">2026-04-14 12:15:42</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-update">⚙️ Update</span></td>
+            <td>KYC Verification: KYC-1847</td>
+            <td>Status changed from Pending to Approved</td>
+            <td>192.168.1.100</td>
+          </tr>
+          <tr>
+            <td><span class="timestamp">2026-04-14 10:08:05</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-update">⚙️ Update</span></td>
+            <td>Dispute: DX-2059</td>
+            <td>Resolution set to Partial Refund (KES 8,500)</td>
+            <td>192.168.1.100</td>
+          </tr>
+          <tr>
+            <td><span class="timestamp">2026-04-13 16:45:22</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-delete">🗑️ Delete</span></td>
+            <td>User Account: USR-4521</td>
+            <td>Fraudulent account suspended</td>
+            <td>192.168.1.100</td>
+          </tr>
+          <tr>
+            <td><span class="timestamp">2026-04-13 14:22:10</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-view">👁️ View</span></td>
+            <td>M-Pesa Callbacks: Webhook</td>
+            <td>Reviewed payment webhook logs</td>
+            <td>192.168.1.100</td>
+          </tr>
+          <tr>
+            <td><span class="timestamp">2026-04-13 09:30:15</span></td>
+            <td><span class="admin-name">Admin Desk</span></td>
+            <td><span class="badge-action badge-create">➕ Create</span></td>
+            <td>Settings: Feature Flag</td>
+            <td>Enabled high-value job review flag</td>
+            <td>192.168.1.100</td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="emptyState" class="empty-state" style="display:none">
+        <div class="empty-state-icon">📋</div>
+        <p>No audit log entries found matching your filters.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pagination -->
+  <div style="display:flex;justify-content:center;align-items:center;gap:1rem;margin-top:1.5rem">
+    <button class="btn" onclick="previousPage()" id="prevBtn">← Previous</button>
+    <span id="pageInfo">Page 1 of 1</span>
+    <button class="btn" onclick="nextPage()" id="nextBtn">Next →</button>
+  </div>
+</main>
+
+<script src="../env.js"></script>
+<script src="../assets/js/admin-shell.js" defer></script>
+<script src="../assets/js/dashboard-session.js" defer></script>
+<script>
+const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+let currentPage = 1;
+const pageSize = 20;
+
+function applyFilters() {
+  // In production, this would re-fetch from /v1/admin/audit-log with filters
+  const action = document.getElementById('filterAction').value;
+  const admin = document.getElementById('filterAdmin').value;
+  const date = document.getElementById('filterDate').value;
+  
+  console.log('Filters applied:', { action, admin, date });
+  // For demo, just show a message
+  console.log('Would filter audit log based on:', { action, admin, date });
+}
+
+function clearFilters() {
+  document.getElementById('filterAction').value = '';
+  document.getElementById('filterAdmin').value = '';
+  document.getElementById('filterDate').value = '';
+  console.log('Filters cleared');
+}
+
+function previousPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    updateTable();
+  }
+}
+
+function nextPage() {
+  currentPage++;
+  updateTable();
+}
+
+function updateTable() {
+  document.getElementById('pageInfo').textContent = `Page ${currentPage} of 3`;
+  console.log('Loading page', currentPage);
+}
+
+function exportAuditLog() {
+  // In production, this would trigger a download of the audit log as CSV
+  alert('Audit log export would be prepared here. In production, this triggers a CSV download.');
+  console.log('Exporting audit log...');
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Audit log page loaded');
+});
+</script>
+</body>
+</html>

@@ -22,8 +22,8 @@
     {
       title: "System",
       links: [
-        { key: "settings", label: "Settings", href: "#", icon: "⚙️" },
-        { key: "audit-log", label: "Audit Log", href: "#", icon: "🧾" }
+        { key: "settings", label: "Settings", href: "admin-settings.html", icon: "⚙️" },
+        { key: "audit-log", label: "Audit Log", href: "admin-audit-log.html", icon: "🧾" }
       ]
     }
   ];
@@ -35,7 +35,22 @@
       + '<a href="admin-dashboard.html" class="logo">Kazi<span>X</span></a>'
       + '<div class="topnav-right">'
       + '  <span class="admin-badge">Admin</span>'
-      + '  <div class="user-chip"><div class="user-avatar">AD</div><span class="user-name">Admin Desk</span></div>'
+      + '  <div class="user-menu-container">'
+      + '    <div class="user-chip" id="userChipToggle"><div class="user-avatar">AD</div><span class="user-name">Admin Desk</span></div>'
+      + '    <div class="user-menu-dropdown" id="userMenuDropdown">'
+      + '      <div class="user-menu-header">'
+      + '        <div class="user-menu-name" id="userMenuName">Admin Desk</div>'
+      + '        <div class="user-menu-status">'
+      + '          <span class="status-indicator"></span>'
+      + '          <span>Logged in</span>'
+      + '        </div>'
+      + '      </div>'
+      + '      <div class="user-menu-body">'
+      + '        <a href="admin-settings.html" class="user-menu-item">Admin Settings</a>'
+      + '        <button class="user-menu-item logout" onclick="window.KazixProfile ? window.KazixProfile.logout() : window.location.href=\'login.html\'">Logout</button>'
+      + '      </div>'
+      + '    </div>'
+      + '  </div>'
       + '</div>';
     return nav;
   }
@@ -107,5 +122,41 @@
         document.body.insertBefore(shell, document.body.firstChild);
       }
     }
+
+    // Setup user menu dropdown toggle for admin topnav
+    setupUserMenuToggle();
   });
+
+  function setupUserMenuToggle() {
+    var userChipToggle = document.getElementById("userChipToggle");
+    var userMenuDropdown = document.getElementById("userMenuDropdown");
+    
+    if (!userChipToggle || !userMenuDropdown) return;
+
+    // Remove existing listeners to prevent duplicates
+    var newUserChipToggle = userChipToggle.cloneNode(true);
+    userChipToggle.parentNode.replaceChild(newUserChipToggle, userChipToggle);
+    userChipToggle = newUserChipToggle;
+
+    // Toggle dropdown when clicking user chip
+    userChipToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      userMenuDropdown.classList.toggle("active");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+      if (!userChipToggle.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+        userMenuDropdown.classList.remove("active");
+      }
+    });
+
+    // Close dropdown when clicking a menu item
+    var menuItems = userMenuDropdown.querySelectorAll(".user-menu-item");
+    menuItems.forEach(function (item) {
+      item.addEventListener("click", function () {
+        userMenuDropdown.classList.remove("active");
+      });
+    });
+  }
 })();

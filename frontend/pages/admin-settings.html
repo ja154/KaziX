@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Settings - KaziX Admin</title>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+<style>
+  .settings-layout{display:grid;grid-template-columns:240px 1fr;gap:2rem}
+  .settings-nav{display:flex;flex-direction:column;gap:0.4rem;position:sticky;top:2rem;height:fit-content}
+  .settings-nav-item{padding:0.65rem 0.95rem;border:1.5px solid transparent;border-radius:4px;color:var(--muted);text-decoration:none;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+  .settings-nav-item:hover{color:var(--ink);border-color:var(--border);background:var(--cream)}
+  .settings-nav-item.active{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+
+  .settings-section{display:none;animation:slideUp 0.3s ease both}
+  .settings-section.active{display:block}
+
+  .settings-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;margin-bottom:1.5rem}
+  .settings-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.5rem}
+  .settings-card-sub{font-size:0.82rem;color:var(--muted);margin-bottom:1.25rem}
+
+  .settings-group{display:grid;gap:1rem;margin-bottom:1.5rem}
+  .settings-group:last-child{margin-bottom:0}
+
+  .setting-field{display:grid;gap:0.4rem}
+  .setting-label{font-size:0.78rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+  .setting-input{padding:0.75rem;border:1.5px solid var(--border);border-radius:2px;background:white;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--ink);outline:none;transition:border-color 0.2s}
+  .setting-input:focus{border-color:var(--ink)}
+  .setting-input::placeholder{color:var(--muted)}
+  .setting-input[type="number"] {width:100%; max-width:120px}
+
+  .setting-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
+
+  .setting-toggle{display:flex;align-items:center;gap:0.75rem;padding:0.75rem;border:1px solid var(--border);border-radius:4px;background:var(--cream);cursor:pointer;transition:all 0.2s}
+  .setting-toggle:hover{border-color:var(--ink);background:white}
+  .toggle-switch{width:44px;height:24px;border:2px solid var(--muted);border-radius:999px;background:transparent;position:relative;transition:all 0.3s}
+  .toggle-switch::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:var(--muted);left:2px;top:50%;transform:translateY(-50%);transition:all 0.3s}
+  .setting-toggle input[type="checkbox"]:checked ~ .toggle-switch{border-color:var(--green);background:rgba(27,107,58,0.1)}
+  .setting-toggle input[type="checkbox"]:checked ~ .toggle-switch::after{background:var(--green);left:22px}
+
+  .btn-group{display:flex;gap:0.75rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+  .btn-group .btn{margin-right:auto}
+
+  .status-message{padding:0.85rem 1rem;border-radius:4px;font-size:0.85rem;margin-bottom:1rem;display:none}
+  .status-message.success{background:rgba(27,107,58,0.1);color:var(--green);border:1px solid rgba(27,107,58,0.3);display:flex;align-items:center;gap:0.5rem}
+  .status-message.error{background:rgba(192,57,43,0.1);color:var(--rust);border:1px solid rgba(192,57,43,0.3);display:flex;align-items:center;gap:0.5rem}
+  .status-message.success::before{content:'✓';font-weight:700;font-size:1.1rem}
+  .status-message.error::before{content:'!';font-weight:700;font-size:1.1rem}
+
+  @media(max-width:900px){
+    .settings-layout{grid-template-columns:1fr;gap:1.5rem}
+    .settings-nav{flex-direction:row;gap:0.5rem;position:static;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:1rem}
+    .settings-nav-item{flex:1;min-width:120px;text-align:center;padding:0.5rem 0.75rem}
+  }
+</style>
+</head>
+<body data-admin-active="settings">
+<main class="main" data-admin-main>
+  <div class="admin-header">
+    <div>
+      <div class="page-title">Settings</div>
+      <div class="page-sub">Configure platform behavior, fees, and policies.</div>
+    </div>
+  </div>
+
+  <div class="settings-layout">
+    <!-- Navigation Sidebar -->
+    <nav class="settings-nav">
+      <a class="settings-nav-item active" data-tab="platform">Platform</a>
+      <a class="settings-nav-item" data-tab="fees">Fees & Escrow</a>
+      <a class="settings-nav-item" data-tab="disputes">Disputes</a>
+      <a class="settings-nav-item" data-tab="kyc">KYC & Trust</a>
+      <a class="settings-nav-item" data-tab="features">Features</a>
+    </nav>
+
+    <!-- Settings Content -->
+    <div class="settings-content">
+      <!-- Platform Settings -->
+      <section class="settings-section active" data-tab="platform">
+        <div id="statusMsg" class="status-message"></div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">General Platform Settings</div>
+          <div class="settings-card-sub">Core configuration for KaziX operations</div>
+          <div class="settings-group">
+            <div class="setting-field">
+              <label class="setting-label">Platform Name</label>
+              <input type="text" class="setting-input" id="platformName" placeholder="KaziX" value="KaziX">
+            </div>
+            <div class="setting-row">
+              <div class="setting-field">
+                <label class="setting-label">Platform Currency</label>
+                <input type="text" class="setting-input" id="platformCurrency" placeholder="KES" value="KES" maxlength="3">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Support Phone</label>
+                <input type="text" class="setting-input" id="supportPhone" placeholder="+254712345678">
+              </div>
+            </div>
+            <div class="setting-field">
+              <label class="setting-label">Support Email</label>
+              <input type="email" class="setting-input" id="supportEmail" placeholder="support@kazix.co.ke">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Maintenance & Alerts</div>
+          <div class="settings-card-sub">Notify users about platform status</div>
+          <div class="settings-group">
+            <div class="setting-field">
+              <label class="setting-label">Maintenance Mode</label>
+              <label class="setting-toggle">
+                <input type="checkbox" id="maintenanceMode" style="display:none">
+                <div class="toggle-switch"></div>
+                <span id="maintenanceModeLabel">Off</span>
+              </label>
+            </div>
+            <div class="setting-field">
+              <label class="setting-label">Maintenance Message (if enabled)</label>
+              <textarea class="setting-input" id="maintenanceMessage" placeholder="We're performing maintenance. Thanks for your patience!" style="resize:vertical;min-height:80px"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fees & Escrow Settings -->
+      <section class="settings-section" data-tab="fees">
+        <div class="settings-card">
+          <div class="settings-card-title">Transaction Fees</div>
+          <div class="settings-card-sub">Configure KaziX commission rates</div>
+          <div class="settings-group">
+            <div class="setting-row">
+              <div class="setting-field">
+                <label class="setting-label">Client Fee (%)</label>
+                <input type="number" class="setting-input" id="clientFeePercent" min="0" max="100" step="0.1" placeholder="5.0" value="5.0">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Fundi Fee (%)</label>
+                <input type="number" class="setting-input" id="fundiFeePercent" min="0" max="100" step="0.1" placeholder="3.0" value="3.0">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Minimum Transaction</label>
+                <input type="number" class="setting-input" id="minTransaction" min="0" step="100" placeholder="500" value="500">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Escrow & Fund Holds</div>
+          <div class="settings-card-sub">Configure escrow release policies</div>
+          <div class="settings-group">
+            <div class="setting-row">
+              <div class="setting-field">
+                <label class="setting-label">Auto-Release Days</label>
+                <input type="number" class="setting-input" id="autoReleaseDays" min="1" max="30" step="1" placeholder="7" value="7">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Max Hold Amount (KES)</label>
+                <input type="number" class="setting-input" id="maxHoldAmount" min="0" step="10000" placeholder="500000">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dispute Settings -->
+      <section class="settings-section" data-tab="disputes">
+        <div class="settings-card">
+          <div class="settings-card-title">Dispute Resolution</div>
+          <div class="settings-card-sub">Configure how disputes are handled</div>
+          <div class="settings-group">
+            <div class="setting-row">
+              <div class="setting-field">
+                <label class="setting-label">Max Resolution Days</label>
+                <input type="number" class="setting-input" id="maxResolutionDays" min="1" max="90" step="1" placeholder="30" value="30">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Escalation Threshold (%)</label>
+                <input type="number" class="setting-input" id="escalationThreshold" min="0" max="100" step="5" placeholder="50" value="50">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Dispute Notifications</div>
+          <div class="settings-card-sub">Who gets notified about new disputes</div>
+          <div class="settings-group">
+            <label class="setting-toggle">
+              <input type="checkbox" id="notifyOnDispute" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Notify admins immediately on dispute creation</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="notifyEscalation" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Notify on escalation</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- KYC & Trust Settings -->
+      <section class="settings-section" data-tab="kyc">
+        <div class="settings-card">
+          <div class="settings-card-title">KYC Requirements</div>
+          <div class="settings-card-sub">Configure identity verification policies</div>
+          <div class="settings-group">
+            <label class="setting-toggle">
+              <input type="checkbox" id="kycRequired" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Require KYC before posting jobs/offers</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="kycBeforePayout" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Require KYC before first payout</span>
+            </label>
+            <div class="setting-field">
+              <label class="setting-label">KYC Review Timeout (hours)</label>
+              <input type="number" class="setting-input" id="kycTimeout" min="1" max="168" step="1" placeholder="24" value="24">
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Fraud & Risk Management</div>
+          <div class="settings-card-sub">Protect the platform from abuse</div>
+          <div class="settings-group">
+            <div class="setting-row">
+              <div class="setting-field">
+                <label class="setting-label">Max Failed Verifications</label>
+                <input type="number" class="setting-input" id="maxFailedVerifications" min="1" max="10" step="1" placeholder="3" value="3">
+              </div>
+              <div class="setting-field">
+                <label class="setting-label">Suspension Duration (days)</label>
+                <input type="number" class="setting-input" id="suspensionDays" min="1" max="365" step="1" placeholder="7" value="7">
+              </div>
+            </div>
+            <label class="setting-toggle">
+              <input type="checkbox" id="flagHighValue" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Flag jobs over KES 100,000 for manual review</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Settings -->
+      <section class="settings-section" data-tab="features">
+        <div class="settings-card">
+          <div class="settings-card-title">Feature Flags</div>
+          <div class="settings-card-sub">Enable/disable platform features</div>
+          <div class="settings-group">
+            <label class="setting-toggle">
+              <input type="checkbox" id="featureJobPosting" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Job Posting (Clients)</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="featureJobSearch" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Job Search (Fundis)</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="featureMessaging" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Messaging</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="featureReviews" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Reviews & Ratings</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="featureDisputes" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>Dispute Resolution</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Payment Methods</div>
+          <div class="settings-card-sub">Configure available payment integrations</div>
+          <div class="settings-group">
+            <label class="setting-toggle">
+              <input type="checkbox" id="paymentMpesa" style="display:none" checked>
+              <div class="toggle-switch"></div>
+              <span>M-Pesa</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="paymentBank" style="display:none">
+              <div class="toggle-switch"></div>
+              <span>Bank Transfer</span>
+            </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="paymentCard" style="display:none">
+              <div class="toggle-switch"></div>
+              <span>Card Payment</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <div class="btn-group">
+        <button class="btn primary" id="saveBtn" onclick="saveSettings()">💾 Save Settings</button>
+        <button class="btn" id="resetBtn" onclick="resetSettings()">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../env.js"></script>
+<script src="../assets/js/profile-utils.js"></script>
+<script src="../assets/js/admin-shell.js" defer></script>
+<script src="../assets/js/dashboard-session.js" defer></script>
+<script>
+const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+
+// Navigation tabs
+document.querySelectorAll('[data-tab]').forEach(el => {
+  if (el.classList.contains('settings-nav-item')) {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tab = el.dataset.tab;
+      document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelector(`[data-tab="${tab}"].settings-section`)?.classList.add('active');
+    });
+  }
+});
+
+// Toggle switches
+document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+  checkbox.addEventListener('change', (e) => {
+    const label = e.target.parentElement.querySelector('[id$="ModeLabel"]');
+    if (label) {
+      label.textContent = e.target.checked ? 'On' : 'Off';
+    }
+  });
+});
+
+// Status message display
+function showStatus(message, type = 'success') {
+  const msg = document.getElementById('statusMsg');
+  msg.textContent = message;
+  msg.className = `status-message ${type}`;
+  msg.style.display = 'flex';
+  setTimeout(() => {
+    msg.style.display = 'none';
+  }, 5000);
+}
+
+// Save settings (placeholder - would call backend in production)
+async function saveSettings() {
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ Saving…';
+
+  try {
+    // In production, this would POST to /v1/admin/settings
+    // For now, just store in localStorage as demo
+    const settings = {
+      platformName: document.getElementById('platformName').value,
+      platformCurrency: document.getElementById('platformCurrency').value,
+      clientFeePercent: parseFloat(document.getElementById('clientFeePercent').value),
+      fundiFeePercent: parseFloat(document.getElementById('fundiFeePercent').value),
+      maintenanceMode: document.getElementById('maintenanceMode').checked,
+      kycRequired: document.getElementById('kycRequired').checked,
+    };
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    localStorage.setItem('kazix_admin_settings', JSON.stringify(settings));
+    showStatus('✓ Settings saved successfully', 'success');
+    console.log('Settings saved:', settings);
+  } catch (error) {
+    showStatus('✗ Failed to save settings: ' + error.message, 'error');
+    console.error('Settings save error:', error);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Save Settings';
+  }
+}
+
+// Reset to defaults
+function resetSettings() {
+  if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
+
+  document.getElementById('platformName').value = 'KaziX';
+  document.getElementById('platformCurrency').value = 'KES';
+  document.getElementById('clientFeePercent').value = '5.0';
+  document.getElementById('fundiFeePercent').value = '3.0';
+  document.getElementById('maintenanceMode').checked = false;
+  document.getElementById('maintenanceModeLabel').textContent = 'Off';
+  document.getElementById('kycRequired').checked = true;
+  showStatus('Settings reset to defaults', 'success');
+}
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const saved = localStorage.getItem('kazix_admin_settings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      document.getElementById('platformName').value = settings.platformName || 'KaziX';
+      document.getElementById('platformCurrency').value = settings.platformCurrency || 'KES';
+      document.getElementById('clientFeePercent').value = settings.clientFeePercent || 5.0;
+      document.getElementById('fundiFeePercent').value = settings.fundiFeePercent || 3.0;
+    }
+  } catch (e) {
+    console.warn('Could not load settings:', e);
+  }
+});
+</script>
+</body>
+</html>

@@ -249,6 +249,20 @@ def _pop_oauth_code_verifier(state: str) -> str | None:
     return str(payload.get("code_verifier") or "")
 
 
+def _is_valid_redirect_to(redirect_to: str | None) -> bool:
+    """Validate redirect_to to prevent open redirect attacks."""
+    if not redirect_to:
+        return True  # None is allowed (will use default)
+    # Whitelisted redirect targets from auth bootstrap
+    valid = {
+        "complete-registration",
+        "client-dashboard",
+        "fundi-dashboard",
+        "admin-dashboard",
+    }
+    return redirect_to in valid
+
+
 # ── Routes ───────────────────────────────────────────────────
 
 @router.post("/send-otp", response_model=OTPResponse, status_code=200)
@@ -258,64 +272,38 @@ async def send_otp(body: SendOTPRequest):
     Phone OTP uses SMS provider configured in Supabase.
     Email sends a magic link when email_redirect_to is provided.
     Otherwise, the email template decides whether users receive a code or link.
+    
+    Handles rate limiting (429) with automatic retry and exponential backoff.
     """
-    client = get_anon_client()
+    from app.services.otp import dispatch_otp_with_retry
+
     try:
         if body.phone:
-            # Supabase signInWithOtp — works for new and existing users
-            # Note: signInWithOtp returns an AuthResponse which contains user/session
-            # but for OTP send, we mostly care if it didn't raise an exception.
-            client.auth.sign_in_with_otp({"phone": body.phone})
-            logger.info("OTP dispatched", channel="phone", phone=body.phone[-4:])  # log last 4 digits only
-            return OTPResponse(success=True, message="OTP sent successfully")
+            success, message = await dispatch_otp_with_retry(
+                destination=body.phone,
+                dispatch_type="phone",
+            )
+        else:  # email
+            success, message = await dispatch_otp_with_retry(
+                destination=str(body.email),
+                dispatch_type="email",
+                use_magic_link=bool(body.email_redirect_to),
+                redirect_to=body.email_redirect_to,
+            )
 
-        # Supabase email passwordless auth can send either a magic link or
-        # a one-time code depending on template configuration.
-        email = str(body.email)
-        options = {"should_create_user": True}
-        if body.email_redirect_to:
-            options["email_redirect_to"] = body.email_redirect_to
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=message,
+            )
 
-        client.auth.sign_in_with_otp(
-            {
-                "email": email,
-                "options": options,
-            }
-        )
-        delivery = "magic_link" if body.email_redirect_to else "otp"
-        logger.info("OTP dispatched", channel="email", delivery=delivery, email=_mask_email(email))
-        message = "Magic link sent successfully" if body.email_redirect_to else "Verification code sent successfully"
         return OTPResponse(success=True, message=message)
-    except AuthApiError as exc:
-        logger.warning(
-            "OTP dispatch rejected by Supabase",
-            destination=body.phone[-4:] if body.phone else _mask_email(str(body.email)),
-            status=getattr(exc, "status", None),
-            code=getattr(exc, "code", None),
-            error=str(exc),
-        )
-        api_status = getattr(exc, "status", None)
-        status_code = api_status if isinstance(api_status, int) and 400 <= api_status <= 599 else status.HTTP_400_BAD_REQUEST
-        detail = "Failed to send OTP. Please try again."
-        if settings.app_env == "development":
-            detail = f"Failed to send OTP: {str(exc)}"
-        raise HTTPException(status_code=status_code, detail=detail)
-    except AuthRetryableError as exc:
-        logger.error(
-            "OTP dispatch retryable failure",
-            destination=body.phone[-4:] if body.phone else _mask_email(str(body.email)),
-            error=str(exc),
-        )
-        detail = "Failed to send OTP. Please try again."
-        if settings.app_env == "development":
-            detail = f"Failed to send OTP: {str(exc)}"
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=detail,
-        )
+
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error(
-            "OTP dispatch failed",
+            "OTP dispatch unexpected error",
             destination=body.phone[-4:] if body.phone else _mask_email(str(body.email)),
             error=str(exc),
         )
@@ -433,9 +421,30 @@ async def start_oauth(body: OAuthStartRequest):
             raise RuntimeError("Missing PKCE code verifier for OAuth start")
 
         _put_oauth_state(state, str(code_verifier))
+        logger.info(
+            "OAuth start successful",
+            provider=body.provider,
+            state=state[:8],
+        )
         return OAuthStartResponse(provider=response.provider, url=response.url, state=state)
+    except AuthApiError as exc:
+        logger.error(
+            "OAuth start auth error",
+            provider=body.provider,
+            error=str(exc),
+            code=getattr(exc, "code", None),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"OAuth configuration error: {exc.message if hasattr(exc, 'message') else str(exc)}. Check Supabase OAuth provider settings.",
+        )
     except Exception as exc:
-        logger.error("OAuth start failed", provider=body.provider, error=str(exc))
+        logger.error(
+            "OAuth start failed",
+            provider=body.provider,
+            error=str(exc),
+            error_type=type(exc).__name__,
+        )
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Failed to initialize OAuth login.",
@@ -446,12 +455,29 @@ async def start_oauth(body: OAuthStartRequest):
 async def exchange_oauth_code(body: OAuthExchangeRequest):
     """
     Exchanges Supabase OAuth callback code for a session using the stored PKCE verifier.
+    Validates redirect_to to prevent open redirect attacks.
     """
     code_verifier = _pop_oauth_code_verifier(body.state)
     if not code_verifier:
+        logger.warning(
+            "OAuth exchange: invalid or expired state",
+            state=body.state[:8] if body.state else "missing",
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="OAuth state is invalid or expired. Please start login again.",
+        )
+
+    # Validate redirect_to to prevent open redirect
+    if not _is_valid_redirect_to(body.redirect_to):
+        logger.warning(
+            "OAuth exchange: invalid redirect_to",
+            state=body.state[:8],
+            redirect_to=body.redirect_to,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid redirect target. Must be a recognized dashboard or flow.",
         )
 
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
@@ -464,14 +490,37 @@ async def exchange_oauth_code(body: OAuthExchangeRequest):
 
     try:
         response = client.auth.exchange_code_for_session(exchange_payload)
+    except AuthApiError as exc:
+        logger.error(
+            "OAuth exchange auth error",
+            state=body.state[:8],
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            message=getattr(exc, "message", None),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"OAuth verification failed. Check that your authorization code is valid and not expired.",
+        )
     except Exception as exc:
-        logger.error("OAuth exchange failed", state=body.state[:8], error=str(exc))
+        logger.error(
+            "OAuth exchange failed",
+            state=body.state[:8],
+            error=str(exc),
+            error_type=type(exc).__name__,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Failed to complete OAuth login.",
         )
 
     if not response.session or not response.user:
+        logger.error(
+            "OAuth exchange: missing session or user",
+            state=body.state[:8],
+            has_session=bool(response.session),
+            has_user=bool(response.user),
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="OAuth login did not return a session.",
@@ -629,3 +678,20 @@ async def bootstrap_auth(user: CurrentSession):
     except Exception as exc:
         logger.error("Auth bootstrap failed", user_id=user.user_id, error=str(exc))
         raise HTTPException(status_code=500, detail="Failed to bootstrap auth state.")
+
+
+@router.post("/logout", status_code=200)
+async def logout(user: CurrentUser):
+    """
+    Logs out the user by signing them out from Supabase.
+    Frontend should clear localStorage tokens and redirect to login.
+    """
+    client = get_user_client(user.access_token)
+    try:
+        client.auth.sign_out()
+        logger.info("User logged out", user_id=user.user_id)
+        return {"success": True, "message": "Logged out successfully"}
+    except Exception as exc:
+        logger.warning("Logout failed", user_id=user.user_id, error=str(exc))
+        # Still return success even if sign_out fails, frontend should clear tokens
+        return {"success": True, "message": "Logged out successfully"}

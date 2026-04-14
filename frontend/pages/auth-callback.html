@@ -110,6 +110,7 @@ async function getCurrentSession() {
 }
 
 async function waitForSession(timeoutMs = 5000) {
+  console.log('[waitForSession] Waiting for session with timeout:', timeoutMs);
   return new Promise((resolve, reject) => {
     let settled = false;
     let subscription;
@@ -123,19 +124,24 @@ async function waitForSession(timeoutMs = 5000) {
     };
 
     const timer = setTimeout(async () => {
+      console.log('[waitForSession] Timeout reached');
       try {
         const session = await getCurrentSession();
         if (session) {
+          console.log('[waitForSession] Found session on timeout');
           finish(resolve, session);
           return;
         }
+        console.error('[waitForSession] No session found on timeout');
         finish(reject, new Error('No session received — the link may have already been used.'));
       } catch (error) {
+        console.error('[waitForSession] Error on timeout:', error);
         finish(reject, error);
       }
     }, timeoutMs);
 
     const { data } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      console.log('[waitForSession] onAuthStateChange event:', _event, session?.user?.email);
       if (session) {
         finish(resolve, session);
       }
@@ -145,9 +151,11 @@ async function waitForSession(timeoutMs = 5000) {
 }
 
 async function resolveSessionFromCallback() {
+  console.log('[resolveSessionFromCallback] Starting...');
   const accessToken = getCallbackParam('access_token');
   const refreshToken = getCallbackParam('refresh_token');
   if (accessToken && refreshToken) {
+    console.log('[resolveSessionFromCallback] Path 1: Using access/refresh tokens');
     const { data, error } = await supabaseClient.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -159,6 +167,7 @@ async function resolveSessionFromCallback() {
 
   const code = initialSearchParams.get('code');
   if (code) {
+    console.log('[resolveSessionFromCallback] Path 2: Using OAuth code');
     const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
     if (error) throw error;
     if (!data?.session) throw new Error('No session returned from the sign-in code.');
@@ -168,6 +177,7 @@ async function resolveSessionFromCallback() {
   const tokenHash = getCallbackParam('token_hash');
   const type = getCallbackParam('type');
   if (tokenHash && type) {
+    console.log('[resolveSessionFromCallback] Path 3: Magic link (token_hash + type)');
     const { data, error } = await supabaseClient.auth.verifyOtp({
       token_hash: tokenHash,
       type,
@@ -177,8 +187,10 @@ async function resolveSessionFromCallback() {
     return data.session;
   }
 
+  console.log('[resolveSessionFromCallback] Checking storage...');
   const sessionFromStorage = await getCurrentSession();
   if (sessionFromStorage) return sessionFromStorage;
+  console.log('[resolveSessionFromCallback] No session found, waiting...');
   return waitForSession();
 }
 
@@ -198,13 +210,16 @@ function persistSession(session) {
 }
 
 async function bootstrapSession(session) {
+  console.log('[bootstrapSession] Fetching from:', `${API_BASE}/v1/auth/bootstrap`);
   const resp = await fetch(`${API_BASE}/v1/auth/bootstrap`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
   });
+  console.log('[bootstrapSession] Response status:', resp.status, resp.statusText);
   const data = await resp.json();
+  console.log('[bootstrapSession] Response data:', data);
   if (!resp.ok) throw new Error(data.detail || 'Could not finish sign-in.');
   return data;
 }
@@ -225,8 +240,8 @@ function mapRedirectToPage(redirectTo, flow) {
 function getSuccessMessage(nextPage, flow) {
   if (nextPage.startsWith('register.html')) {
     return flow === 'register'
-      ? 'Redirecting you back to finish your profile…'
-      : 'Redirecting you to complete your account…';
+        ? 'Redirecting you back to finish your profile...'
+        : 'Redirecting you to complete your account...';
   }
   return 'Redirecting you to your dashboard…';
 }
@@ -262,6 +277,52 @@ function handOffToOriginalTab(nextPage, flow) {
   }, 400);
 }
 
+function handOffViaWindowOpener(session, bootstrap, flow) {
+  /**
+   * Direct method: if this tab was opened from another (via email/magic link click),
+   * communicate directly with window.opener to set the session there, then close this tab.
+   * This avoids relying on localStorage heartbeat timing and is more reliable.
+   */
+  if (!window.opener) return false;
+
+  try {
+    const nextPage = mapRedirectToPage(bootstrap.redirect_to, flow);
+    
+    // Inject session and auth state into the opening window
+    window.opener.localStorage.setItem('kazix_access_token', session.access_token);
+    window.opener.localStorage.setItem('kazix_refresh_token', session.refresh_token);
+    if (session.expires_in !== null) {
+      window.opener.localStorage.setItem('kazix_expires_in', String(session.expires_in));
+    }
+    window.opener.localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
+    
+    // Signal the original tab to redirect
+    window.opener.localStorage.setItem('kazix_magic_link_complete', '1');
+    window.opener.localStorage.setItem('kazix_auth_next_page', nextPage);
+    window.opener.localStorage.setItem('kazix_auth_flow', flow);
+    
+    // Show success message in this tab
+    document.getElementById('icon').textContent  = '✅';
+    document.getElementById('title').textContent = flow === 'login' ? 'You\\'re signed in!' : 'Email confirmed!';
+    document.getElementById('sub').textContent   = 'Returning you to your original tab...';
+    document.getElementById('spinner').style.display = 'none';
+    
+    // Close this tab after a brief delay
+    setTimeout(() => {
+      try {
+        window.close();
+      } catch (_error) {
+        // Ignore — if we can't close, the user can close manually
+      }
+    }, 600);
+    
+    return true;
+  } catch (error) {
+    console.warn('Window opener handoff failed:', error);
+    return false;
+  }
+}
+
 async function handleCallback() {
   // ── 1. Check for error params in the callback URL first ──────────────────
   const urlError = getCallbackParam('error');
@@ -294,10 +355,15 @@ async function handleCallback() {
 
   // ── 2. No error — recover the session using the current v2 APIs ──────────
   try {
+    console.log('[Auth Callback] Starting session resolution...');
     const session = await resolveSessionFromCallback();
     if (!session) throw new Error('No session returned. The link may be invalid or already used.');
+    console.log('[Auth Callback] Session resolved:', session.user?.email);
     persistSession(session);
+    
+    console.log('[Auth Callback] Calling bootstrap endpoint...');
     const bootstrap = await bootstrapSession(session);
+    console.log('[Auth Callback] Bootstrap response:', bootstrap);
     const nextPage = mapRedirectToPage(bootstrap.redirect_to, authFlow);
 
     localStorage.setItem('kazix_magic_link_complete', '1');
@@ -305,19 +371,33 @@ async function handleCallback() {
     localStorage.setItem('kazix_auth_flow', authFlow);
 
     document.getElementById('icon').textContent  = '✅';
-    document.getElementById('title').textContent = authFlow === 'login' ? 'You’re signed in!' : 'Email confirmed!';
+    document.getElementById('title').textContent = authFlow === 'login' ? 'You\'re signed in!' : 'Email confirmed!';
     document.getElementById('sub').textContent   = getSuccessMessage(nextPage, authFlow);
     document.getElementById('spinner').style.display = 'none';
 
+    // ── TRY METHOD 1: Direct window.opener handoff (email links open new tabs) ──
+    // This is the preferred method for magic links because Supabase redirects open new tabs
+    console.log('[Auth Callback] Method 1: Attempting window.opener handoff...');
+    if (handOffViaWindowOpener(session, bootstrap, authFlow)) {
+      console.log('[Auth Callback] ✓ Handoff via window.opener successful');
+      return;
+    }
+
+    // ── FALLBACK METHOD 2: localStorage heartbeat (for same-tab flows or if opener unavailable) ──
+    console.log('[Auth Callback] Method 1 failed, trying Method 2: localStorage heartbeat...');
     if (shouldHandOffToOriginalTab(authFlow)) {
+      console.log('[Auth Callback] ✓ Handing off to original tab');
       handOffToOriginalTab(nextPage, authFlow);
       return;
     }
 
+    // ── FALLBACK METHOD 3: Direct redirect (no original tab, so redirect here) ──
+    console.log('[Auth Callback] Method 2 failed, using Method 3: Direct redirect to', nextPage);
     setTimeout(() => { window.location.href = nextPage; }, 800);
 
   } catch (err) {
-    console.error('Auth callback error:', err);
+    console.error('[Auth Callback] ✗ Error during callback:', err.message, err);
+    console.log('[Auth Callback] Stack:', err.stack);
     showError(toDisplayError(err, 'Unable to confirm your email. Please try again.'));
   }
 }

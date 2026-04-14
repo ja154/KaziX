@@ -245,6 +245,30 @@
     }
   }
 
+  async function logout() {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('No active session');
+      }
+      
+      // Call logout endpoint
+      await requestJson('/v1/auth/logout', { auth: true, method: 'POST' });
+    } catch (error) {
+      console.warn('Logout request failed:', error);
+      // Continue with local logout even if API call fails
+    }
+
+    // Clear all session data from localStorage
+    localStorage.removeItem('kazix_access_token');
+    localStorage.removeItem('kazix_role');
+    localStorage.removeItem('kazix_refresh_token');
+    localStorage.removeItem('kazix_user_id');
+
+    // Redirect to login page
+    window.location.href = 'login.html';
+  }
+
   window.KazixProfile = {
     API_BASE,
     arrayToCsv,
@@ -261,6 +285,7 @@
     getProfileIdFromQuery,
     hydrateShell,
     initials,
+    logout,
     profilePath,
     requestJson,
     roleHomePath,

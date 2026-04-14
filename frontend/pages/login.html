@@ -669,6 +669,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   validatePhone();
 });
 
+// Listen for storage changes from other tabs (e.g., when auth-callback.html sets kazix_magic_link_complete)
+window.addEventListener('storage', (e) => {
+  if (e.key === 'kazix_magic_link_complete' && e.newValue === '1') {
+    // Immediately redirect without waiting for the next poll interval
+    const nextPage = localStorage.getItem('kazix_auth_next_page') || 'index.html';
+    clearAuthTabWaiting();
+    persistSession({
+      access_token: localStorage.getItem('kazix_access_token'),
+      refresh_token: localStorage.getItem('kazix_refresh_token'),
+      token_type: localStorage.getItem('kazix_token_type') || 'bearer',
+      expires_in: Number(localStorage.getItem('kazix_expires_in')) || 3600,
+      is_new_user: false,
+      redirect_to: localStorage.getItem('kazix_auth_next_page')?.includes('register') ? 'complete-registration' : 'dashboard',
+    });
+    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+    window.history.replaceState({}, '', cleanUrl);
+    window.location.href = nextPage;
+  }
+});
+
 window.addEventListener('beforeunload', clearAuthTabWaiting);
 </script>
 </body>

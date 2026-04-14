@@ -61,6 +61,13 @@ class Settings(BaseSettings):
     at_username: str = "sandbox"
     at_sender_id: str = "KaziX"
 
+    # ── OTP Retry Configuration ──────────────────────────────
+    otp_max_retries: int = 3
+    otp_initial_backoff_ms: int = 100
+    otp_max_backoff_ms: int = 5000
+    otp_backoff_multiplier: float = 2.0
+    otp_jitter_enabled: bool = True
+
     # ── Logging ──────────────────────────────────────────────
     log_level: str = "INFO"
 

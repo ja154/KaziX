@@ -13,6 +13,34 @@
     return "Good evening";
   }
 
+  function setupUserMenuToggle() {
+    var userChipToggle = document.getElementById("userChipToggle");
+    var userMenuDropdown = document.getElementById("userMenuDropdown");
+    
+    if (!userChipToggle || !userMenuDropdown) return;
+
+    // Toggle dropdown when clicking user chip
+    userChipToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      userMenuDropdown.classList.toggle("active");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", function (e) {
+      if (!userChipToggle.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+        userMenuDropdown.classList.remove("active");
+      }
+    });
+
+    // Close dropdown when clicking a menu item
+    var menuItems = userMenuDropdown.querySelectorAll(".user-menu-item");
+    menuItems.forEach(function (item) {
+      item.addEventListener("click", function () {
+        userMenuDropdown.classList.remove("active");
+      });
+    });
+  }
+
   async function hydrateDashboard(options) {
     options = options || {};
     var helpers = window.KazixProfile;
@@ -74,6 +102,15 @@
       setText("#sidebarAvatar", avatar);
       setText("#sidebarName", name);
       setText("#sidebarRole", roleLabel);
+
+      // Update user menu header with user name
+      var userMenuName = document.getElementById("userMenuName");
+      if (userMenuName) {
+        userMenuName.textContent = name;
+      }
+
+      // Setup user menu dropdown toggle
+      setupUserMenuToggle();
 
       var greetingName = firstName(name);
       var greeting = greetingForHour(new Date()) + ", " + greetingName + " 👋";
