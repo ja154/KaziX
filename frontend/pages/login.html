@@ -329,6 +329,33 @@ function validateEmail() {
   document.getElementById('sendEmailBtn').disabled = !isValidEmail(emailInput.value);
 }
 
+async function startOAuth(provider) {
+  const btn = document.getElementById(
+    provider === 'google' ? 'oauthGoogleBtn' : 'oauthGithubBtn'
+  );
+  if (btn) btn.disabled = true;
+
+  try {
+    const redirectTo = getMagicLinkCallbackUrl('login');
+    localStorage.setItem('kazix_auth_flow', 'login');
+    markAuthTabWaiting('login');
+
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+        ...(provider === 'google' ? { scopes: 'openid email profile' } : {}),
+      },
+    });
+    if (error) throw error;
+  } catch (err) {
+    clearAuthTabWaiting();
+    if (btn) btn.disabled = false;
+    console.error('OAuth start error:', err);
+    alert(toDisplayError(err, `Could not start ${provider} login. Please try again.`));
+  }
+}
+
 function mapRedirectToPage(redirectTo) {
   const map = {
     'complete-registration': 'register.html',
@@ -602,69 +629,7 @@ async function verifyOTP() {
   }
 }
 
-async function startOAuth(provider) {
-  const btn = document.getElementById(
-    provider === 'google' ? 'oauthGoogleBtn' : 'oauthGithubBtn'
-  );
-  if (btn) btn.disabled = true;
-
-  try {
-    const redirectTo = `${window.location.origin}${window.location.pathname}`;
-    const { error } = await supabaseClient.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo },
-    });
-    if (error) throw error;
-  } catch (err) {
-    if (btn) btn.disabled = false;
-    alert(toDisplayError(err, 'Could not start OAuth login.'));
-  }
-}
-
-async function handleOAuthCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const hasOAuthParams = params.has('code') || params.has('error') || params.has('error_description');
-  if (params.has('error_description')) {
-    alert(params.get('error_description'));
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.getSession();
-  if (error) {
-    if (hasOAuthParams) alert(toDisplayError(error, 'OAuth callback failed.'));
-    return;
-  }
-  if (!data?.session) return;
-
-  try {
-    const resp = await fetch(`${API_BASE}/v1/auth/bootstrap`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
-      },
-    });
-    const bootstrap = await resp.json();
-    if (!resp.ok) throw new Error(bootstrap.detail || 'OAuth bootstrap failed');
-
-    const payload = {
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      token_type: 'bearer',
-      expires_in: Math.max(0, Math.floor((new Date(data.session.expires_at * 1000) - new Date()) / 1000)),
-      is_new_user: bootstrap.is_new_user,
-      redirect_to: bootstrap.redirect_to,
-    };
-
-    const cleanUrl = `${window.location.origin}${window.location.pathname}`;
-    window.history.replaceState({}, '', cleanUrl);
-    finishAuth(payload);
-  } catch (err) {
-    alert(toDisplayError(err, 'OAuth callback failed.'));
-  }
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-  await handleOAuthCallback();
+document.addEventListener('DOMContentLoaded', () => {
   validateEmail();
   validatePhone();
 });

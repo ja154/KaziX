@@ -16,7 +16,7 @@ import secrets
 import time
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from gotrue.errors import AuthApiError, AuthRetryableError
 from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -30,6 +30,14 @@ from supabase import create_client
 logger = get_logger(__name__)
 router = APIRouter()
 settings = get_settings()
+
+# Rate limiter
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    limiter = Limiter(key_func=get_remote_address)
+except ImportError:
+    limiter = None
 
 _OAUTH_STATE_TTL_SECONDS = 600
 _OAUTH_STATE_STORE: dict[str, dict[str, str | float]] = {}
@@ -394,11 +402,29 @@ async def verify_otp(body: VerifyOTPRequest):
 
 
 @router.post("/oauth/start", response_model=OAuthStartResponse, status_code=200)
-async def start_oauth(body: OAuthStartRequest):
+async def start_oauth(body: OAuthStartRequest, request: Request):
     """
     Returns a Supabase OAuth authorization URL for the selected provider.
     Frontend should redirect the browser to the returned URL.
+    Rate limited to 10 requests per minute per IP.
     """
+    # Rate limiting check
+    client_ip = request.client.host if request.client else "unknown"
+    try:
+        if hasattr(request.app, "state") and hasattr(request.app.state, "limiter"):
+            limiter_instance = request.app.state.limiter
+            rate_key = f"oauth_start:{client_ip}"
+            if not limiter_instance.hit(rate_key, 10, 60):
+                logger.warning("OAuth start rate limit exceeded", client_ip=client_ip)
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many OAuth requests. Please wait before trying again.",
+                )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.debug("Rate limiting check failed (non-blocking)", error=str(e))
+    
     # Build an isolated auth client per request so we can safely capture
     # this login's PKCE code verifier without cross-user collisions.
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
@@ -452,11 +478,28 @@ async def start_oauth(body: OAuthStartRequest):
 
 
 @router.post("/oauth/exchange", status_code=200)
-async def exchange_oauth_code(body: OAuthExchangeRequest):
+async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
     """
     Exchanges Supabase OAuth callback code for a session using the stored PKCE verifier.
     Validates redirect_to to prevent open redirect attacks.
+    Rate limited to 5 requests per minute per IP.
     """
+    # Rate limiting check
+    client_ip = request.client.host if request.client else "unknown"
+    try:
+        if hasattr(request.app, "state") and hasattr(request.app.state, "limiter"):
+            limiter_instance = request.app.state.limiter
+            rate_key = f"oauth_exchange:{client_ip}"
+            if not limiter_instance.hit(rate_key, 5, 60):
+                logger.warning("OAuth exchange rate limit exceeded", client_ip=client_ip)
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many token exchange attempts. Please try again later.",
+                )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.debug("Rate limiting check failed (non-blocking)", error=str(e))
     code_verifier = _pop_oauth_code_verifier(body.state)
     if not code_verifier:
         logger.warning(
@@ -680,18 +723,63 @@ async def bootstrap_auth(user: CurrentSession):
         raise HTTPException(status_code=500, detail="Failed to bootstrap auth state.")
 
 
+@router.post("/oauth/refresh", status_code=200)
+async def refresh_oauth_token(body: dict):
+    """
+    Refresh expired access token using refresh token.
+    Frontend calls this before access_token expires to get a new one.
+    """
+    refresh_token = body.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing refresh_token",
+        )
+
+    client = create_client(settings.supabase_url, settings.supabase_anon_key)
+    try:
+        response = client.auth.refresh_session(refresh_token)
+        if not response.session:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token invalid or expired. Please sign in again.",
+            )
+        logger.info("Token refreshed")
+        return {
+            "access_token": response.session.access_token,
+            "refresh_token": response.session.refresh_token,
+            "token_type": "bearer",
+            "expires_in": response.session.expires_in,
+        }
+    except AuthApiError as exc:
+        logger.warning(
+            "Token refresh auth error",
+            error=str(exc),
+            code=getattr(exc, "code", None),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token invalid or expired. Please sign in again.",
+        )
+    except Exception as exc:
+        logger.error("Token refresh failed", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Token refresh service unavailable. Please try again.",
+        )
+
+
 @router.post("/logout", status_code=200)
-async def logout(user: CurrentUser):
+async def logout(session: CurrentSession):
     """
     Logs out the user by signing them out from Supabase.
     Frontend should clear localStorage tokens and redirect to login.
     """
-    client = get_user_client(user.access_token)
     try:
-        client.auth.sign_out()
-        logger.info("User logged out", user_id=user.user_id)
+        get_anon_client().auth.admin.sign_out(session.access_token)
+        logger.info("User logged out", user_id=session.user_id)
         return {"success": True, "message": "Logged out successfully"}
     except Exception as exc:
-        logger.warning("Logout failed", user_id=user.user_id, error=str(exc))
+        logger.warning("Logout failed", user_id=session.user_id, error=str(exc))
         # Still return success even if sign_out fails, frontend should clear tokens
         return {"success": True, "message": "Logged out successfully"}

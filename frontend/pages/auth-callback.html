@@ -303,7 +303,7 @@ function handOffViaWindowOpener(session, bootstrap, flow) {
     
     // Show success message in this tab
     document.getElementById('icon').textContent  = '✅';
-    document.getElementById('title').textContent = flow === 'login' ? 'You\\'re signed in!' : 'Email confirmed!';
+    document.getElementById('title').textContent = flow === 'login' ? "You're signed in!" : 'Email confirmed!';
     document.getElementById('sub').textContent   = 'Returning you to your original tab...';
     document.getElementById('spinner').style.display = 'none';
     
@@ -371,7 +371,7 @@ async function handleCallback() {
     localStorage.setItem('kazix_auth_flow', authFlow);
 
     document.getElementById('icon').textContent  = '✅';
-    document.getElementById('title').textContent = authFlow === 'login' ? 'You\'re signed in!' : 'Email confirmed!';
+    document.getElementById('title').textContent = authFlow === 'login' ? "You're signed in!" : 'Email confirmed!';
     document.getElementById('sub').textContent   = getSuccessMessage(nextPage, authFlow);
     document.getElementById('spinner').style.display = 'none';
 

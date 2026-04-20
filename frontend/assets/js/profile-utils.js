@@ -19,6 +19,24 @@
     fundi: 'worker-profile-edit.html',
     admin: 'admin-dashboard.html',
   };
+  const AUTH_STORAGE_KEYS = new Set([
+    'kazix_access_token',
+    'kazix_refresh_token',
+    'kazix_expires_in',
+    'kazix_token_type',
+    'kazix_user_id',
+    'kazix_role',
+    'kazix_login_email',
+    'kazix_magic_link_complete',
+    'kazix_auth_next_page',
+    'kazix_auth_flow',
+    'kazix_auth_waiter_id',
+    'kazix_auth_waiting_owner',
+    'kazix_auth_waiting_flow',
+    'kazix_auth_waiting_heartbeat',
+    'kazix_auth_waiting_started_at',
+  ]);
+  const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   let myProfilePromise = null;
 
   function getAccessToken() {
@@ -216,6 +234,51 @@
     };
   }
 
+  function wireNotificationButtons() {
+    document.querySelectorAll('.notif-btn').forEach((button) => {
+      if (button.dataset.notificationsWired === 'true') return;
+
+      button.dataset.notificationsWired = 'true';
+      button.style.cursor = 'pointer';
+
+      if (!button.getAttribute('aria-label')) {
+        button.setAttribute('aria-label', 'View notifications');
+      }
+
+      button.addEventListener('click', function () {
+        window.location.href = 'notifications.html';
+      });
+    });
+  }
+
+  function isSupabaseStorageKey(key) {
+    return key === 'supabase.auth.token'
+      || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key);
+  }
+
+  function clearMatchingStorage(storage) {
+    if (!storage) return;
+
+    for (let index = storage.length - 1; index >= 0; index -= 1) {
+      const key = storage.key(index);
+      if (!key) continue;
+
+      if (
+        AUTH_STORAGE_KEYS.has(key)
+        || AUTH_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
+        || isSupabaseStorageKey(key)
+      ) {
+        storage.removeItem(key);
+      }
+    }
+  }
+
+  function clearAuthStorage() {
+    myProfilePromise = null;
+    clearMatchingStorage(window.localStorage);
+    clearMatchingStorage(window.sessionStorage);
+  }
+
   async function hydrateShell(options = {}) {
     const { data = null, silent = true } = options;
 
@@ -237,6 +300,7 @@
       setAllText('.sidebar-bottom .sp-role', accountLabel);
       setDestination('.topnav .user-chip', accountHref);
       setDestination('.sidebar-bottom .sidebar-profile', accountHref);
+      wireNotificationButtons();
 
       return shellData;
     } catch (error) {
@@ -248,25 +312,18 @@
   async function logout() {
     try {
       const token = getAccessToken();
-      if (!token) {
-        throw new Error('No active session');
+      if (token) {
+        await requestJson('/v1/auth/logout', { auth: true, method: 'POST' });
       }
-      
-      // Call logout endpoint
-      await requestJson('/v1/auth/logout', { auth: true, method: 'POST' });
     } catch (error) {
       console.warn('Logout request failed:', error);
-      // Continue with local logout even if API call fails
+    } finally {
+      clearAuthStorage();
+
+      // Replace the current history entry so the user cannot bounce back into
+      // an authenticated page after logging out.
+      window.location.replace('login.html?logged_out=1');
     }
-
-    // Clear all session data from localStorage
-    localStorage.removeItem('kazix_access_token');
-    localStorage.removeItem('kazix_role');
-    localStorage.removeItem('kazix_refresh_token');
-    localStorage.removeItem('kazix_user_id');
-
-    // Redirect to login page
-    window.location.href = 'login.html';
   }
 
   window.KazixProfile = {
@@ -294,4 +351,10 @@
     setText,
     show,
   };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wireNotificationButtons);
+  } else {
+    wireNotificationButtons();
+  }
 })();

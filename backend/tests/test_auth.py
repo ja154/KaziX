@@ -34,6 +34,19 @@ class _FakeAuthLookupClient:
         )
 
 
+class _FakeLogoutAdmin:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    def sign_out(self, jwt: str, scope: str = "global") -> None:
+        self.calls.append((jwt, scope))
+
+
+class _FakeLogoutClient:
+    def __init__(self) -> None:
+        self.auth = SimpleNamespace(admin=_FakeLogoutAdmin())
+
+
 class _FakeResult:
     def __init__(self, data) -> None:
         self.data = data
@@ -336,3 +349,31 @@ async def test_bootstrap_accepts_asymmetric_supabase_tokens(monkeypatch) -> None
         "role": "client",
         "profile": None,
     }
+
+
+@pytest.mark.asyncio
+async def test_logout_uses_authenticated_session_token(monkeypatch) -> None:
+    secret = "test-jwt-secret"
+    fake_client = _FakeLogoutClient()
+    access_token = _make_bearer_token(secret)
+
+    monkeypatch.setattr(
+        deps_module,
+        "settings",
+        SimpleNamespace(supabase_jwt_secret=secret),
+    )
+    monkeypatch.setattr(auth_module, "get_anon_client", lambda: fake_client)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/v1/auth/logout",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "success": True,
+        "message": "Logged out successfully",
+    }
+    assert fake_client.auth.admin.calls == [(access_token, "global")]

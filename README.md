@@ -68,5 +68,17 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Open `http://localhost:8000/` for the website and `http://localhost:8000/docs` for API docs in development.
 
+## OAuth Setup
+
+Social login returns to `frontend/pages/auth-callback.html`, and Supabase must be allowed to send users back to that page.
+
+- Supabase Auth redirect URLs should include `http://localhost:8000/pages/auth-callback.html` for local development.
+- Google OAuth must authorize the Supabase callback URL, not the frontend page URL. For this project, that callback is `https://tziamornnxxsfofzyvpj.supabase.co/auth/v1/callback`.
+- Google OAuth should also allow the local JavaScript origin `http://localhost:8000` while developing.
+
+Reference docs:
+- https://supabase.com/docs/guides/auth/social-login/auth-google
+- https://supabase.com/docs/guides/auth/redirect-urls
+
 ## 🇰🇪 Built for Kenya
 KaziX is designed with the local context in mind, focusing on mobile-first accessibility and deep integration with M-Pesa workflows.

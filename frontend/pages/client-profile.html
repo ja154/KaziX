@@ -29,8 +29,12 @@
 .p-divider{height:1px;background:var(--border);margin:1rem 0}
 .p-location,.p-member{font-size:0.8rem;color:var(--muted)}
 .p-location{display:flex;align-items:center;gap:0.45rem;margin-bottom:0.45rem}
-.public-link{display:block;margin-top:1.1rem;text-align:center;padding:0.72rem;border:1.5px solid var(--border);border-radius:2px;color:var(--ink);text-decoration:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;transition:all 0.2s}
+.profile-actions{display:grid;gap:0.7rem;margin-top:1.1rem}
+.public-link{display:block;text-align:center;padding:0.72rem;border:1.5px solid var(--border);border-radius:2px;color:var(--ink);text-decoration:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;transition:all 0.2s}
 .public-link:hover{border-color:var(--ink);background:var(--cream)}
+.logout-btn{display:block;width:100%;padding:0.72rem;border:1.5px solid rgba(192,57,43,0.28);border-radius:2px;background:white;color:var(--rust);font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;transition:all 0.2s}
+.logout-btn:hover{border-color:var(--rust);background:rgba(192,57,43,0.06)}
+.logout-btn:disabled{opacity:0.6;cursor:wait}
 .profile-right{display:flex;flex-direction:column;gap:1.25rem}
 .section-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:0.75rem}
@@ -58,6 +62,9 @@
 .save-btn{padding:0.85rem 1.4rem;background:var(--ink);color:#F5F0E8;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.84rem;cursor:pointer;transition:background 0.2s}
 .save-btn:hover{background:var(--green)}
 .save-btn:disabled{opacity:0.6;cursor:wait}
+.mobile-logout-btn{width:100%;background:none;border:none;text-align:left;cursor:pointer;color:#F5B7AE;font-family:'DM Sans',sans-serif}
+.mobile-logout-btn:hover{background:rgba(192,57,43,0.16);color:#F5F0E8}
+.mobile-logout-btn:disabled{opacity:0.6;cursor:wait}
 
 @media(max-width:900px){
   .sidebar{display:none}
@@ -122,7 +129,10 @@
           <div class="p-divider"></div>
           <div class="p-location" id="profileLocation">📍 Loading location…</div>
           <div class="p-member" id="profileMember">Member since…</div>
-          <a class="public-link" id="publicProfileLink" href="client-public-profile.html">View Public Profile</a>
+          <div class="profile-actions">
+            <a class="public-link" id="publicProfileLink" href="client-public-profile.html">View Public Profile</a>
+            <button class="logout-btn" type="button" onclick="window.KazixProfile.logout()">Log Out</button>
+          </div>
         </div>
       </section>
 
@@ -221,6 +231,7 @@
       <a class="mobile-nav-drawer-item" href="payments.html">💳 Payments</a>
       <a class="mobile-nav-drawer-item" href="reviews.html">⭐ Reviews</a>
       <a class="mobile-nav-drawer-item" href="saved-workers.html">❤️ Saved Fundis</a>
+      <button class="mobile-nav-drawer-item mobile-logout-btn" type="button" onclick="window.KazixProfile.logout()">↩ Log Out</button>
     </div>
   </div>
 </nav>

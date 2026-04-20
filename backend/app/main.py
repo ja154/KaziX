@@ -9,14 +9,18 @@ import asyncio
 from contextlib import asynccontextmanager
 
 import sentry_sdk
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 from app.web import mount_frontend
+
+limiter = Limiter(key_func=get_remote_address)
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -94,8 +98,22 @@ def create_app() -> FastAPI:
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
-        allow_headers=["*"],
+        allow_headers=["*", "Authorization"],
+        max_age=86400,
     )
+
+    # Security headers middleware
+    @app.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = "default-src 'self' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:"
+        return response
+
+    app.state.limiter = limiter
 
     if settings.is_production:
         app.add_middleware(
@@ -112,7 +130,8 @@ def create_app() -> FastAPI:
 
     # ── Health probe ─────────────────────────────────────────
     @app.get("/health", tags=["ops"])
-    async def health():
+    @limiter.limit("10/minute")
+    async def health(request: Request):
         return {"status": "ok", "env": settings.app_env}
 
     # ── Frontend pages/assets ───────────────────────────────
