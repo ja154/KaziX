@@ -437,6 +437,26 @@ function toDisplayError(err, fallback) {
   return message || fallback;
 }
 
+function summarizeResponseText(text) {
+  return text.replace(/\s+/g, ' ').trim().slice(0, 240);
+}
+
+async function readApiResponse(resp) {
+  const text = await resp.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    if (!resp.ok) {
+      return {
+        detail: summarizeResponseText(text) || `Request failed with ${resp.status} ${resp.statusText}.`,
+      };
+    }
+    throw new Error('The server returned an unexpected response.');
+  }
+}
+
 function selectType(type) {
   regRole = type;
   document.getElementById('typeClient').classList.toggle('selected', type === 'client');
@@ -633,8 +653,8 @@ async function sendRegOtp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, email_redirect_to: callbackUrl }),
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Failed to send verification link');
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to send verification link');
 
     saveRegFormData();
     document.getElementById('regSentEmail').textContent = email;
@@ -668,8 +688,8 @@ async function resendRegOtp() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, email_redirect_to: callbackUrl }),
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Failed to resend verification link');
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to resend verification link');
 
     startRegCountdown();
   } catch (err) {
@@ -797,8 +817,8 @@ async function submitReg() {
       },
       body: JSON.stringify(payload),
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Failed to create profile');
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to create profile');
 
     localStorage.setItem('kazix_role', payload.role);
   } catch (err) {
@@ -814,7 +834,7 @@ async function submitReg() {
   if (regRole === 'pro') {
     document.getElementById('successEmoji').textContent = '🔧';
     document.getElementById('successTitle').textContent = 'Welcome to KaziX!';
-    document.getElementById('successSub').textContent = 'Your profile is under review. We\'ll verify your ID within 2–4 hours and notify you by SMS. You can already browse available jobs!';
+    document.getElementById('successSub').textContent = 'Your profile is under review. We\'ll verify your ID within 2–4 hours and notify you once it\'s approved. You can already browse available jobs!';
     document.getElementById('regSuccess').querySelectorAll('a')[0].href = 'worker-profile-edit.html';
     document.getElementById('regSuccess').querySelectorAll('a')[0].textContent = 'Open My Profile';
     document.getElementById('regSuccess').querySelectorAll('a')[1].href = 'worker-jobs.html';

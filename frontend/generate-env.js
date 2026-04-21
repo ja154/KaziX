@@ -49,7 +49,7 @@ for (const rawLine of lines) {
 const supabaseUrl = vars.VITE_SUPABASE_URL || vars.SUPABASE_URL;
 const supabaseAnonKey = vars.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY;
 const supabaseRedirectUrl = vars.SUPABASE_REDIRECT_URL || null;
-const apiBase = vars.KAZIX_API_BASE || vars.VITE_API_URL || null;
+const apiBase = vars.KAZIX_API_BASE || vars.VITE_API_URL || vars.BACKEND_API_URL || null;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in frontend/.env.');

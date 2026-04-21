@@ -258,6 +258,26 @@ function toDisplayError(err, fallback) {
   return message || fallback;
 }
 
+function summarizeResponseText(text) {
+  return text.replace(/\s+/g, ' ').trim().slice(0, 240);
+}
+
+async function readApiResponse(resp) {
+  const text = await resp.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (_error) {
+    if (!resp.ok) {
+      return {
+        detail: summarizeResponseText(text) || `Request failed with ${resp.status} ${resp.statusText}.`,
+      };
+    }
+    throw new Error('The server returned an unexpected response.');
+  }
+}
+
 function getCanonicalLocalCallbackUrl(flow = 'login') {
   const url = new URL(window.location.href);
   if (url.hostname === '0.0.0.0') {
@@ -423,8 +443,8 @@ async function requestMagicLink(email) {
       email_redirect_to: getMagicLinkCallbackUrl('login'),
     }),
   });
-  const data = await resp.json();
-  if (!resp.ok) throw new Error(data.detail || 'Failed to send sign-in link');
+  const data = await readApiResponse(resp);
+  if (!resp.ok) throw new Error(data?.detail || 'Failed to send sign-in link');
   return data;
 }
 
@@ -548,8 +568,8 @@ async function sendOTP() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: `+254${phone}` }),
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Failed to send OTP');
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to send OTP');
     showOTPPanel(phone);
   } catch (err) {
     alert(toDisplayError(err, 'Could not send OTP.'));
@@ -619,8 +639,8 @@ async function verifyOTP() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone: `+254${phone}`, token: code }),
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || 'Invalid OTP');
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Invalid OTP');
     finishAuth(data);
   } catch (err) {
     alert(toDisplayError(err, 'OTP verification failed.'));
