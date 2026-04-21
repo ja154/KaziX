@@ -5,6 +5,28 @@ const root = path.resolve(__dirname);
 const envPath = path.join(root, '.env');
 const outPath = path.join(root, 'env.js');
 
+// --- Patch: Create .env from process.env if missing (for Vercel build) ---
+if (!fs.existsSync(envPath)) {
+  // List all required env vars here
+  const envVars = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY',
+    'SUPABASE_REDIRECT_URL',
+    'SUPABASE_URL',
+    'SUPABASE_ANON_KEY',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
+    'OAUTH_REDIRECT_URI',
+    'VITE_API_URL',
+    'KAZIX_API_BASE',
+    'BACKEND_API_URL',
+  ];
+  const envContent = envVars
+    .map(key => `${key}=${process.env[key] || ''}`)
+    .join('\n');
+  fs.writeFileSync(envPath, envContent);
+}
+
 if (!fs.existsSync(envPath)) {
   throw new Error('frontend/.env not found. Create it with SUPABASE_URL and SUPABASE_ANON_KEY.');
 }
