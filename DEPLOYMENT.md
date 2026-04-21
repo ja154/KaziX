@@ -59,8 +59,8 @@ If you prefer not to use Blueprints:
    - `APP_PORT=8000`
    - `PORT=8000`
    - `LOG_LEVEL=INFO`
-   - `ALLOWED_ORIGINS=https://kazixfrontend.vercel.app,https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000`
-   - `ALLOWED_HOSTS=localhost,127.0.0.1,*.onrender.com,api.kazix.co.ke`
+   - **`ALLOWED_ORIGINS=https://kazixfrontend.vercel.app`** ← Add current frontend URL (required for CORS)
+   - `ALLOWED_HOSTS=localhost,127.0.0.1,kazix-api.onrender.com,api.kazix.co.ke`
    - `MPESA_ENV=sandbox`
    - `MPESA_SHORTCODE=174379`
    - `MPESA_CALLBACK_URL=https://kazix-api.onrender.com/v1/mpesa/callback`
@@ -98,6 +98,32 @@ Add these URLs in Supabase Auth:
   - `https://kazix.co.ke/pages/auth-callback.html` if using a custom frontend domain
 
 For Google OAuth, keep using the Supabase callback URL from your Supabase project.
+
+## 3b. Fix CORS Errors (Cross-Origin Request Blocking)
+
+If you see browser errors like:
+```
+Access to fetch at 'https://kazix-api.onrender.com/v1/auth/send-otp' 
+from origin 'https://kazixfrontend.vercel.app' has been blocked by CORS policy
+```
+
+**Root Cause:** The backend's `ALLOWED_ORIGINS` environment variable does not include your frontend's URL.
+
+**Solution:**
+
+1. Go to **Render Dashboard** → Select `kazix-api` service → **Environment** tab
+2. Find (or add) the environment variable: `ALLOWED_ORIGINS`
+3. Set the value to your frontend URL(s):
+   - **For current production:** `ALLOWED_ORIGINS=https://kazixfrontend.vercel.app`
+   - **When adding custom domain:** `ALLOWED_ORIGINS=https://kazixfrontend.vercel.app,https://kazix.vercel.app`
+4. **Save** and **Redeploy** the service
+5. After redeploy, test by:
+   - Opening DevTools (F12) → **Network** tab
+   - Try sending an OTP or making any API call
+   - Verify the preflight OPTIONS request returns status **200** with `Access-Control-Allow-Origin` response header
+   - If fixed, the POST request should also succeed
+
+For more details, see the template at `backend/.env.production.example`.
 
 ## 4. Custom Domains
 
