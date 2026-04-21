@@ -37,6 +37,7 @@ This repo is now wired for a `Vercel + Render` deployment:
 Render will create a web service named `kazix-api` with:
 
 - Docker context: `backend/`
+- Dockerfile path: `backend/Dockerfile`
 - Health check: `/health`
 - Default hostname: `https://kazix-api.onrender.com`
 
@@ -48,8 +49,9 @@ If you prefer not to use Blueprints:
 2. Connect the GitHub repo.
 3. Configure the service:
    - Runtime: `Docker`
-   - Dockerfile Path: `./backend/Dockerfile`
-   - Docker Build Context: `./backend`
+   - Dockerfile Path: `backend/Dockerfile`
+   - Docker Build Context: `backend`
+   - Root Directory: leave blank
    - Region: `Frankfurt`
 4. Add environment variables:
    - `APP_ENV=production`
