@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import field_validator
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
@@ -20,17 +20,22 @@ class Settings(BaseSettings):
     app_env: Literal["development", "production", "testing"] = "development"
     app_secret_key: str
     app_host: str = "0.0.0.0"
-    app_port: int = 8000
+    app_port: int = Field(default=8000, validation_alias=AliasChoices("APP_PORT", "PORT"))
     allowed_origins: str = (
         "http://localhost:8000,http://127.0.0.1:8000,"
         "http://localhost:5000,http://127.0.0.1:5000,"
         "http://localhost:5173,http://127.0.0.1:5173,"
         "http://localhost:3000,http://127.0.0.1:3000"
     )
+    allowed_hosts: str = "localhost,127.0.0.1"
 
     @property
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+
+    @property
+    def trusted_hosts(self) -> list[str]:
+        return [host.strip() for host in self.allowed_hosts.split(",") if host.strip()]
 
     @property
     def is_production(self) -> bool:

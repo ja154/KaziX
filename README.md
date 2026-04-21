@@ -68,6 +68,21 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 Open `http://localhost:8000/` for the website and `http://localhost:8000/docs` for API docs in development.
 
+## Deployment
+
+The recommended production setup is:
+
+- Frontend: Vercel (`frontend/`)
+- Backend API: Render (`backend/`)
+- Database/Auth: Supabase
+
+Deployment files now included in the repo:
+
+- [frontend/vercel.json](/home/jay/Desktop/KaziX/frontend/vercel.json)
+- [frontend/package.json](/home/jay/Desktop/KaziX/frontend/package.json)
+- [render.yaml](/home/jay/Desktop/KaziX/render.yaml)
+- [DEPLOYMENT.md](/home/jay/Desktop/KaziX/DEPLOYMENT.md)
+
 ## OAuth Setup
 
 Social login returns to `frontend/pages/auth-callback.html`, and Supabase must be allowed to send users back to that page.

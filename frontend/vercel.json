@@ -1,0 +1,28 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/pages/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/pages",
+      "destination": "/pages/index.html",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/env.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ]
+}

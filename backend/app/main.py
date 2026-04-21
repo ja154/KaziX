@@ -118,7 +118,7 @@ def create_app() -> FastAPI:
     if settings.is_production:
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=["api.kazix.co.ke", "*.kazix.co.ke"],
+            allowed_hosts=settings.trusted_hosts,
         )
 
     # ── Prometheus metrics (/metrics) ───────────────────────

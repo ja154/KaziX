@@ -27,6 +27,7 @@ for (const rawLine of lines) {
 const supabaseUrl = vars.VITE_SUPABASE_URL || vars.SUPABASE_URL;
 const supabaseAnonKey = vars.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY;
 const supabaseRedirectUrl = vars.SUPABASE_REDIRECT_URL || null;
+const apiBase = vars.KAZIX_API_BASE || vars.VITE_API_URL || null;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in frontend/.env.');
@@ -35,6 +36,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const config = {
   SUPABASE_URL: supabaseUrl,
   SUPABASE_ANON_KEY: supabaseAnonKey,
+  ...(apiBase ? { KAZIX_API_BASE: apiBase.replace(/\/$/, '') } : {}),
   ...(supabaseRedirectUrl ? { SUPABASE_REDIRECT_URL: supabaseRedirectUrl } : {}),
 };
 
@@ -45,6 +47,7 @@ const content = `// Generated from frontend/.env. Do not edit directly.
   window.KAZIX_CONFIG = config;
   window.SUPABASE_URL = window.SUPABASE_URL || config.SUPABASE_URL;
   window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || config.SUPABASE_ANON_KEY;
+  window.KAZIX_API_BASE = window.KAZIX_API_BASE || config.KAZIX_API_BASE;
   window.SUPABASE_REDIRECT_URL = window.SUPABASE_REDIRECT_URL || config.SUPABASE_REDIRECT_URL;
 })();
 `;

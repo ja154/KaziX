@@ -1,52 +1,46 @@
-# Build stage
-FROM python:3.11-slim-alpine AS builder
+# ── Build stage ────────────────────────────────────────────────────────────────
+FROM python:3.11-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev
+# Build deps: gcc for C extensions, musl-dev for libc, libffi/openssl for cryptography
+RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev curl
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements
 COPY requirements.txt .
 
-# Install Python dependencies into a virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Runtime stage
-FROM python:3.11-slim-alpine
+# ── Runtime stage ───────────────────────────────────────────────────────────────
+FROM python:3.11-alpine
 
-# Install runtime dependencies only
-RUN apk add --no-cache libffi openssl
+# Runtime libs + curl (required by HEALTHCHECK)
+RUN apk add --no-cache libffi openssl curl
 
-# Create non-root user for security
-RUN addgroup -g 1000 kazix && adduser -D -u 1000 -G kazix kazix
+# Non-root user
+RUN addgroup -g 1000 kazix \
+ && adduser -D -u 1000 -G kazix kazix
 
-# Set working directory
 WORKDIR /app
 
-# Copy virtual environment from builder
+# Copy venv from builder
 COPY --from=builder --chown=kazix:kazix /opt/venv /opt/venv
 
-# Copy application code
+# Copy application source
 COPY --chown=kazix:kazix . .
 
-# Set environment variables
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Switch to non-root user
 USER kazix
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+# grace_period gives uvicorn time to fully boot before first probe
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD sh -c 'curl -f "http://localhost:${PORT:-8000}/health" || exit 1'
 
-# Expose port
 EXPOSE 8000
 
-# Start the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

@@ -1,0 +1,10 @@
+{
+  "name": "kazix-frontend",
+  "private": true,
+  "scripts": {
+    "build": "node generate-env.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

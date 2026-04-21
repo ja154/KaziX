@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: kazix-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    rootDir: backend
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: APP_ENV
+        value: production
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: APP_PORT
+        value: "8000"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ALLOWED_ORIGINS
+        value: https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000
+      - key: ALLOWED_HOSTS
+        value: localhost,127.0.0.1,*.onrender.com,api.kazix.co.ke
+      - key: MPESA_ENV
+        value: sandbox
+      - key: MPESA_SHORTCODE
+        value: "174379"
+      - key: MPESA_CALLBACK_URL
+        value: https://kazix-api.onrender.com/v1/mpesa/callback
+      - key: AT_USERNAME
+        value: sandbox
+      - key: AT_SENDER_ID
+        value: KaziX
+      - key: OTP_MAX_RETRIES
+        value: "3"
+      - key: OTP_INITIAL_BACKOFF_MS
+        value: "100"
+      - key: OTP_MAX_BACKOFF_MS
+        value: "5000"
+      - key: OTP_BACKOFF_MULTIPLIER
+        value: "2.0"
+      - key: OTP_JITTER_ENABLED
+        value: "true"
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: MPESA_CONSUMER_KEY
+        sync: false
+      - key: MPESA_CONSUMER_SECRET
+        sync: false
+      - key: MPESA_PASSKEY
+        sync: false
+      - key: AT_API_KEY
+        sync: false
