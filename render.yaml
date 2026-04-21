@@ -19,7 +19,7 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: ALLOWED_ORIGINS
-        value: https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000
+        value: https://kazixfrontend.vercel.app,https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000
       - key: ALLOWED_HOSTS
         value: localhost,127.0.0.1,*.onrender.com,api.kazix.co.ke
       - key: MPESA_ENV

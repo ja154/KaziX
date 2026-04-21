@@ -59,7 +59,7 @@ If you prefer not to use Blueprints:
    - `APP_PORT=8000`
    - `PORT=8000`
    - `LOG_LEVEL=INFO`
-   - `ALLOWED_ORIGINS=https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000`
+   - `ALLOWED_ORIGINS=https://kazixfrontend.vercel.app,https://kazix.vercel.app,https://kazix.co.ke,http://localhost:3000,http://127.0.0.1:3000`
    - `ALLOWED_HOSTS=localhost,127.0.0.1,*.onrender.com,api.kazix.co.ke`
    - `MPESA_ENV=sandbox`
    - `MPESA_SHORTCODE=174379`
@@ -79,7 +79,7 @@ If you prefer not to use Blueprints:
 4. Add these environment variables in Vercel:
    - `VITE_SUPABASE_URL=https://your-project.supabase.co`
    - `VITE_SUPABASE_ANON_KEY=your-supabase-anon-key`
-   - `SUPABASE_REDIRECT_URL=https://kazix.vercel.app/pages/auth-callback.html`
+   - `SUPABASE_REDIRECT_URL=https://kazixfrontend.vercel.app/pages/auth-callback.html`
    - `VITE_API_URL=https://kazix-api.onrender.com`
 5. Deploy.
 
@@ -90,9 +90,10 @@ The checked-in `frontend/vercel.json` will make `/` load `pages/index.html`.
 Add these URLs in Supabase Auth:
 
 - Site URL:
-  - `https://kazix.vercel.app`
+  - `https://kazixfrontend.vercel.app`
 - Redirect URLs:
   - `http://localhost:8000/pages/auth-callback.html`
+  - `https://kazixfrontend.vercel.app/pages/auth-callback.html`
   - `https://kazix.vercel.app/pages/auth-callback.html`
   - `https://kazix.co.ke/pages/auth-callback.html` if using a custom frontend domain
 
@@ -134,9 +135,9 @@ Expected response:
 
 Frontend checks:
 
-1. Open `https://kazix.vercel.app/`
+1. Open `https://kazixfrontend.vercel.app/`
 2. Confirm the landing page loads.
-3. Open `https://kazix.vercel.app/pages/login.html`
+3. Open `https://kazixfrontend.vercel.app/pages/login.html`
 4. Confirm login and auth bootstrap calls go to the Render API host.
 
 ## 6. Notes

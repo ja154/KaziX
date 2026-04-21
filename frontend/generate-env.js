@@ -66,10 +66,29 @@ const content = `// Generated from frontend/.env. Do not edit directly.
 (function () {
   const config = ${JSON.stringify(config, null, 2)};
 
+  function inferApiBase() {
+    const host = window.location.hostname;
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(host)) {
+      return null;
+    }
+
+    if (
+      host === 'kazixfrontend.vercel.app' ||
+      host === 'kazix.vercel.app' ||
+      host === 'kazix.co.ke' ||
+      host === 'www.kazix.co.ke' ||
+      host.endsWith('.kazix.co.ke')
+    ) {
+      return 'https://kazix-api.onrender.com';
+    }
+
+    return null;
+  }
+
   window.KAZIX_CONFIG = config;
   window.SUPABASE_URL = window.SUPABASE_URL || config.SUPABASE_URL;
   window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || config.SUPABASE_ANON_KEY;
-  window.KAZIX_API_BASE = window.KAZIX_API_BASE || config.KAZIX_API_BASE;
+  window.KAZIX_API_BASE = window.KAZIX_API_BASE || config.KAZIX_API_BASE || inferApiBase();
   window.SUPABASE_REDIRECT_URL = window.SUPABASE_REDIRECT_URL || config.SUPABASE_REDIRECT_URL;
 })();
 `;
