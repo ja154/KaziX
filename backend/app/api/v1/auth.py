@@ -16,8 +16,8 @@ import secrets
 import time
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, status, Request
-from gotrue.errors import AuthApiError, AuthRetryableError
+from fastapi import APIRouter, HTTPException, Request, status
+from gotrue.errors import AuthApiError
 from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -25,6 +25,7 @@ from app.api.deps import CurrentSession, CurrentUser
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.supabase import get_admin_client, get_anon_client, get_user_client
+from app.services.profile_defaults import build_default_profile_row
 from supabase import create_client
 
 logger = get_logger(__name__)
@@ -398,14 +399,10 @@ async def register_with_email(body: EmailRegisterRequest):
     user_id = getattr(created_user.user, "id", None)
     if user_id:
         try:
-            default_profile = {
-                "id": user_id,
-                "role": "client",
-                "full_name": "User",
-                "phone": f"{body.email.split('@')[0]}@pending",  # Temporary placeholder
-                "email": body.email,
-                "preferred_language": "en",
-            }
+            default_profile = build_default_profile_row(
+                user_id,
+                email=body.email,
+            )
             admin.table("profiles").insert(default_profile).execute()
             logger.info(
                 "Default profile created for new user",
@@ -652,14 +649,11 @@ async def verify_otp(body: VerifyOTPRequest):
             # Only create default profile if one doesn't already exist
             if not existing.data:
                 destination = body.phone if body.phone else str(body.email)
-                default_profile = {
-                    "id": user_id,
-                    "role": "client",
-                    "full_name": "User",
-                    "phone": body.phone or f"{str(body.email).split('@')[0]}@pending",
-                    "email": body.email if body.email else None,
-                    "preferred_language": "en",
-                }
+                default_profile = build_default_profile_row(
+                    user_id,
+                    phone=body.phone,
+                    email=body.email,
+                )
                 admin.table("profiles").insert(default_profile).execute()
                 logger.info(
                     "Default profile created for new OTP user",
@@ -827,7 +821,7 @@ async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"OAuth verification failed. Check that your authorization code is valid and not expired.",
+            detail="OAuth verification failed. Check that your authorization code is valid and not expired.",
         )
     except Exception as exc:
         logger.error(

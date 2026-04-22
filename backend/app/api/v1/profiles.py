@@ -11,9 +11,12 @@ from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import CurrentSession, CurrentUser
+from app.core.logging import get_logger
 from app.core.supabase import get_admin_client, get_anon_client, get_user_client
+from app.services.profile_defaults import build_default_profile_row
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 class UpdateMyProfileRequest(BaseModel):
@@ -75,14 +78,28 @@ def _profile_update_http_error(exc: Exception) -> HTTPException:
     return HTTPException(status_code=500, detail="Failed to save profile changes.")
 
 
-def _collect_profile_sections(admin, user_id: str, *, public: bool) -> dict:
+def _collect_profile_sections(
+    admin,
+    user_id: str,
+    *,
+    public: bool,
+    enforce_active: bool = False,
+) -> dict:
+    private_columns = (
+        "id, role, full_name, phone, email, county, area, mpesa_number, "
+        "preferred_language, avatar_url, is_verified, created_at, updated_at"
+    )
+    if enforce_active:
+        private_columns = (
+            "id, role, full_name, phone, email, county, area, mpesa_number, "
+            "preferred_language, avatar_url, is_verified, is_suspended, "
+            "created_at, updated_at"
+        )
+
     profile = (
         admin.table("profiles")
         .select(
-            (
-                "id, role, full_name, phone, email, county, area, mpesa_number, "
-                "preferred_language, avatar_url, is_verified, created_at, updated_at"
-            )
+            private_columns
             if not public
             else (
                 "id, role, full_name, county, area, preferred_language, avatar_url, "
@@ -97,9 +114,16 @@ def _collect_profile_sections(admin, user_id: str, *, public: bool) -> dict:
     if not profile.data:
         raise HTTPException(status_code=404, detail="Profile not found")
 
-    payload = {"profile": profile.data, "fundi_profile": None}
+    profile_data = dict(profile.data)
+    if not public and enforce_active and profile_data.pop("is_suspended", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is suspended. Contact support.",
+        )
 
-    if profile.data["role"] == "fundi":
+    payload = {"profile": profile_data, "fundi_profile": None}
+
+    if profile_data["role"] == "fundi":
         fundi = (
             admin.table("fundi_profiles")
             .select(
@@ -116,15 +140,80 @@ def _collect_profile_sections(admin, user_id: str, *, public: bool) -> dict:
     return payload
 
 
+def _fetch_auth_user(access_token: str):
+    try:
+        response = get_anon_client().auth.get_user(jwt=access_token)
+        return getattr(response, "user", None) if response else None
+    except Exception as exc:
+        logger.warning("Could not load auth user for profile bootstrap", error=str(exc))
+        return None
+
+
+def _ensure_profile_exists(admin, session: CurrentSession) -> dict:
+    try:
+        return _collect_profile_sections(
+            admin,
+            session.user_id,
+            public=False,
+            enforce_active=True,
+        )
+    except HTTPException as exc:
+        if exc.status_code != status.HTTP_404_NOT_FOUND:
+            raise
+
+        auth_user = _fetch_auth_user(session.access_token)
+        default_profile = build_default_profile_row(
+            session.user_id,
+            phone=getattr(auth_user, "phone", None),
+            email=getattr(auth_user, "email", None),
+        )
+
+        try:
+            admin.table("profiles").insert(default_profile).execute()
+            logger.info(
+                "Auto-created default profile from /v1/profiles/me",
+                user_id=session.user_id,
+                has_phone=bool(default_profile["phone"]),
+                has_email=bool(default_profile["email"]),
+            )
+        except Exception as profile_exc:
+            try:
+                return _collect_profile_sections(
+                    admin,
+                    session.user_id,
+                    public=False,
+                    enforce_active=True,
+                )
+            except HTTPException as refetch_exc:
+                if refetch_exc.status_code != status.HTTP_404_NOT_FOUND:
+                    raise refetch_exc
+
+            logger.warning(
+                "Failed to auto-create default profile from /v1/profiles/me",
+                user_id=session.user_id,
+                error=str(profile_exc),
+                code=getattr(profile_exc, "code", None),
+            )
+            raise exc
+
+        return _collect_profile_sections(
+            admin,
+            session.user_id,
+            public=False,
+            enforce_active=True,
+        )
+
+
 @router.get("/me")
-async def get_my_profile(user: CurrentUser):
+async def get_my_profile(session: CurrentSession):
     """
     Returns the full private profile of the logged-in user.
     Includes fundi-specific profile data if applicable.
+    Auto-creates a default profile if one does not exist yet.
     """
     admin = get_admin_client()
     try:
-        return _collect_profile_sections(admin, user.user_id, public=False)
+        return _ensure_profile_exists(admin, session)
     except HTTPException:
         raise
     except Exception:
