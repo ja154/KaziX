@@ -393,6 +393,36 @@ async def register_with_email(body: EmailRegisterRequest):
         user_id=getattr(created_user.user, "id", None),
     )
 
+    # Create a default profile row so /v1/profiles/me doesn't 404 for new users
+    # Users will update this during the profile completion step
+    user_id = getattr(created_user.user, "id", None)
+    if user_id:
+        try:
+            default_profile = {
+                "id": user_id,
+                "role": "client",
+                "full_name": "User",
+                "phone": f"{body.email.split('@')[0]}@pending",  # Temporary placeholder
+                "email": body.email,
+                "preferred_language": "en",
+            }
+            admin.table("profiles").insert(default_profile).execute()
+            logger.info(
+                "Default profile created for new user",
+                user_id=user_id,
+                email=_mask_email(body.email),
+            )
+        except Exception as exc:
+            # Non-blocking: log but don't fail signup if profile creation fails
+            logger.warning(
+                "Default profile creation failed during signup, continuing anyway",
+                user_id=user_id,
+                email=_mask_email(body.email),
+                error=str(exc),
+                code=getattr(exc, "code", None),
+                details=getattr(exc, "details", None),
+            )
+
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
     try:
         response = client.auth.sign_in_with_password(
@@ -607,6 +637,43 @@ async def verify_otp(body: VerifyOTPRequest):
 
     user_id = response.user.id
     admin = get_admin_client()
+    
+    # Create a default profile row if this is a new user from OTP
+    # This ensures /v1/profiles/me doesn't 404 for new OTP users
+    if response.user:
+        try:
+            existing = (
+                admin.table("profiles")
+                .select("id")
+                .eq("id", user_id)
+                .maybe_single()
+                .execute()
+            )
+            # Only create default profile if one doesn't already exist
+            if not existing.data:
+                destination = body.phone if body.phone else str(body.email)
+                default_profile = {
+                    "id": user_id,
+                    "role": "client",
+                    "full_name": "User",
+                    "phone": body.phone or f"{str(body.email).split('@')[0]}@pending",
+                    "email": body.email if body.email else None,
+                    "preferred_language": "en",
+                }
+                admin.table("profiles").insert(default_profile).execute()
+                logger.info(
+                    "Default profile created for new OTP user",
+                    user_id=user_id,
+                    destination=destination[-4:] if body.phone else _mask_email(destination),
+                )
+        except Exception as exc:
+            # Non-blocking: log but don't fail OTP verification if profile creation fails
+            logger.warning(
+                "Default profile creation failed during OTP verification, continuing anyway",
+                user_id=user_id,
+                error=str(exc),
+                code=getattr(exc, "code", None),
+            )
 
     try:
         _, is_new_user, redirect_to = _resolve_profile_state(admin, user_id)

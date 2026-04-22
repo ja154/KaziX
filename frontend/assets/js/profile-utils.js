@@ -121,6 +121,24 @@
     if (!myProfilePromise) {
       myProfilePromise = requestJson('/v1/profiles/me', { auth: true }).catch((error) => {
         myProfilePromise = null;
+        
+        // Handle 404 Profile not found — user hasn't completed registration yet
+        if (error.message && error.message.includes('404') || error.message.includes('Profile not found')) {
+          // Clear auth tokens and redirect to registration
+          AUTH_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
+          AUTH_STORAGE_PREFIXES.forEach(prefix => {
+            const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
+            keys.forEach(k => localStorage.removeItem(k));
+          });
+          
+          const redirectUrl = 'register.html?mode=complete-profile';
+          console.warn('Profile not found for authenticated user. Redirecting to registration:', error.message);
+          window.location.replace(redirectUrl);
+          
+          // Return a rejected promise in case redirect is blocked
+          return Promise.reject(new Error('Profile not found. Please complete your registration.'));
+        }
+        
         throw error;
       });
     }
