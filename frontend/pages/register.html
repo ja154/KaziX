@@ -427,24 +427,23 @@ function resolveApiBase() {
   ]);
   const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
 
-  if (!useSameOriginProxy) {
-    return (configured || window.location.origin).replace(/\/$/, '');
-  }
-
-  if (!configured) {
-    return '';
-  }
-
-  try {
-    const configuredUrl = new URL(configured, window.location.origin);
-    if (configuredUrl.origin !== window.location.origin) {
-      return '';
+  if (configured) {
+    try {
+      const configuredUrl = new URL(configured, window.location.origin);
+      if (configuredUrl.origin === window.location.origin && configuredUrl.pathname === '/') {
+        return '';
+      }
+      return configuredUrl.toString().replace(/\/$/, '');
+    } catch (_error) {
+      return configured.replace(/\/$/, '');
     }
-  } catch (_error) {
+  }
+
+  if (useSameOriginProxy) {
     return '';
   }
 
-  return configured.replace(/\/$/, '');
+  return window.location.origin.replace(/\/$/, '');
 }
 
 const API_BASE = resolveApiBase();

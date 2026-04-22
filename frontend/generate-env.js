@@ -81,43 +81,34 @@ const content = `// Generated from frontend/.env. Do not edit directly.
     return PROXY_API_HOSTS.has(host) || host.endsWith('.kazix.co.ke');
   }
 
-  function inferApiBase() {
-    const host = window.location.hostname;
-    if (isLocalHost(host)) {
+  function normalizeApiBase(candidate) {
+    if (!candidate) {
       return null;
     }
 
+    try {
+      const url = new URL(candidate, window.location.origin);
+      if (url.origin === window.location.origin && url.pathname === '/') {
+        return '';
+      }
+      return url.toString().replace(/\\/$/, '');
+    } catch (_error) {
+      return candidate.replace(/\\/$/, '');
+    }
+  }
+
+  function inferApiBase() {
+    const host = window.location.hostname;
     if (shouldUseSameOriginProxy(host)) {
-      // Prefer Vercel rewrites for deployed frontend hosts so browser requests
-      // stay same-origin and do not depend on backend CORS headers.
-      return '/';
+      return '';
     }
 
     return null;
   }
 
   function resolveApiBase() {
-    const configuredApiBase = config.KAZIX_API_BASE ? config.KAZIX_API_BASE.replace(/\\/$/, '') : null;
-    const host = window.location.hostname;
-
-    if (!shouldUseSameOriginProxy(host)) {
-      return configuredApiBase || inferApiBase();
-    }
-
-    if (!configuredApiBase) {
-      return inferApiBase();
-    }
-
-    try {
-      const configuredUrl = new URL(configuredApiBase, window.location.origin);
-      if (configuredUrl.origin !== window.location.origin) {
-        return '/';
-      }
-    } catch (_error) {
-      return '/';
-    }
-
-    return configuredApiBase;
+    const configuredApiBase = normalizeApiBase(config.KAZIX_API_BASE);
+    return configuredApiBase ?? inferApiBase();
   }
 
   window.KAZIX_CONFIG = config;

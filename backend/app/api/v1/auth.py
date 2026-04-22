@@ -347,7 +347,7 @@ async def register_with_email(body: EmailRegisterRequest):
     """
     admin = get_admin_client()
     try:
-        admin.auth.admin.create_user(
+        created_user = admin.auth.admin.create_user(
             {
                 "email": body.email,
                 "password": body.password,
@@ -376,6 +376,22 @@ async def register_with_email(body: EmailRegisterRequest):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Could not create account right now. Please try again.",
         )
+
+    if not getattr(created_user, "user", None):
+        logger.error(
+            "Email registration returned no Supabase user",
+            email=_mask_email(body.email),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not create account right now. Please try again.",
+        )
+
+    logger.info(
+        "Email registration created Supabase user",
+        email=_mask_email(body.email),
+        user_id=getattr(created_user.user, "id", None),
+    )
 
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
     try:
