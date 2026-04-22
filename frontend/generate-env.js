@@ -66,29 +66,64 @@ const content = `// Generated from frontend/.env. Do not edit directly.
 (function () {
   const config = ${JSON.stringify(config, null, 2)};
 
+  const PROXY_API_HOSTS = new Set([
+    'kazixfrontend.vercel.app',
+    'kazix.vercel.app',
+    'kazix.co.ke',
+    'www.kazix.co.ke',
+  ]);
+
+  function isLocalHost(host) {
+    return ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+  }
+
+  function shouldUseSameOriginProxy(host) {
+    return PROXY_API_HOSTS.has(host) || host.endsWith('.kazix.co.ke');
+  }
+
   function inferApiBase() {
     const host = window.location.hostname;
-    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(host)) {
+    if (isLocalHost(host)) {
       return null;
     }
 
-    if (
-      host === 'kazixfrontend.vercel.app' ||
-      host === 'kazix.vercel.app' ||
-      host === 'kazix.co.ke' ||
-      host === 'www.kazix.co.ke' ||
-      host.endsWith('.kazix.co.ke')
-    ) {
-      return 'https://kazix-api.onrender.com';
+    if (shouldUseSameOriginProxy(host)) {
+      // Prefer Vercel rewrites for deployed frontend hosts so browser requests
+      // stay same-origin and do not depend on backend CORS headers.
+      return '/';
     }
 
     return null;
   }
 
+  function resolveApiBase() {
+    const configuredApiBase = config.KAZIX_API_BASE ? config.KAZIX_API_BASE.replace(/\\/$/, '') : null;
+    const host = window.location.hostname;
+
+    if (!shouldUseSameOriginProxy(host)) {
+      return configuredApiBase || inferApiBase();
+    }
+
+    if (!configuredApiBase) {
+      return inferApiBase();
+    }
+
+    try {
+      const configuredUrl = new URL(configuredApiBase, window.location.origin);
+      if (configuredUrl.origin !== window.location.origin) {
+        return '/';
+      }
+    } catch (_error) {
+      return '/';
+    }
+
+    return configuredApiBase;
+  }
+
   window.KAZIX_CONFIG = config;
   window.SUPABASE_URL = window.SUPABASE_URL || config.SUPABASE_URL;
   window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || config.SUPABASE_ANON_KEY;
-  window.KAZIX_API_BASE = window.KAZIX_API_BASE || config.KAZIX_API_BASE || inferApiBase();
+  window.KAZIX_API_BASE = window.KAZIX_API_BASE || resolveApiBase();
   window.SUPABASE_REDIRECT_URL = window.SUPABASE_REDIRECT_URL || config.SUPABASE_REDIRECT_URL;
 })();
 `;

@@ -1,5 +1,36 @@
 (function () {
-  const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+  function resolveApiBase() {
+    const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
+    const host = window.location.hostname;
+    const proxyHosts = new Set([
+      'kazixfrontend.vercel.app',
+      'kazix.vercel.app',
+      'kazix.co.ke',
+      'www.kazix.co.ke',
+    ]);
+    const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+
+    if (!useSameOriginProxy) {
+      return (configured || window.location.origin).replace(/\/$/, '');
+    }
+
+    if (!configured) {
+      return '';
+    }
+
+    try {
+      const configuredUrl = new URL(configured, window.location.origin);
+      if (configuredUrl.origin !== window.location.origin) {
+        return '';
+      }
+    } catch (_error) {
+      return '';
+    }
+
+    return configured.replace(/\/$/, '');
+  }
+
+  const API_BASE = resolveApiBase();
 
   const TRADE_LABELS = {
     plumber: 'Plumber',
@@ -35,6 +66,7 @@
     'kazix_auth_waiting_flow',
     'kazix_auth_waiting_heartbeat',
     'kazix_auth_waiting_started_at',
+    'kazix_reg_pending_profile',
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   let myProfilePromise = null;

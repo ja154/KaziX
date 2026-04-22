@@ -4,7 +4,38 @@
  * Import this on every authenticated page
  */
 
-const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+function resolveApiBase() {
+  const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
+  const host = window.location.hostname;
+  const proxyHosts = new Set([
+    'kazixfrontend.vercel.app',
+    'kazix.vercel.app',
+    'kazix.co.ke',
+    'www.kazix.co.ke',
+  ]);
+  const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+
+  if (!useSameOriginProxy) {
+    return (configured || window.location.origin).replace(/\/$/, '');
+  }
+
+  if (!configured) {
+    return '';
+  }
+
+  try {
+    const configuredUrl = new URL(configured, window.location.origin);
+    if (configuredUrl.origin !== window.location.origin) {
+      return '';
+    }
+  } catch (_error) {
+    return '';
+  }
+
+  return configured.replace(/\/$/, '');
+}
+
+const API_BASE = resolveApiBase();
 const SESSION_KEYS = {
   access_token: 'kazix_access_token',
   refresh_token: 'kazix_refresh_token',
@@ -181,6 +212,7 @@ function clearSession() {
   Object.values(SESSION_KEYS).forEach(key => {
     localStorage.removeItem(key);
   });
+  localStorage.removeItem('kazix_reg_pending_profile');
   if (refreshTimer) clearTimeout(refreshTimer);
 }
 

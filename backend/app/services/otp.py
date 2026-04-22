@@ -14,6 +14,7 @@ from gotrue.errors import AuthApiError, AuthRetryableError
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
+from app.core.supabase import get_anon_client
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -188,8 +189,6 @@ async def send_phone_otp(phone: str) -> None:
     Send phone OTP via Supabase.
     May raise AuthApiError, AuthRetryableError, or other exceptions.
     """
-    from app.core.supabase import get_anon_client
-
     client = get_anon_client()
     client.auth.sign_in_with_otp({"phone": phone})
     logger.info("OTP dispatched", channel="phone", phone=phone[-4:])
@@ -199,15 +198,14 @@ async def send_email_otp(
     email: str,
     use_magic_link: bool = False,
     redirect_to: str | None = None,
+    should_create_user: bool = False,
 ) -> None:
     """
     Send email OTP or magic link via Supabase.
     May raise AuthApiError, AuthRetryableError, or other exceptions.
     """
-    from app.core.supabase import get_anon_client
-
     client = get_anon_client()
-    options = {"should_create_user": False}
+    options = {"should_create_user": should_create_user}
     if use_magic_link and redirect_to:
         options["email_redirect_to"] = redirect_to
 
@@ -232,6 +230,7 @@ async def dispatch_otp_with_retry(
     dispatch_type: Literal["phone", "email"],
     use_magic_link: bool = False,
     redirect_to: str | None = None,
+    should_create_user: bool = False,
 ) -> tuple[bool, str]:
     """
     Dispatch OTP with automatic retry on rate limits.
@@ -251,6 +250,7 @@ async def dispatch_otp_with_retry(
                 destination,
                 use_magic_link=use_magic_link,
                 redirect_to=redirect_to,
+                should_create_user=should_create_user,
             )
 
         # Try immediate dispatch first

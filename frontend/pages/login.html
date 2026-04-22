@@ -147,9 +147,9 @@
       </div>
 
       <div class="auth-title">Sign in</div>
-      <div class="auth-sub" id="authSub">Start with email for a secure sign-in link, or switch to phone OTP if you prefer.<br>New here? <a href="register.html">Create a free account →</a></div>
+      <div class="auth-sub" id="authSub">Use your email and password to access your KaziX account.<br>New here? <a href="register.html">Create a free account →</a></div>
 
-      <div class="method-toggle">
+      <div class="method-toggle" style="display:none">
         <div class="method-option active" onclick="setAuthMethod(this,'email')">Email sign-in</div>
         <div class="method-option" onclick="setAuthMethod(this,'phone')">Phone OTP</div>
       </div>
@@ -158,25 +158,17 @@
         <div class="field-group">
           <label class="field-label">Email Address</label>
           <input class="field-input" type="email" id="emailInput" placeholder="you@example.com" autocomplete="email" oninput="validateEmail()">
-          <div class="field-hint">We'll send a secure sign-in link to this email address.</div>
+          <div class="field-hint">Use the same email address you registered with.</div>
         </div>
-        <button class="auth-btn" id="sendEmailBtn" onclick="sendMagicLink()" disabled>Send Sign-In Link →</button>
-
-        <div class="email-status" id="emailStatus">
-          <div class="status-card">
-            <div class="status-icon">✉️</div>
-            <div>
-              <div class="status-title">Check your inbox</div>
-              <div class="status-copy">We sent a sign-in link to <strong id="sentEmail">you@example.com</strong>. Open the email and tap the button to continue.</div>
-              <div class="status-note" id="emailStatusNote">Waiting for confirmation…</div>
-            </div>
-          </div>
-          <div class="otp-resend">Didn't receive it? <button id="resendEmailBtn" onclick="resendMagicLink()" disabled>Resend link (<span id="emailCountdown">60</span>s)</button></div>
-          <div class="otp-change-phone">Need a different address? <button onclick="resetEmailState()">Use another email</button></div>
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <input class="field-input" type="password" id="passwordInput" placeholder="Your password" autocomplete="current-password" oninput="validateEmail()">
+          <div class="field-hint">Minimum 8 characters.</div>
         </div>
+        <button class="auth-btn" id="sendEmailBtn" onclick="signInWithEmailPassword()" disabled>Sign In →</button>
       </div>
 
-      <div class="auth-method-panel" id="phonePanel">
+      <div class="auth-method-panel" id="phonePanel" style="display:none">
         <div id="phoneStep">
           <div class="field-group">
             <label class="field-label">Phone Number</label>
@@ -227,7 +219,39 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../env.js"></script>
 <script>
-const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+function resolveApiBase() {
+  const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
+  const host = window.location.hostname;
+  const proxyHosts = new Set([
+    'kazixfrontend.vercel.app',
+    'kazix.vercel.app',
+    'kazix.co.ke',
+    'www.kazix.co.ke',
+  ]);
+  const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+
+  if (!useSameOriginProxy) {
+    return (configured || window.location.origin).replace(/\/$/, '');
+  }
+
+  if (!configured) {
+    return '';
+  }
+
+  try {
+    const configuredUrl = new URL(configured, window.location.origin);
+    if (configuredUrl.origin !== window.location.origin) {
+      return '';
+    }
+  } catch (_error) {
+    return '';
+  }
+
+  return configured.replace(/\/$/, '');
+}
+
+const API_BASE = resolveApiBase();
+const API_BASE_LABEL = API_BASE || window.location.origin;
 const SUPABASE_URL = window.SUPABASE_URL || window.KAZIX_CONFIG?.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPABASE_ANON_KEY;
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -253,7 +277,7 @@ sessionStorage.setItem(AUTH_WAITER_SESSION_KEY, authWaiterId);
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
   if (message === 'Failed to fetch') {
-    return `Cannot reach API at ${API_BASE}. Start the FastAPI app and, if you are using a separate frontend origin, ensure ALLOWED_ORIGINS includes ${window.location.origin}.`;
+    return `Cannot reach API at ${API_BASE_LABEL}. Start the FastAPI app and, if you are using a separate frontend origin, ensure ALLOWED_ORIGINS includes ${window.location.origin}.`;
   }
   return message || fallback;
 }
@@ -276,6 +300,11 @@ async function readApiResponse(resp) {
     }
     throw new Error('The server returned an unexpected response.');
   }
+}
+
+function isRecoverableEmailSendError(err) {
+  const message = err?.message?.trim() || '';
+  return err instanceof TypeError || message === 'Failed to fetch';
 }
 
 function getCanonicalLocalCallbackUrl(flow = 'login') {
@@ -345,8 +374,39 @@ function validatePhone() {
 
 function validateEmail() {
   const emailInput = document.getElementById('emailInput');
-  if (emailInput.readOnly) return;
-  document.getElementById('sendEmailBtn').disabled = !isValidEmail(emailInput.value);
+  const passwordInput = document.getElementById('passwordInput');
+  document.getElementById('sendEmailBtn').disabled = !isValidEmail(emailInput.value) || (passwordInput?.value || '').length < 8;
+}
+
+async function signInWithEmailPassword() {
+  const email = document.getElementById('emailInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  if (!isValidEmail(email) || password.length < 8) {
+    validateEmail();
+    return;
+  }
+
+  const btn = document.getElementById('sendEmailBtn');
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/auth/email/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Could not sign in.');
+    finishAuth(data);
+  } catch (err) {
+    alert(toDisplayError(err, 'Could not sign in.'));
+    btn.textContent = 'Sign In →';
+    validateEmail();
+  }
 }
 
 async function startOAuth(provider) {
@@ -435,17 +495,36 @@ function primeMagicLinkState(email) {
 }
 
 async function requestMagicLink(email) {
-  const resp = await fetch(`${API_BASE}/v1/auth/send-otp`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+  const callbackUrl = getMagicLinkCallbackUrl('login');
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        email_redirect_to: callbackUrl,
+        should_create_user: false,
+      }),
+    });
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to send sign-in link');
+    return data;
+  } catch (error) {
+    if (!isRecoverableEmailSendError(error)) {
+      throw error;
+    }
+    console.warn('Magic link API unavailable, falling back to Supabase browser auth.', error);
+    const { error: supabaseError } = await supabaseClient.auth.signInWithOtp({
       email,
-      email_redirect_to: getMagicLinkCallbackUrl('login'),
-    }),
-  });
-  const data = await readApiResponse(resp);
-  if (!resp.ok) throw new Error(data?.detail || 'Failed to send sign-in link');
-  return data;
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: callbackUrl,
+      },
+    });
+    if (supabaseError) throw supabaseError;
+    return { success: true };
+  }
 }
 
 function startEmailCountdown() {

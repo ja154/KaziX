@@ -6,6 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Create Account — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../env.js"></script>
 <style>
   :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
@@ -167,7 +168,7 @@
       <div class="reg-steps" id="stepProgress">
         <div class="rs-node active" id="rsn1"><div class="rs-circle">1</div><div class="rs-label">Account type</div></div>
         <div class="rs-node" id="rsn2"><div class="rs-circle">2</div><div class="rs-label">Your details</div></div>
-        <div class="rs-node" id="rsn3"><div class="rs-circle">3</div><div class="rs-label">Verify email</div></div>
+        <div class="rs-node" id="rsn3"><div class="rs-circle">3</div><div class="rs-label">Create password</div></div>
         <div class="rs-node" id="rsn4"><div class="rs-circle">4</div><div class="rs-label">Profile</div></div>
       </div>
 
@@ -270,23 +271,26 @@
         </div>
         <div class="reg-btns">
           <button class="btn-back" onclick="goRStep(1)">←</button>
-          <button class="btn-next" id="regSendOtpBtn" onclick="sendRegOtp()">Continue →</button>
+          <button class="btn-next" id="regDetailsContinueBtn" onclick="continueRegSetup()">Continue →</button>
         </div>
       </div>
 
-      <!-- STEP 3: MAGIC LINK WAITING -->
+      <!-- STEP 3: PASSWORD SETUP -->
       <div class="reg-step" id="rstep3">
-        <div class="reg-step-title">Check your inbox</div>
-        <div class="reg-step-sub">We sent a magic link to <strong id="regSentEmail">your@email.com</strong></div>
-        <div style="background:var(--cream);border-radius:6px;padding:2rem;text-align:center;margin-bottom:1.5rem">
-          <div style="font-size:3rem;margin-bottom:0.75rem">✉️</div>
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.5rem">Open your email and click the link</div>
-          <div style="font-size:0.82rem;color:var(--muted);line-height:1.65">Click the <strong>"Confirm your email"</strong> button in the message we just sent. This tab will automatically continue once confirmed.</div>
+        <div class="reg-step-title">Secure your account</div>
+        <div class="reg-step-sub">Create a password for <strong id="regPasswordEmail">your@email.com</strong> so you can sign in any time without email codes.</div>
+        <div class="field-group">
+          <label class="field-label">Password <span class="req">*</span></label>
+          <input class="field-input" type="password" id="regPassword" placeholder="At least 8 characters" autocomplete="new-password">
+          <div class="field-hint">Use at least 8 characters. A mix of letters, numbers, and symbols is best.</div>
         </div>
-        <div id="magicLinkStatus" style="font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:1rem">Waiting for confirmation…</div>
-        <div class="otp-note" style="text-align:center;margin-bottom:1rem">Didn't receive it? <button id="regResendBtn" onclick="resendRegOtp()" disabled style="background:none;border:none;color:#C0392B;font-weight:600;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif;padding:0">Resend link (<span id="regCountdown">60</span>s)</button></div>
+        <div class="field-group">
+          <label class="field-label">Confirm Password <span class="req">*</span></label>
+          <input class="field-input" type="password" id="regPasswordConfirm" placeholder="Repeat your password" autocomplete="new-password">
+        </div>
         <div class="reg-btns">
-          <button class="btn-back" onclick="cancelMagicLink()">← Back</button>
+          <button class="btn-back" onclick="goRStep(2)">←</button>
+          <button class="btn-next" id="regCreateAccountBtn" onclick="createRegAccount()">Continue →</button>
         </div>
       </div>
 
@@ -412,7 +416,45 @@ function getCanonicalLocalCallbackUrl() {
 }
 
 const isCanonicalRedirectPending = redirectDevOriginToLocalhost();
-const API_BASE = (window.KAZIX_API_BASE || window.location.origin).replace(/\/$/, '');
+function resolveApiBase() {
+  const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
+  const host = window.location.hostname;
+  const proxyHosts = new Set([
+    'kazixfrontend.vercel.app',
+    'kazix.vercel.app',
+    'kazix.co.ke',
+    'www.kazix.co.ke',
+  ]);
+  const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+
+  if (!useSameOriginProxy) {
+    return (configured || window.location.origin).replace(/\/$/, '');
+  }
+
+  if (!configured) {
+    return '';
+  }
+
+  try {
+    const configuredUrl = new URL(configured, window.location.origin);
+    if (configuredUrl.origin !== window.location.origin) {
+      return '';
+    }
+  } catch (_error) {
+    return '';
+  }
+
+  return configured.replace(/\/$/, '');
+}
+
+const API_BASE = resolveApiBase();
+const API_BASE_LABEL = API_BASE || window.location.origin;
+const SUPABASE_URL = window.SUPABASE_URL || window.KAZIX_CONFIG?.SUPABASE_URL;
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPABASE_ANON_KEY;
+if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing Supabase configuration. Generate frontend/env.js and load Supabase before the register flow.');
+}
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let regRole = 'client';
 let regCurrentStep = 1;
@@ -432,7 +474,7 @@ sessionStorage.setItem(AUTH_WAITER_SESSION_KEY, authWaiterId);
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
   if (message === 'Failed to fetch') {
-    return `Cannot reach API at ${API_BASE}. Start the FastAPI app and, if you are using a separate frontend origin, ensure ALLOWED_ORIGINS includes ${window.location.origin}.`;
+    return `Cannot reach API at ${API_BASE_LABEL}. Start the FastAPI app and, if you are using a separate frontend origin, ensure ALLOWED_ORIGINS includes ${window.location.origin}.`;
   }
   return message || fallback;
 }
@@ -454,6 +496,46 @@ async function readApiResponse(resp) {
       };
     }
     throw new Error('The server returned an unexpected response.');
+  }
+}
+
+function isRecoverableEmailSendError(err) {
+  const message = err?.message?.trim() || '';
+  return err instanceof TypeError || message === 'Failed to fetch';
+}
+
+async function sendMagicLinkViaSupabase(email, callbackUrl) {
+  const { error } = await supabaseClient.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: callbackUrl,
+    },
+  });
+  if (error) throw error;
+}
+
+async function requestRegisterMagicLink(email, callbackUrl) {
+  try {
+    const resp = await fetch(`${API_BASE}/v1/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        email_redirect_to: callbackUrl,
+        should_create_user: true,
+      }),
+    });
+    const data = await readApiResponse(resp);
+    if (!resp.ok) throw new Error(data?.detail || 'Failed to send verification link');
+    return 'api';
+  } catch (error) {
+    if (!isRecoverableEmailSendError(error)) {
+      throw error;
+    }
+    console.warn('Magic link API unavailable, falling back to Supabase browser auth.', error);
+    await sendMagicLinkViaSupabase(email, callbackUrl);
+    return 'supabase';
   }
 }
 
@@ -580,6 +662,15 @@ function validateStep2() {
   return null;
 }
 
+function validateStep3() {
+  const password = document.getElementById('regPassword').value;
+  const confirmPassword = document.getElementById('regPasswordConfirm').value;
+
+  if (password.length < 8) return 'Password must be at least 8 characters long.';
+  if (password !== confirmPassword) return 'Passwords do not match.';
+  return null;
+}
+
 function startRegCountdown() {
   let secs = 60;
   const resendBtn = document.getElementById('regResendBtn');
@@ -628,82 +719,63 @@ function restoreRegFormData() {
   if (em) document.getElementById('regEmail').value    = em;
   if (co) document.getElementById('regCounty').value   = co;
   if (ar) document.getElementById('regArea').value     = ar;
+  document.getElementById('regPasswordEmail').textContent = em || document.getElementById('regEmail').value.trim() || 'your@email.com';
 }
 
-async function sendRegOtp() {
+function continueRegSetup() {
   const error = validateStep2();
-  if (error) { alert(error); return; }
+  if (error) {
+    alert(error);
+    return;
+  }
+  saveRegFormData();
+  document.getElementById('regPasswordEmail').textContent = document.getElementById('regEmail').value.trim();
+  goRStep(3);
+}
+
+async function createRegAccount() {
+  const detailError = validateStep2();
+  if (detailError) {
+    alert(detailError);
+    goRStep(2);
+    return;
+  }
+  const passwordError = validateStep3();
+  if (passwordError) {
+    alert(passwordError);
+    return;
+  }
 
   const email = document.getElementById('regEmail').value.trim();
-  const btn   = document.getElementById('regSendOtpBtn');
+  const password = document.getElementById('regPassword').value;
+  const btn = document.getElementById('regCreateAccountBtn');
   btn.disabled  = true;
-  btn.textContent = 'Sending link…';
+  btn.textContent = 'Creating account…';
 
   try {
-    markAuthTabWaiting('register');
-    localStorage.setItem('kazix_auth_flow', 'register');
-    localStorage.removeItem('kazix_magic_link_complete');
-    localStorage.removeItem('kazix_auth_next_page');
-    const callbackUrl = getMagicLinkCallbackUrl();
-
-    // Send exactly one passwordless email for signup so we do not trip
-    // Supabase auth rate limits or wait on a second best-effort request.
-    const resp = await fetch(`${API_BASE}/v1/auth/send-otp`, {
+    saveRegFormData();
+    const resp = await fetch(`${API_BASE}/v1/auth/email/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, email_redirect_to: callbackUrl }),
+      body: JSON.stringify({
+        email,
+        password,
+      }),
     });
     const data = await readApiResponse(resp);
-    if (!resp.ok) throw new Error(data?.detail || 'Failed to send verification link');
+    if (!resp.ok) throw new Error(data?.detail || 'Could not create your account.');
 
-    saveRegFormData();
-    document.getElementById('regSentEmail').textContent = email;
-    goRStep(3);
-    startRegCountdown();
-    startMagicLinkPoll();
+    regAuthPayload = data;
+    persistSession(data);
+    localStorage.setItem('kazix_reg_pending_profile', '1');
+    goRStep(4);
   } catch (err) {
-    clearAuthTabWaiting();
-    console.error('sendRegOtp error:', err);
-    const message = err?.message || (typeof err === 'string' ? err : 'Could not send verification link.');
-    alert(message);
+    console.error('createRegAccount error:', err);
+    alert(toDisplayError(err, 'Could not create your account.'));
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Continue →';
   }
-}
-
-async function resendRegOtp() {
-  const resendBtn = document.getElementById('regResendBtn');
-  resendBtn.disabled = true;
-  const email = document.getElementById('regEmail').value.trim();
-  try {
-    markAuthTabWaiting('register');
-    localStorage.setItem('kazix_auth_flow', 'register');
-    localStorage.removeItem('kazix_magic_link_complete');
-    localStorage.removeItem('kazix_auth_next_page');
-    const callbackUrl = getMagicLinkCallbackUrl();
-
-    const resp = await fetch(`${API_BASE}/v1/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, email_redirect_to: callbackUrl }),
-    });
-    const data = await readApiResponse(resp);
-    if (!resp.ok) throw new Error(data?.detail || 'Failed to resend verification link');
-
-    startRegCountdown();
-  } catch (err) {
-    console.error('resendRegOtp error:', err);
-    const message = err?.message || (typeof err === 'string' ? err : 'Could not resend verification link.');
-    alert(message || 'Could not resend verification link.');
-    resendBtn.disabled = false;
-  }
-}
-
-function cancelMagicLink() {
-  clearInterval(magicLinkPollTimer);
-  clearAuthTabWaiting();
-  goRStep(2);
 }
 
 function getMagicLinkCallbackUrl() {
@@ -734,42 +806,10 @@ function getMagicLinkCallbackUrl() {
 }
 
 // Poll localStorage for magic link completion signal set by auth-callback.html
-function startMagicLinkPoll() {
-  clearInterval(magicLinkPollTimer);
-  magicLinkPollTimer = setInterval(() => {
-    if (localStorage.getItem('kazix_magic_link_complete') === '1') {
-      clearInterval(magicLinkPollTimer);
-      const nextPage = localStorage.getItem('kazix_auth_next_page') || 'register.html?step=4';
-      localStorage.removeItem('kazix_magic_link_complete');
-      localStorage.removeItem('kazix_auth_next_page');
-      clearAuthTabWaiting();
-      if (nextPage !== 'register.html?step=4') {
-        window.location.href = nextPage;
-        return;
-      }
-      document.getElementById('magicLinkStatus').textContent = '✅ Email confirmed! Loading your profile…';
-      document.getElementById('magicLinkStatus').style.color = '#1B6B3A';
-      setTimeout(() => advanceToStep4(), 600);
-    }
-  }, 1000);
-}
-
-function advanceToStep4() {
-  clearAuthTabWaiting();
-  restoreRegFormData();
-  // Retrieve the session stored by auth-callback
-  regAuthPayload = {
-    access_token:  localStorage.getItem('kazix_access_token'),
-    refresh_token: localStorage.getItem('kazix_refresh_token'),
-    token_type:    localStorage.getItem('kazix_token_type') || 'bearer',
-  };
-  goRStep(4);
-}
-
 async function submitReg() {
   const accessToken = regAuthPayload?.access_token || localStorage.getItem('kazix_access_token');
   if (!accessToken) {
-    alert('Please verify your email first.');
+    alert('Please create your account first.');
     goRStep(3);
     return;
   }
@@ -821,6 +861,7 @@ async function submitReg() {
     if (!resp.ok) throw new Error(data?.detail || 'Failed to create profile');
 
     localStorage.setItem('kazix_role', payload.role);
+    localStorage.removeItem('kazix_reg_pending_profile');
   } catch (err) {
     alert(toDisplayError(err, 'Could not complete registration.'));
     submitBtn.disabled = false;
@@ -843,22 +884,51 @@ async function submitReg() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function resumePendingRegistration() {
+  const accessToken = localStorage.getItem('kazix_access_token');
+  if (!accessToken) return false;
+
+  regAuthPayload = {
+    access_token: accessToken,
+    refresh_token: localStorage.getItem('kazix_refresh_token'),
+    token_type: localStorage.getItem('kazix_token_type') || 'bearer',
+  };
+
+  if (localStorage.getItem('kazix_reg_pending_profile') === '1') {
+    goRStep(4);
+    return true;
+  }
+
+  try {
+    const resp = await fetch(`${API_BASE}/v1/auth/bootstrap`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await readApiResponse(resp);
+    if (resp.ok && data?.redirect_to === 'complete-registration') {
+      goRStep(4);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Could not resume pending registration automatically.', err);
+  }
+
+  regAuthPayload = null;
+  return false;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   if (isCanonicalRedirectPending) return;
   restoreRegFormData();
-  // If returning from magic link callback, auto-advance to step 4
   const params = new URLSearchParams(window.location.search);
   if (params.get('step') === '4' && localStorage.getItem('kazix_access_token')) {
-    clearAuthTabWaiting();
-    regAuthPayload = {
-      access_token:  localStorage.getItem('kazix_access_token'),
-      refresh_token: localStorage.getItem('kazix_refresh_token'),
-      token_type:    'bearer',
-    };
-    goRStep(4);
-  } else {
-    goRStep(1);
+    localStorage.setItem('kazix_reg_pending_profile', '1');
   }
+  if (await resumePendingRegistration()) {
+    return;
+  }
+  goRStep(1);
 });
 
 window.addEventListener('beforeunload', clearAuthTabWaiting);

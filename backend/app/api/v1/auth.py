@@ -49,6 +49,7 @@ class SendOTPRequest(BaseModel):
     phone: str | None = Field(default=None, pattern=r"^\+254[0-9]{9}$", examples=["+254712345678"])
     email: str | None = Field(default=None, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     email_redirect_to: str | None = Field(default=None, min_length=1)
+    should_create_user: bool = False
 
     @model_validator(mode="after")
     def validate_destination(self):
@@ -56,6 +57,8 @@ class SendOTPRequest(BaseModel):
             raise ValueError("Provide exactly one destination: phone or email.")
         if self.phone and self.email_redirect_to:
             raise ValueError("email_redirect_to is only supported for email sign-in.")
+        if self.phone and self.should_create_user:
+            raise ValueError("should_create_user is only supported for email sign-in.")
         return self
 
 
@@ -97,6 +100,16 @@ class CreateProfileRequest(BaseModel):
 class OTPResponse(BaseModel):
     success: bool
     message: str
+
+
+class EmailRegisterRequest(BaseModel):
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(..., min_length=8, max_length=128)
+
+
+class EmailLoginRequest(BaseModel):
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(..., min_length=8, max_length=128)
 
 
 class SessionResponse(BaseModel):
@@ -229,6 +242,58 @@ def _mask_email(email: str) -> str:
     return f"{masked_local}@{domain}"
 
 
+def _auth_error_http_exception(
+    exc: Exception,
+    *,
+    default_status: int,
+    default_detail: str,
+) -> HTTPException:
+    message = getattr(exc, "message", None) or str(exc)
+    code = getattr(exc, "code", None)
+    status_code = getattr(exc, "status", None)
+    blob = " ".join(
+        str(part or "")
+        for part in (message, code, status_code)
+    ).lower()
+
+    if "already" in blob and ("registered" in blob or "exists" in blob):
+        return HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with that email already exists. Sign in instead.",
+        )
+    if "invalid login credentials" in blob:
+        return HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+        )
+    if "password" in blob and (
+        "weak" in blob
+        or "characters" in blob
+        or "least" in blob
+        or "length" in blob
+    ):
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=message or "Password must be at least 8 characters long.",
+        )
+
+    return HTTPException(
+        status_code=default_status,
+        detail=default_detail if settings.app_env == "production" else (message or default_detail),
+    )
+
+
+def _build_auth_payload(response, *, is_new_user: bool, redirect_to: str) -> dict:
+    return {
+        "access_token": response.session.access_token,
+        "refresh_token": response.session.refresh_token,
+        "token_type": "bearer",
+        "expires_in": response.session.expires_in,
+        "is_new_user": is_new_user,
+        "redirect_to": redirect_to,
+    }
+
+
 def _cleanup_oauth_state(now_ts: float) -> None:
     expired = [
         state
@@ -273,6 +338,146 @@ def _is_valid_redirect_to(redirect_to: str | None) -> bool:
 
 # ── Routes ───────────────────────────────────────────────────
 
+@router.post("/email/register", status_code=201)
+async def register_with_email(body: EmailRegisterRequest):
+    """
+    Creates a password-based email account and immediately signs the user in.
+    This avoids OTP/magic-link setup and allows the frontend to proceed straight
+    to profile completion.
+    """
+    admin = get_admin_client()
+    try:
+        admin.auth.admin.create_user(
+            {
+                "email": body.email,
+                "password": body.password,
+                "email_confirm": True,
+            }
+        )
+    except AuthApiError as exc:
+        logger.warning(
+            "Email registration rejected",
+            email=_mask_email(body.email),
+            code=getattr(exc, "code", None),
+            error=str(exc),
+        )
+        raise _auth_error_http_exception(
+            exc,
+            default_status=status.HTTP_400_BAD_REQUEST,
+            default_detail="Could not create account. Please try again.",
+        )
+    except Exception as exc:
+        logger.error(
+            "Email registration failed",
+            email=_mask_email(body.email),
+            error=str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not create account right now. Please try again.",
+        )
+
+    client = create_client(settings.supabase_url, settings.supabase_anon_key)
+    try:
+        response = client.auth.sign_in_with_password(
+            {
+                "email": body.email,
+                "password": body.password,
+            }
+        )
+    except AuthApiError as exc:
+        logger.error(
+            "Email registration sign-in failed",
+            email=_mask_email(body.email),
+            code=getattr(exc, "code", None),
+            error=str(exc),
+        )
+        raise _auth_error_http_exception(
+            exc,
+            default_status=status.HTTP_401_UNAUTHORIZED,
+            default_detail="Account created, but sign-in failed. Please try signing in.",
+        )
+    except Exception as exc:
+        logger.error(
+            "Email registration sign-in unexpected failure",
+            email=_mask_email(body.email),
+            error=str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Account created, but sign-in failed. Please try signing in.",
+        )
+
+    if not response.session or not response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account was created but no session was returned.",
+        )
+
+    return _build_auth_payload(
+        response,
+        is_new_user=True,
+        redirect_to="complete-registration",
+    )
+
+
+@router.post("/email/login", status_code=200)
+async def login_with_email(body: EmailLoginRequest):
+    """
+    Signs an existing user in with email + password and returns the same
+    session bootstrap payload used by the frontend auth flows.
+    """
+    client = create_client(settings.supabase_url, settings.supabase_anon_key)
+    try:
+        response = client.auth.sign_in_with_password(
+            {
+                "email": body.email,
+                "password": body.password,
+            }
+        )
+    except AuthApiError as exc:
+        logger.warning(
+            "Email login rejected",
+            email=_mask_email(body.email),
+            code=getattr(exc, "code", None),
+            error=str(exc),
+        )
+        raise _auth_error_http_exception(
+            exc,
+            default_status=status.HTTP_401_UNAUTHORIZED,
+            default_detail="Incorrect email or password.",
+        )
+    except Exception as exc:
+        logger.error(
+            "Email login failed",
+            email=_mask_email(body.email),
+            error=str(exc),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not sign in right now. Please try again.",
+        )
+
+    if not response.session or not response.user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sign-in did not return a session.",
+        )
+
+    admin = get_admin_client()
+    try:
+        _, is_new_user, redirect_to = _resolve_profile_state(admin, response.user.id)
+    except Exception as exc:
+        logger.error("Email login profile check failed", user_id=response.user.id, error=str(exc))
+        is_new_user = True
+        redirect_to = "complete-registration"
+
+    return _build_auth_payload(
+        response,
+        is_new_user=is_new_user,
+        redirect_to=redirect_to,
+    )
+
 @router.post("/send-otp", response_model=OTPResponse, status_code=200)
 async def send_otp(body: SendOTPRequest):
     """
@@ -280,6 +485,8 @@ async def send_otp(body: SendOTPRequest):
     Phone OTP uses SMS provider configured in Supabase.
     Email sends a magic link when email_redirect_to is provided.
     Otherwise, the email template decides whether users receive a code or link.
+    Set should_create_user=True for registration flows so new email users
+    can be created before profile completion.
     
     Handles rate limiting (429) with automatic retry and exponential backoff.
     """
@@ -297,6 +504,7 @@ async def send_otp(body: SendOTPRequest):
                 dispatch_type="email",
                 use_magic_link=bool(body.email_redirect_to),
                 redirect_to=body.email_redirect_to,
+                should_create_user=body.should_create_user,
             )
 
         if not success:
@@ -391,14 +599,7 @@ async def verify_otp(body: VerifyOTPRequest):
         is_new_user = True
         redirect_to = "complete-registration"
 
-    return {
-        "access_token":  response.session.access_token,
-        "refresh_token": response.session.refresh_token,
-        "token_type":    "bearer",
-        "expires_in":    response.session.expires_in,
-        "is_new_user":   is_new_user,
-        "redirect_to":   redirect_to,
-    }
+    return _build_auth_payload(response, is_new_user=is_new_user, redirect_to=redirect_to)
 
 
 @router.post("/oauth/start", response_model=OAuthStartResponse, status_code=200)
@@ -578,14 +779,7 @@ async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
         is_new_user = True
         redirect_to = "complete-registration"
 
-    return {
-        "access_token": response.session.access_token,
-        "refresh_token": response.session.refresh_token,
-        "token_type": "bearer",
-        "expires_in": response.session.expires_in,
-        "is_new_user": is_new_user,
-        "redirect_to": redirect_to,
-    }
+        return _build_auth_payload(response, is_new_user=is_new_user, redirect_to=redirect_to)
 
 
 @router.post("/profile", status_code=201)

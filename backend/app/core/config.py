@@ -25,9 +25,11 @@ class Settings(BaseSettings):
         "http://localhost:8000,http://127.0.0.1:8000,"
         "http://localhost:5000,http://127.0.0.1:5000,"
         "http://localhost:5173,http://127.0.0.1:5173,"
-        "http://localhost:3000,http://127.0.0.1:3000"
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://kazixfrontend.vercel.app,https://kazix.vercel.app,"
+        "https://kazix.co.ke,https://www.kazix.co.ke"
     )
-    allowed_hosts: str = "localhost,127.0.0.1"
+    allowed_hosts: str = "localhost,127.0.0.1,*.onrender.com,kazix-api.onrender.com,api.kazix.co.ke"
 
     @property
     def cors_origins(self) -> list[str]:
