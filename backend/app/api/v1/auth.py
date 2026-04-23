@@ -281,30 +281,55 @@ def _auth_error_http_exception(
         for part in (message, code, status_code)
     ).lower()
 
-    if "already" in blob and ("registered" in blob or "exists" in blob):
+    if code == "user_already_exists" or ("already" in blob and ("registered" in blob or "exists" in blob)):
         return HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with that email already exists. Sign in instead.",
         )
-    if "invalid login credentials" in blob:
+    if code == "invalid_credentials" or "invalid login credentials" in blob:
         return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
         )
-    if "password" in blob and (
+    if code == "weak_password" or ("password" in blob and (
         "weak" in blob
         or "characters" in blob
         or "least" in blob
         or "length" in blob
-    ):
+    )):
         return HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=message or "Password must be at least 8 characters long.",
+            detail=message or "Password is too weak or too short.",
         )
+    if code == "over_request_rate_limit" or "rate limit" in blob:
+        return HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many requests. Please try again later.",
+        )
+    if code == "signup_disabled" or "signup is disabled" in blob:
+        return HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Signups are currently disabled. Please contact support.",
+        )
+    if code == "email_address_invalid" or "email address is invalid" in blob:
+        return HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="The email address provided is invalid.",
+        )
+
+    # In production, we usually hide internal error details unless they are safe/known.
+    # But if we have a clear Supabase code, it's often safe to pass the message through.
+    final_detail = default_detail
+    if settings.app_env != "production":
+        final_detail = message or default_detail
+    elif code:
+        # If there's a specific code but we didn't match it above,
+        # we might want to still show a generic error but log the code.
+        logger.info("Unmapped auth error code encountered", code=code, message=message)
 
     return HTTPException(
         status_code=default_status,
-        detail=default_detail if settings.app_env == "production" else (message or default_detail),
+        detail=final_detail,
     )
 
 
@@ -640,6 +665,11 @@ async def register_with_email(body: EmailRegisterRequest):
         response = await _sign_in_after_email_registration(body.email, body.password)
 
     if not response.session or not response.user:
+        logger.error(
+            "Email registration failed to provide a session after retries",
+            email=_mask_email(body.email),
+            user_id=user_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account was created but no session was returned.",
