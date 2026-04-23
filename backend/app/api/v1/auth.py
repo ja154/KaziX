@@ -1023,7 +1023,7 @@ async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
         is_new_user = True
         redirect_to = "complete-registration"
 
-        return _build_auth_payload(response, is_new_user=is_new_user, redirect_to=redirect_to)
+    return _build_auth_payload(response, is_new_user=is_new_user, redirect_to=redirect_to)
 
 
 @router.post("/profile", status_code=201)

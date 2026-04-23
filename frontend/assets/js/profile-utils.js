@@ -122,15 +122,10 @@
       myProfilePromise = requestJson('/v1/profiles/me', { auth: true }).catch((error) => {
         myProfilePromise = null;
         
-        // Handle 404 Profile not found — user hasn't completed registration yet
-        if (error.message && error.message.includes('404') || error.message.includes('Profile not found')) {
-          // Clear auth tokens and redirect to registration
-          AUTH_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-          AUTH_STORAGE_PREFIXES.forEach(prefix => {
-            const keys = Object.keys(localStorage).filter(k => k.startsWith(prefix));
-            keys.forEach(k => localStorage.removeItem(k));
-          });
-          
+        // Handle 404 Profile not found — user hasn't completed registration yet.
+        // We do NOT clear the auth tokens here, as the user IS authenticated with Supabase,
+        // they just don't have a KaziX profile record yet.
+        if (error.message && (error.message.includes('404') || error.message.includes('Profile not found'))) {
           const redirectUrl = 'register.html?mode=complete-profile';
           console.warn('Profile not found for authenticated user. Redirecting to registration:', error.message);
           window.location.replace(redirectUrl);
