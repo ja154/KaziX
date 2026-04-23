@@ -43,8 +43,8 @@ except ImportError:
 
 _OAUTH_STATE_TTL_SECONDS = 600
 _OAUTH_STATE_STORE: dict[str, dict[str, str | float]] = {}
-_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS = 3
-_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS = 0.4
+_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS = 5
+_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS = 1.0
 
 
 # ── Schemas ──────────────────────────────────────────────────
@@ -336,11 +336,12 @@ async def _sign_in_after_email_registration(email: str, password: str):
     last_auth_error: AuthApiError | None = None
     last_unexpected_error: Exception | None = None
 
+    # Use a fresh client without any stale session state
+    anon_client = create_client(settings.supabase_url, settings.supabase_anon_key)
+
     for attempt in range(1, _EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS + 1):
         try:
-            response = create_client(settings.supabase_url, settings.supabase_anon_key).auth.sign_in_with_password(
-                sign_in_payload
-            )
+            response = anon_client.auth.sign_in_with_password(sign_in_payload)
             if response.session and response.user:
                 if attempt > 1:
                     logger.info(
@@ -370,6 +371,8 @@ async def _sign_in_after_email_registration(email: str, password: str):
                 code=getattr(exc, "code", None),
                 error=str(exc),
             )
+            # If it's a 401, it might be because the user hasn't propagated yet
+            # We continue retrying unless it's a different kind of error
         except Exception as exc:
             last_unexpected_error = exc
             logger.warning(
@@ -381,7 +384,7 @@ async def _sign_in_after_email_registration(email: str, password: str):
             )
 
         if attempt < _EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS:
-            await asyncio.sleep(_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS * attempt)
+            await asyncio.sleep(_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS * (1.5 ** (attempt - 1)))
 
     if last_auth_error is not None:
         detail = "Account created, but sign-in failed. Please try signing in."
@@ -583,15 +586,33 @@ async def register_with_email(body: EmailRegisterRequest):
             detail="Could not create account right now. Please try again.",
         )
 
+    user_id = getattr(created_user, "id", None)
+    email_confirmed_at = getattr(created_user, "email_confirmed_at", None)
+
     logger.info(
         "Email registration created Supabase user",
         email=_mask_email(body.email),
-        user_id=getattr(created_user, "id", None),
+        user_id=user_id,
+        email_confirmed_at=email_confirmed_at,
     )
+
+    # Ensure user is confirmed if created via admin
+    if user_id and not email_confirmed_at:
+        try:
+            admin.auth.admin.update_user_by_id(
+                user_id,
+                {"email_confirm": True}
+            )
+            logger.info("Manually confirmed email for admin-created user", user_id=user_id)
+        except Exception as exc:
+            logger.warning(
+                "Failed to manually confirm email for admin-created user",
+                user_id=user_id,
+                error=str(exc)
+            )
 
     # Create a default profile row so /v1/profiles/me doesn't 404 for new users
     # Users will update this during the profile completion step
-    user_id = getattr(created_user, "id", None)
     if user_id:
         try:
             default_profile = build_default_profile_row(

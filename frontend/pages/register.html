@@ -666,9 +666,11 @@ function isPostRegistrationSigninError(_statusCode, detail) {
 async function retryRegistrationSignin(email, password) {
   let lastError = null;
 
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
     if (attempt > 1) {
-      await wait(500 * attempt);
+      const delay = Math.min(1000 * Math.pow(1.5, attempt - 2), 5000);
+      console.log(`[retryRegistrationSignin] Attempt ${attempt} after ${delay}ms...`);
+      await wait(delay);
     }
 
     try {
@@ -684,7 +686,8 @@ async function retryRegistrationSignin(email, password) {
       if (resp.ok) return data;
 
       lastError = new Error(data?.detail || 'Could not sign in.');
-      if (resp.status !== 401) {
+      console.warn(`[retryRegistrationSignin] Attempt ${attempt} failed with status ${resp.status}:`, data?.detail);
+      if (resp.status !== 401 && resp.status !== 403) {
         throw lastError;
       }
     } catch (error) {
