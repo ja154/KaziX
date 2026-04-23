@@ -305,6 +305,13 @@ def _auth_error_http_exception(
     )
 
 
+def _should_fallback_to_public_email_signup(exc: Exception) -> bool:
+    message = getattr(exc, "message", None) or str(exc)
+    code = getattr(exc, "code", None)
+    blob = " ".join(str(part or "") for part in (message, code)).lower()
+    return code == "not_admin" or "user not allowed" in blob or "not_admin" in blob
+
+
 def _build_auth_payload(response, *, is_new_user: bool, redirect_to: str) -> dict:
     return {
         "access_token": response.session.access_token,
@@ -409,26 +416,68 @@ async def register_with_email(body: EmailRegisterRequest):
     to profile completion.
     """
     admin = get_admin_client()
+    response = None
+    created_user = None
     try:
-        created_user = admin.auth.admin.create_user(
+        created = admin.auth.admin.create_user(
             {
                 "email": body.email,
                 "password": body.password,
                 "email_confirm": True,
             }
         )
+        created_user = getattr(created, "user", None)
     except AuthApiError as exc:
-        logger.warning(
-            "Email registration rejected",
-            email=_mask_email(body.email),
-            code=getattr(exc, "code", None),
-            error=str(exc),
-        )
-        raise _auth_error_http_exception(
-            exc,
-            default_status=status.HTTP_400_BAD_REQUEST,
-            default_detail="Could not create account. Please try again.",
-        )
+        if _should_fallback_to_public_email_signup(exc):
+            logger.warning(
+                "Admin email registration unavailable; falling back to public signup",
+                email=_mask_email(body.email),
+                code=getattr(exc, "code", None),
+                error=str(exc),
+            )
+            client = create_client(settings.supabase_url, settings.supabase_anon_key)
+            try:
+                response = client.auth.sign_up(
+                    {
+                        "email": body.email,
+                        "password": body.password,
+                    }
+                )
+                created_user = getattr(response, "user", None)
+            except AuthApiError as signup_exc:
+                logger.warning(
+                    "Public email signup rejected",
+                    email=_mask_email(body.email),
+                    code=getattr(signup_exc, "code", None),
+                    error=str(signup_exc),
+                )
+                raise _auth_error_http_exception(
+                    signup_exc,
+                    default_status=status.HTTP_400_BAD_REQUEST,
+                    default_detail="Could not create account. Please try again.",
+                )
+            except Exception as signup_exc:
+                logger.error(
+                    "Public email signup failed",
+                    email=_mask_email(body.email),
+                    error=str(signup_exc),
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Could not create account right now. Please try again.",
+                )
+        else:
+            logger.warning(
+                "Email registration rejected",
+                email=_mask_email(body.email),
+                code=getattr(exc, "code", None),
+                error=str(exc),
+            )
+            raise _auth_error_http_exception(
+                exc,
+                default_status=status.HTTP_400_BAD_REQUEST,
+                default_detail="Could not create account. Please try again.",
+            )
     except Exception as exc:
         logger.error(
             "Email registration failed",
@@ -440,7 +489,7 @@ async def register_with_email(body: EmailRegisterRequest):
             detail="Could not create account right now. Please try again.",
         )
 
-    if not getattr(created_user, "user", None):
+    if not created_user:
         logger.error(
             "Email registration returned no Supabase user",
             email=_mask_email(body.email),
@@ -453,12 +502,12 @@ async def register_with_email(body: EmailRegisterRequest):
     logger.info(
         "Email registration created Supabase user",
         email=_mask_email(body.email),
-        user_id=getattr(created_user.user, "id", None),
+        user_id=getattr(created_user, "id", None),
     )
 
     # Create a default profile row so /v1/profiles/me doesn't 404 for new users
     # Users will update this during the profile completion step
-    user_id = getattr(created_user.user, "id", None)
+    user_id = getattr(created_user, "id", None)
     if user_id:
         try:
             default_profile = build_default_profile_row(
@@ -482,36 +531,37 @@ async def register_with_email(body: EmailRegisterRequest):
                 details=getattr(exc, "details", None),
             )
 
-    client = create_client(settings.supabase_url, settings.supabase_anon_key)
-    try:
-        response = client.auth.sign_in_with_password(
-            {
-                "email": body.email,
-                "password": body.password,
-            }
-        )
-    except AuthApiError as exc:
-        logger.error(
-            "Email registration sign-in failed",
-            email=_mask_email(body.email),
-            code=getattr(exc, "code", None),
-            error=str(exc),
-        )
-        raise _auth_error_http_exception(
-            exc,
-            default_status=status.HTTP_401_UNAUTHORIZED,
-            default_detail="Account created, but sign-in failed. Please try signing in.",
-        )
-    except Exception as exc:
-        logger.error(
-            "Email registration sign-in unexpected failure",
-            email=_mask_email(body.email),
-            error=str(exc),
-        )
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Account created, but sign-in failed. Please try signing in.",
-        )
+    if not response or not response.session or not response.user:
+        client = create_client(settings.supabase_url, settings.supabase_anon_key)
+        try:
+            response = client.auth.sign_in_with_password(
+                {
+                    "email": body.email,
+                    "password": body.password,
+                }
+            )
+        except AuthApiError as exc:
+            logger.error(
+                "Email registration sign-in failed",
+                email=_mask_email(body.email),
+                code=getattr(exc, "code", None),
+                error=str(exc),
+            )
+            raise _auth_error_http_exception(
+                exc,
+                default_status=status.HTTP_401_UNAUTHORIZED,
+                default_detail="Account created, but sign-in failed. Please try signing in.",
+            )
+        except Exception as exc:
+            logger.error(
+                "Email registration sign-in unexpected failure",
+                email=_mask_email(body.email),
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Account created, but sign-in failed. Please try signing in.",
+            )
 
     if not response.session or not response.user:
         raise HTTPException(

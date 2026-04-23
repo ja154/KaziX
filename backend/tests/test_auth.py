@@ -58,13 +58,18 @@ class _FakePasswordAuthClient:
         refresh_token: str = "email-refresh-token",
         expires_in: int = 3600,
         sign_in_error: Exception | None = None,
+        sign_up_error: Exception | None = None,
+        sign_up_returns_session: bool = False,
     ) -> None:
         self.user_id = user_id
         self.access_token = access_token
         self.refresh_token = refresh_token
         self.expires_in = expires_in
         self.sign_in_error = sign_in_error
+        self.sign_up_error = sign_up_error
+        self.sign_up_returns_session = sign_up_returns_session
         self.payloads: list[dict] = []
+        self.sign_up_payloads: list[dict] = []
 
     def sign_in_with_password(self, payload: dict):
         self.payloads.append(payload)
@@ -77,6 +82,22 @@ class _FakePasswordAuthClient:
                 refresh_token=self.refresh_token,
                 expires_in=self.expires_in,
             ),
+        )
+
+    def sign_up(self, payload: dict):
+        self.sign_up_payloads.append(payload)
+        if self.sign_up_error:
+            raise self.sign_up_error
+        session = None
+        if self.sign_up_returns_session:
+            session = SimpleNamespace(
+                access_token=self.access_token,
+                refresh_token=self.refresh_token,
+                expires_in=self.expires_in,
+            )
+        return SimpleNamespace(
+            user=SimpleNamespace(id=self.user_id),
+            session=session,
         )
 
 
@@ -269,6 +290,56 @@ async def test_email_register_returns_conflict_for_duplicate_email(monkeypatch) 
 
     assert response.status_code == 409
     assert response.json()["detail"] == "An account with that email already exists. Sign in instead."
+
+
+@pytest.mark.asyncio
+async def test_email_register_falls_back_to_public_signup_when_admin_client_is_not_allowed(monkeypatch) -> None:
+    fake_user_admin = _FakeAdminUserAdmin(
+        create_error=AuthApiError("User not allowed", 403, "not_admin")
+    )
+    fake_admin = _FakeRegisterAdminClient(fake_user_admin)
+    fake_password_auth = _FakePasswordAuthClient(
+        user_id="fallback-email-user",
+        sign_up_returns_session=True,
+    )
+    fake_password_client = _FakePasswordClient(fake_password_auth)
+
+    monkeypatch.setattr(auth_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(auth_module, "create_client", lambda *_args, **_kwargs: fake_password_client)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/v1/auth/email/register",
+            json={
+                "email": "jane@example.com",
+                "password": "SecurePass123!",
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json() == {
+        "access_token": "email-access-token",
+        "refresh_token": "email-refresh-token",
+        "token_type": "bearer",
+        "expires_in": 3600,
+        "is_new_user": True,
+        "redirect_to": "complete-registration",
+    }
+    assert fake_user_admin.payloads == [
+        {
+            "email": "jane@example.com",
+            "password": "SecurePass123!",
+            "email_confirm": True,
+        }
+    ]
+    assert fake_password_auth.sign_up_payloads == [
+        {
+            "email": "jane@example.com",
+            "password": "SecurePass123!",
+        }
+    ]
+    assert fake_password_auth.payloads == []
 
 
 @pytest.mark.asyncio
