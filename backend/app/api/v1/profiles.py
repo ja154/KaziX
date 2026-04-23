@@ -169,7 +169,7 @@ def _ensure_profile_exists(admin, session: CurrentSession) -> dict:
         )
 
         try:
-            admin.table("profiles").insert(default_profile).execute()
+            admin.table("profiles").upsert(default_profile, on_conflict="id").execute()
             logger.info(
                 "Auto-created default profile from /v1/profiles/me",
                 user_id=session.user_id,
@@ -177,6 +177,8 @@ def _ensure_profile_exists(admin, session: CurrentSession) -> dict:
                 has_email=bool(default_profile["email"]),
             )
         except Exception as profile_exc:
+            # Fallback: check if it was just a race condition where the profile
+            # was created by another request in the meantime.
             try:
                 return _collect_profile_sections(
                     admin,
@@ -188,11 +190,15 @@ def _ensure_profile_exists(admin, session: CurrentSession) -> dict:
                 if refetch_exc.status_code != status.HTTP_404_NOT_FOUND:
                     raise refetch_exc
 
+            # If we still get a 404, the upsert actually failed for a real reason.
+            # Log full details to help diagnose constraint violations or DB issues.
             logger.warning(
                 "Failed to auto-create default profile from /v1/profiles/me",
                 user_id=session.user_id,
                 error=str(profile_exc),
                 code=getattr(profile_exc, "code", None),
+                details=getattr(profile_exc, "details", None) if hasattr(profile_exc, "details") else None,
+                hint=getattr(profile_exc, "hint", None) if hasattr(profile_exc, "hint") else None,
             )
             raise exc
 
