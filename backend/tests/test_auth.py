@@ -58,6 +58,7 @@ class _FakePasswordAuthClient:
         refresh_token: str = "email-refresh-token",
         expires_in: int = 3600,
         sign_in_error: Exception | None = None,
+        sign_in_errors: list[Exception | None] | None = None,
         sign_up_error: Exception | None = None,
         sign_up_returns_session: bool = False,
     ) -> None:
@@ -66,6 +67,7 @@ class _FakePasswordAuthClient:
         self.refresh_token = refresh_token
         self.expires_in = expires_in
         self.sign_in_error = sign_in_error
+        self.sign_in_errors = list(sign_in_errors or [])
         self.sign_up_error = sign_up_error
         self.sign_up_returns_session = sign_up_returns_session
         self.payloads: list[dict] = []
@@ -73,6 +75,10 @@ class _FakePasswordAuthClient:
 
     def sign_in_with_password(self, payload: dict):
         self.payloads.append(payload)
+        if self.sign_in_errors:
+            next_error = self.sign_in_errors.pop(0)
+            if next_error:
+                raise next_error
         if self.sign_in_error:
             raise self.sign_in_error
         return SimpleNamespace(
@@ -266,6 +272,47 @@ async def test_email_register_creates_confirmed_user_and_signs_in(monkeypatch) -
             "email": "jane@example.com",
             "password": "SecurePass123!",
         }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_email_register_retries_sign_in_when_first_attempt_fails(monkeypatch) -> None:
+    fake_user_admin = _FakeAdminUserAdmin(user_id="new-email-user")
+    fake_admin = _FakeRegisterAdminClient(fake_user_admin)
+    fake_password_auth = _FakePasswordAuthClient(
+        user_id="new-email-user",
+        sign_in_errors=[
+            AuthApiError("Invalid login credentials", 400, "invalid_credentials"),
+            None,
+        ],
+    )
+    fake_password_client = _FakePasswordClient(fake_password_auth)
+
+    monkeypatch.setattr(auth_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(auth_module, "create_client", lambda *_args, **_kwargs: fake_password_client)
+    monkeypatch.setattr(auth_module, "_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS", 0)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/v1/auth/email/register",
+            json={
+                "email": "jane@example.com",
+                "password": "SecurePass123!",
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json()["redirect_to"] == "complete-registration"
+    assert fake_password_auth.payloads == [
+        {
+            "email": "jane@example.com",
+            "password": "SecurePass123!",
+        },
+        {
+            "email": "jane@example.com",
+            "password": "SecurePass123!",
+        },
     ]
 
 

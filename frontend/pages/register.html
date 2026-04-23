@@ -655,6 +655,46 @@ function persistSession(payload) {
   localStorage.setItem('kazix_token_type', payload.token_type || 'bearer');
 }
 
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isPostRegistrationSigninError(_statusCode, detail) {
+  return /account created, but sign-in failed/i.test(detail || '');
+}
+
+async function retryRegistrationSignin(email, password) {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    if (attempt > 1) {
+      await wait(500 * attempt);
+    }
+
+    try {
+      const resp = await fetch(`${API_BASE}/v1/auth/email/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+      const data = await readApiResponse(resp);
+      if (resp.ok) return data;
+
+      lastError = new Error(data?.detail || 'Could not sign in.');
+      if (resp.status !== 401) {
+        throw lastError;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('Could not sign in.');
+}
+
 function fullPhone() {
   return `+254${document.getElementById('regPhone').value.replace(/\s/g, '')}`;
 }
@@ -796,7 +836,20 @@ async function createRegAccount() {
       }),
     });
     const data = await readApiResponse(resp);
-    if (!resp.ok) throw new Error(data?.detail || 'Could not create your account.');
+    if (!resp.ok) {
+      const detail = data?.detail || 'Could not create your account.';
+      if (isPostRegistrationSigninError(resp.status, detail)) {
+        console.warn('Registration created the user but did not return a session. Retrying login.', detail);
+        btn.textContent = 'Signing you in…';
+        const recoveredSession = await retryRegistrationSignin(email, password);
+        regAuthPayload = recoveredSession;
+        persistSession(recoveredSession);
+        localStorage.setItem('kazix_reg_pending_profile', '1');
+        goRStep(4);
+        return;
+      }
+      throw new Error(detail);
+    }
 
     regAuthPayload = data;
     persistSession(data);

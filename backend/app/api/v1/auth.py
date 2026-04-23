@@ -12,6 +12,7 @@ GET  /v1/auth/session      → returns current user + profile in one call
 GET  /v1/auth/bootstrap    → returns profile completion state for OAuth/OTP sessions
 """
 
+import asyncio
 import secrets
 import time
 from typing import Literal
@@ -42,6 +43,8 @@ except ImportError:
 
 _OAUTH_STATE_TTL_SECONDS = 600
 _OAUTH_STATE_STORE: dict[str, dict[str, str | float]] = {}
+_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS = 3
+_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS = 0.4
 
 
 # ── Schemas ──────────────────────────────────────────────────
@@ -323,6 +326,87 @@ def _build_auth_payload(response, *, is_new_user: bool, redirect_to: str) -> dic
     }
 
 
+async def _sign_in_after_email_registration(email: str, password: str):
+    sign_in_payload = {
+        "email": email,
+        "password": password,
+    }
+    masked_email = _mask_email(email)
+    missing_session_error: HTTPException | None = None
+    last_auth_error: AuthApiError | None = None
+    last_unexpected_error: Exception | None = None
+
+    for attempt in range(1, _EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS + 1):
+        try:
+            response = create_client(settings.supabase_url, settings.supabase_anon_key).auth.sign_in_with_password(
+                sign_in_payload
+            )
+            if response.session and response.user:
+                if attempt > 1:
+                    logger.info(
+                        "Email registration sign-in succeeded after retry",
+                        email=masked_email,
+                        attempt=attempt,
+                    )
+                return response
+
+            missing_session_error = HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account was created but no session was returned.",
+            )
+            logger.warning(
+                "Email registration sign-in returned no session",
+                email=masked_email,
+                attempt=attempt,
+                max_attempts=_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS,
+            )
+        except AuthApiError as exc:
+            last_auth_error = exc
+            logger.warning(
+                "Email registration sign-in attempt failed",
+                email=masked_email,
+                attempt=attempt,
+                max_attempts=_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS,
+                code=getattr(exc, "code", None),
+                error=str(exc),
+            )
+        except Exception as exc:
+            last_unexpected_error = exc
+            logger.warning(
+                "Email registration sign-in attempt hit unexpected error",
+                email=masked_email,
+                attempt=attempt,
+                max_attempts=_EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS,
+                error=str(exc),
+            )
+
+        if attempt < _EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS:
+            await asyncio.sleep(_EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS * attempt)
+
+    if last_auth_error is not None:
+        detail = "Account created, but sign-in failed. Please try signing in."
+        if settings.app_env != "production":
+            detail = getattr(last_auth_error, "message", None) or str(last_auth_error) or detail
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=detail,
+        )
+
+    if last_unexpected_error is not None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Account created, but sign-in failed. Please try signing in.",
+        )
+
+    if missing_session_error is not None:
+        raise missing_session_error
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Account created, but sign-in failed. Please try signing in.",
+    )
+
+
 def _cleanup_oauth_state(now_ts: float) -> None:
     expired = [
         state
@@ -532,36 +616,7 @@ async def register_with_email(body: EmailRegisterRequest):
             )
 
     if not response or not response.session or not response.user:
-        client = create_client(settings.supabase_url, settings.supabase_anon_key)
-        try:
-            response = client.auth.sign_in_with_password(
-                {
-                    "email": body.email,
-                    "password": body.password,
-                }
-            )
-        except AuthApiError as exc:
-            logger.error(
-                "Email registration sign-in failed",
-                email=_mask_email(body.email),
-                code=getattr(exc, "code", None),
-                error=str(exc),
-            )
-            raise _auth_error_http_exception(
-                exc,
-                default_status=status.HTTP_401_UNAUTHORIZED,
-                default_detail="Account created, but sign-in failed. Please try signing in.",
-            )
-        except Exception as exc:
-            logger.error(
-                "Email registration sign-in unexpected failure",
-                email=_mask_email(body.email),
-                error=str(exc),
-            )
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="Account created, but sign-in failed. Please try signing in.",
-            )
+        response = await _sign_in_after_email_registration(body.email, body.password)
 
     if not response.session or not response.user:
         raise HTTPException(
