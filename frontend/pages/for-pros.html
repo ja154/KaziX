@@ -147,7 +147,8 @@
     <li><a href="find-workers.html">Find Workers</a></li>
     <li><a href="post-job.html">Post a Job</a></li>
     <li><a href="for-pros.html" class="active">For Pros</a></li>
-    <li><a href="register.html" class="nav-cta">Register as Pro</a></li>
+    <li data-auth="guest"><a href="register.html" class="nav-cta">Register as Pro</a></li>
+    <li data-auth-slot="profile" style="display:none"></li>
   </ul>
 </nav>
 
@@ -340,5 +341,6 @@ function updateCalc() {
 }
 updateCalc();
 </script>
+<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>

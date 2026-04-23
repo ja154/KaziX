@@ -107,7 +107,8 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6}
     <li><a href="find-workers.html">Find Workers</a></li>
     <li><a href="worker-jobs.html">Find Jobs</a></li>
     <li><a href="for-pros.html">For Pros</a></li>
-    <li><a href="login.html" class="nav-cta">Sign In</a></li>
+    <li data-auth="guest"><a href="login.html" class="nav-cta">Sign In</a></li>
+    <li data-auth-slot="profile" style="display:none"></li>
   </ul>
 </nav>
 
@@ -261,5 +262,6 @@ function submitApply() {
   `;
 }
 </script>
+<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>

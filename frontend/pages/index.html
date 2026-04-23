@@ -251,7 +251,8 @@ footer{
     <li><a href="for-pros.html">For Pros</a></li>
     <li><a href="how-it-works.html">How It Works</a></li>
   </ul>
-  <a href="login.html" class="nav-cta">Get Started</a>
+  <a href="login.html" class="nav-cta" data-auth="guest">Get Started</a>
+  <div data-auth-slot="profile" style="display:none"></div>
 </nav>
 
 <section class="hero">
@@ -359,5 +360,6 @@ footer{
   <span>© 2025 KaziX Ltd. All rights reserved.</span>
   <span>Built for Kenya 🇰🇪 · <a href="#">Powered by M-Pesa</a></span>
 </div>
+<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>

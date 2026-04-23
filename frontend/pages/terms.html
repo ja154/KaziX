@@ -103,7 +103,8 @@ footer{background:var(--ink);color:#F5F0E8;padding:3rem 6% 2rem;display:grid;gri
     <li><a href="for-pros.html">For Pros</a></li>
     <li><a href="help-centre.html">Help Centre</a></li>
   </ul>
-  <a href="login.html" class="nav-cta">Get Started</a>
+  <a href="login.html" class="nav-cta" data-auth="guest">Get Started</a>
+  <div data-auth-slot="profile" style="display:none"></div>
 </nav>
 
 <section class="page-hero">
@@ -214,5 +215,6 @@ footer{background:var(--ink);color:#F5F0E8;padding:3rem 6% 2rem;display:grid;gri
   <span>Built for Kenya. Escrow payments via M-Pesa.</span>
   <span>Copyright 2026 KaziX.</span>
 </div>
+<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>

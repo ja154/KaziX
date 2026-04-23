@@ -119,7 +119,8 @@ footer{background:var(--ink);color:#F5F0E8;padding:3rem 5% 2rem;display:grid;gri
     <li><a href="post-job.html">Post a Job</a></li>
     <li><a href="for-pros.html">For Pros</a></li>
     <li><a href="how-it-works.html" style="color:var(--ink);font-weight:700;border-bottom:2px solid var(--saffron);padding-bottom:2px">How It Works</a></li>
-    <li><a href="login.html" class="nav-cta">Get Started</a></li>
+    <li data-auth="guest"><a href="login.html" class="nav-cta">Get Started</a></li>
+    <li data-auth-slot="profile" style="display:none"></li>
   </ul>
 </nav>
 
@@ -306,5 +307,6 @@ function toggleFaq(el) {
   }
 }
 </script>
+<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>
