@@ -10,7 +10,7 @@ This repo is now wired for a `Vercel + Render` deployment:
 
 - `frontend/package.json` gives Vercel a build step that generates `env.js`.
 - `frontend/vercel.json` redirects `/` to `/pages/index.html` and disables caching for `env.js`.
-- `frontend/generate-env.js` now publishes `KAZIX_API_BASE` so frontend API calls can target Render.
+- `frontend/generate-env.js` now publishes `KAZIX_API_BASE` so frontend API calls can target Render consistently.
 - `render.yaml` defines a Render Blueprint for the backend service.
 - `backend/app/core/config.py` now accepts `PORT` and configurable `ALLOWED_HOSTS`.
 - `backend/Dockerfile` now binds Uvicorn to `PORT` when a platform sets it.
@@ -80,7 +80,7 @@ If you prefer not to use Blueprints:
    - `VITE_SUPABASE_URL=https://your-project.supabase.co`
    - `VITE_SUPABASE_ANON_KEY=your-supabase-anon-key`
    - `SUPABASE_REDIRECT_URL=https://kazixfrontend.vercel.app/pages/auth-callback.html`
-   - `VITE_API_URL=https://kazix-api.onrender.com`
+   - `KAZIX_API_BASE=https://kazix.onrender.com` (replace with your actual Render backend URL if different)
 5. Deploy.
 
 The checked-in `frontend/vercel.json` will make `/` load `pages/index.html`.
@@ -171,6 +171,7 @@ Frontend checks:
 - Render free instances can sleep after idle periods. Upgrade the plan if you want always-on behavior.
 - The backend Docker image now respects `PORT`, which makes Render detection more reliable.
 - The frontend build writes `env.js` from Vercel environment variables, so redeploy after changing frontend env values.
+- `KAZIX_API_BASE`, `API_BASE_URL`, and `VITE_API_URL` are all accepted, but `KAZIX_API_BASE` is the canonical name in this repo.
 
 ## References
 

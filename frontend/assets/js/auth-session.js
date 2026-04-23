@@ -4,34 +4,44 @@
  * Import this on every authenticated page
  */
 
-function resolveApiBase() {
-  const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
-  const host = window.location.hostname;
-  const proxyHosts = new Set([
-    'kazixfrontend.vercel.app',
-    'kazix.vercel.app',
-    'kazix.co.ke',
-    'www.kazix.co.ke',
-  ]);
-  const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
 
-  if (configured) {
-    try {
-      const configuredUrl = new URL(configured, window.location.origin);
-      if (configuredUrl.origin === window.location.origin && configuredUrl.pathname === '/') {
-        return '';
-      }
-      return configuredUrl.toString().replace(/\/$/, '');
-    } catch (_error) {
-      return configured.replace(/\/$/, '');
+function normalizeApiBase(candidate) {
+  if (candidate === undefined || candidate === null) {
+    return null;
+  }
+
+  const value = String(candidate).trim();
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin === window.location.origin && url.pathname === '/') {
+      return '';
     }
+    return url.toString().replace(/\/$/, '');
+  } catch (_error) {
+    return value.replace(/\/$/, '');
+  }
+}
+
+function isLocalHost(host) {
+  return ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+}
+
+function resolveApiBase() {
+  const configured = normalizeApiBase(window.KAZIX_API_BASE ?? window.KAZIX_CONFIG?.KAZIX_API_BASE ?? null);
+  if (configured !== null) {
+    return configured;
   }
 
-  if (useSameOriginProxy) {
-    return '';
+  if (isLocalHost(window.location.hostname)) {
+    return window.location.origin.replace(/\/$/, '');
   }
 
-  return window.location.origin.replace(/\/$/, '');
+  return DEFAULT_REMOTE_API_BASE;
 }
 
 const API_BASE = resolveApiBase();

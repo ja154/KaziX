@@ -17,6 +17,7 @@ if (!fs.existsSync(envPath)) {
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'OAUTH_REDIRECT_URI',
+    'API_BASE_URL',
     'VITE_API_URL',
     'KAZIX_API_BASE',
     'BACKEND_API_URL',
@@ -49,7 +50,12 @@ for (const rawLine of lines) {
 const supabaseUrl = vars.VITE_SUPABASE_URL || vars.SUPABASE_URL;
 const supabaseAnonKey = vars.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY;
 const supabaseRedirectUrl = vars.SUPABASE_REDIRECT_URL || null;
-const apiBase = vars.KAZIX_API_BASE || vars.VITE_API_URL || vars.BACKEND_API_URL || null;
+const apiBase =
+  vars.KAZIX_API_BASE ||
+  vars.API_BASE_URL ||
+  vars.VITE_API_URL ||
+  vars.BACKEND_API_URL ||
+  null;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY (or SUPABASE_URL/SUPABASE_ANON_KEY) in frontend/.env.');
@@ -65,20 +71,10 @@ const config = {
 const content = `// Generated from frontend/.env. Do not edit directly.
 (function () {
   const config = ${JSON.stringify(config, null, 2)};
-
-  const PROXY_API_HOSTS = new Set([
-    'kazixfrontend.vercel.app',
-    'kazix.vercel.app',
-    'kazix.co.ke',
-    'www.kazix.co.ke',
-  ]);
+  const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
 
   function isLocalHost(host) {
     return ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
-  }
-
-  function shouldUseSameOriginProxy(host) {
-    return PROXY_API_HOSTS.has(host) || host.endsWith('.kazix.co.ke');
   }
 
   function normalizeApiBase(candidate) {
@@ -99,11 +95,11 @@ const content = `// Generated from frontend/.env. Do not edit directly.
 
   function inferApiBase() {
     const host = window.location.hostname;
-    if (shouldUseSameOriginProxy(host)) {
-      return '';
+    if (isLocalHost(host)) {
+      return window.location.origin.replace(/\\/$/, '');
     }
 
-    return null;
+    return DEFAULT_REMOTE_API_BASE;
   }
 
   function resolveApiBase() {
