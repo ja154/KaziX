@@ -232,6 +232,27 @@ def _profile_write_http_error(exc: Exception, *, table_name: str) -> HTTPExcepti
     )
 
 
+def _should_retry_profile_write_with_admin(exc: Exception) -> bool:
+    if isinstance(exc, PostgrestAPIError):
+        error_blob = " ".join(
+            str(part or "")
+            for part in (exc.code, exc.message, exc.details, exc.hint)
+        ).lower()
+        return (
+            exc.code in {"42501", "PGRST301", "PGRST302"}
+            or "row-level security" in error_blob
+            or "permission denied" in error_blob
+            or ("jwt" in error_blob and "invalid" in error_blob)
+        )
+
+    message = str(exc).lower()
+    return (
+        "row-level security" in message
+        or "permission denied" in message
+        or ("jwt" in message and "invalid" in message)
+    )
+
+
 def _mask_email(email: str) -> str:
     local, _, domain = email.partition("@")
     if not domain:
@@ -335,6 +356,47 @@ def _is_valid_redirect_to(redirect_to: str | None) -> bool:
         "admin-dashboard",
     }
     return redirect_to in valid
+
+
+def _upsert_self_owned_row(
+    *,
+    user_id: str,
+    access_token: str,
+    table_name: str,
+    payload: dict,
+):
+    """
+    Try the write as the authenticated user first so normal self-service
+    RLS continues to work, then fall back to the service role for the
+    same user-owned row when hosted PostgREST auth/RLS behavior gets in
+    the way of profile completion.
+    """
+    try:
+        return (
+            get_user_client(access_token)
+            .table(table_name)
+            .upsert(payload, on_conflict="id")
+            .execute()
+        )
+    except Exception as exc:
+        if not _should_retry_profile_write_with_admin(exc):
+            raise
+
+        logger.warning(
+            "User-scoped profile write failed; retrying with admin client",
+            user_id=user_id,
+            table_name=table_name,
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            details=getattr(exc, "details", None),
+            hint=getattr(exc, "hint", None),
+        )
+        return (
+            get_admin_client()
+            .table(table_name)
+            .upsert(payload, on_conflict="id")
+            .execute()
+        )
 
 
 # ── Routes ───────────────────────────────────────────────────
@@ -882,8 +944,6 @@ async def create_profile(body: CreateProfileRequest, user: CurrentSession):
             detail="Maximum rate must be greater than or equal to minimum rate.",
         )
 
-    client = get_user_client(user.access_token)
-
     # Upsert profiles row (idempotent)
     profile_data = {
         "id":                 user.user_id,
@@ -898,10 +958,11 @@ async def create_profile(body: CreateProfileRequest, user: CurrentSession):
     }
 
     try:
-        profile_result = (
-            client.table("profiles")
-            .upsert(profile_data, on_conflict="id")
-            .execute()
+        profile_result = _upsert_self_owned_row(
+            user_id=user.user_id,
+            access_token=user.access_token,
+            table_name="profiles",
+            payload=profile_data,
         )
     except Exception as exc:
         logger.error(
@@ -926,7 +987,12 @@ async def create_profile(body: CreateProfileRequest, user: CurrentSession):
             "kyc_status":       "pending",
         }
         try:
-            client.table("fundi_profiles").upsert(fundi_data, on_conflict="id").execute()
+            _upsert_self_owned_row(
+                user_id=user.user_id,
+                access_token=user.access_token,
+                table_name="fundi_profiles",
+                payload=fundi_data,
+            )
         except Exception as exc:
             logger.error(
                 "Fundi profile upsert failed",

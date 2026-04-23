@@ -482,6 +482,48 @@ async def test_create_profile_returns_conflict_for_duplicate_phone(monkeypatch) 
 
 
 @pytest.mark.asyncio
+async def test_create_profile_falls_back_to_admin_client_when_user_upsert_fails(monkeypatch) -> None:
+    secret = "test-jwt-secret"
+    failing_user_client = _ErroringAdminClient(
+        execute_errors={
+            "profiles": {
+                "message": 'new row violates row-level security policy for table "profiles"',
+                "code": "42501",
+                "details": "",
+                "hint": "",
+            }
+        }
+    )
+    fake_admin = _FakeAdminClient()
+
+    monkeypatch.setattr(deps_module, "settings", SimpleNamespace(supabase_jwt_secret=secret))
+    monkeypatch.setattr(auth_module, "get_user_client", lambda _token: failing_user_client)
+    monkeypatch.setattr(auth_module, "get_admin_client", lambda: fake_admin)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/v1/auth/profile",
+            headers={"Authorization": f"Bearer {_make_bearer_token(secret)}"},
+            json={
+                "full_name": "Jane Wanjiku",
+                "phone": "+254712345678",
+                "email": "jane@example.com",
+                "county": "Nairobi",
+                "area": "Westlands",
+                "role": "client",
+                "mpesa_number": "+254712345678",
+                "preferred_language": "en",
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json()["success"] is True
+    assert fake_admin.tables["profiles"]["user-123"]["full_name"] == "Jane Wanjiku"
+    assert fake_admin.tables["profiles"]["user-123"]["role"] == "client"
+
+
+@pytest.mark.asyncio
 async def test_create_profile_rejects_inverted_fundi_rate_range(monkeypatch) -> None:
     secret = "test-jwt-secret"
     fake_admin = _FakeAdminClient()
