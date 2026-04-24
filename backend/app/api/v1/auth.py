@@ -20,7 +20,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Request, status
 from gotrue.errors import AuthApiError
 from postgrest.exceptions import APIError as PostgrestAPIError
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from app.api.deps import CurrentSession, CurrentUser
 from app.core.config import get_settings
@@ -76,6 +76,16 @@ class VerifyOTPRequest(BaseModel):
         if bool(self.phone) == bool(self.email):
             raise ValueError("Provide exactly one destination: phone or email.")
         return self
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+    redirect_to: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    access_token: str
+    new_password: str = Field(min_length=8)
 
 
 class CreateProfileRequest(BaseModel):
@@ -1276,3 +1286,42 @@ async def logout(session: CurrentSession):
         logger.warning("Logout failed", user_id=session.user_id, error=str(exc))
         # Still return success even if sign_out fails, frontend should clear tokens
         return {"success": True, "message": "Logged out successfully"}
+
+
+@router.post("/email/forgot-password", status_code=200)
+async def forgot_password(payload: ForgotPasswordRequest):
+    """Trigger Supabase password recovery email."""
+    redirect_to = payload.redirect_to or f"{settings.frontend_url}/pages/reset-password.html"
+    try:
+        admin_client = get_admin_client()
+        admin_client.auth.admin.reset_password_for_email(
+            payload.email,
+            {"redirect_to": redirect_to},
+        )
+    except Exception as exc:
+        logger.warning(
+            "Password recovery request failed",
+            email=_mask_email(payload.email),
+            error=str(exc),
+        )
+        # Always return 200 so we don't leak which emails exist
+    return {"ok": True, "message": "If an account exists, a reset link has been sent."}
+
+
+@router.post("/email/reset-password", status_code=200)
+async def reset_password(payload: ResetPasswordRequest):
+    """Complete password reset using the recovery token from the email link."""
+    try:
+        anon_client = get_anon_client()
+        # Authenticate with the recovery access token, then update password
+        anon_client.auth.set_session(payload.access_token, payload.access_token)
+        result = anon_client.auth.update_user({"password": payload.new_password})
+        if not result or not result.user:
+            raise ValueError("Update returned no user")
+    except Exception as exc:
+        logger.warning("Password reset failed", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset link is invalid or has expired. Please request a new one.",
+        )
+    return {"ok": True, "message": "Password updated. You can now sign in."}

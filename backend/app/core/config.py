@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     at_username: str = "sandbox"
     at_sender_id: str = "KaziX"
 
+    # ── Frontend ────────────────────────────────────────────────
+    frontend_url: str = "https://kazixfrontend.vercel.app"
+
     # ── OTP Retry Configuration ──────────────────────────────
     otp_max_retries: int = 3
     otp_initial_backoff_ms: int = 100
