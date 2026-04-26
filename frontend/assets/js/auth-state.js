@@ -293,8 +293,13 @@
   }
 
   async function logout() {
+    if (window.KazixProfile && typeof window.KazixProfile.logout === 'function') {
+      // Delegate to the canonical implementation in profile-utils.js
+      // so we have one source of truth for clearing storage + redirect.
+      return window.KazixProfile.logout();
+    }
+    // Fallback used only when profile-utils.js is not present on the page.
     const token = getToken();
-
     try {
       if (token) {
         await fetch(`${API_BASE}/v1/auth/logout`, {
@@ -306,7 +311,7 @@
       // Ignore API logout failures and clear local state anyway.
     } finally {
       clearAuth();
-      window.location.replace('index.html');
+      window.location.replace('login.html?logged_out=1');
     }
   }
 
