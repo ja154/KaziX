@@ -1293,8 +1293,8 @@ async def forgot_password(payload: ForgotPasswordRequest):
     """Trigger Supabase password recovery email."""
     redirect_to = payload.redirect_to or f"{settings.frontend_url}/pages/reset-password.html"
     try:
-        admin_client = get_admin_client()
-        admin_client.auth.admin.reset_password_for_email(
+        anon_client = get_anon_client()
+        anon_client.auth.reset_password_for_email(
             payload.email,
             {"redirect_to": redirect_to},
         )
