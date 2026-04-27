@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaziX Error Handling System - Integration Test</title>
+    <link rel="stylesheet" href="assets/css/error-components.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        h2 {
+            color: #666;
+            font-size: 18px;
+            margin-top: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.secondary {
+            background: #6c757d;
+        }
+        button.secondary:hover {
+            background: #545b62;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #004085;
+        }
+        .test-status {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>KaziX Error Handling System - Integration Test</h1>
+    
+    <div class="test-container">
+        <h2>1. Toast Notifications</h2>
+        <p>Test various toast notification types and options.</p>
+        
+        <div class="button-group">
+            <button onclick="testErrorToast()">Show Error Toast</button>
+            <button class="success" onclick="testSuccessToast()">Show Success Toast</button>
+            <button class="secondary" onclick="testWarningToast()">Show Warning Toast</button>
+            <button onclick="testInfoToast()">Show Info Toast</button>
+            <button class="danger" onclick="clearAllToasts()">Clear All Toasts</button>
+        </div>
+        
+        <div class="info-box">
+            💡 Error toasts dismiss after 4 seconds, success after 3 seconds. Hover to pause auto-dismiss.
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>2. Form Validation (Real-time)</h2>
+        <p>Type in the fields below to see real-time validation. Error messages appear on blur.</p>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="emailField">Email Address</label>
+                <input type="text" id="emailField" name="email" placeholder="user@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="phoneField">Phone Number</label>
+                <input type="text" id="phoneField" name="phone" placeholder="+254712345678 or 0712345678">
+            </div>
+            
+            <div class="form-group">
+                <label for="urlField">Website URL</label>
+                <input type="text" id="urlField" name="url" placeholder="https://example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="passwordField">Password</label>
+                <input type="password" id="passwordField" name="password" placeholder="Min 8 characters">
+            </div>
+            
+            <div class="button-group">
+                <button type="button" onclick="submitTestForm()">Submit Form</button>
+                <button type="button" class="secondary" onclick="clearForm()">Clear Form & Errors</button>
+            </div>
+        </form>
+        
+        <div class="info-box">
+            💡 Leave a field empty or enter invalid data, then blur the field to see validation errors.
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>3. Field-Level Error Display</h2>
+        <p>Manually set and clear field errors to test inline error display.</p>
+        
+        <div class="form-group">
+            <label for="errorTestField">Test Field</label>
+            <input type="text" id="errorTestField" placeholder="Type something...">
+        </div>
+        
+        <div class="button-group">
+            <button onclick="setManualFieldError()">Set Field Error</button>
+            <button class="secondary" onclick="clearManualFieldError()">Clear Field Error</button>
+        </div>
+        
+        <div class="info-box">
+            💡 Click a button to manually set/clear an error on the field above.
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>4. Error Modal Dialog</h2>
+        <p>Display critical errors in a modal dialog.</p>
+        
+        <div class="button-group">
+            <button class="danger" onclick="showTestModal()">Show Error Modal</button>
+        </div>
+        
+        <div class="info-box">
+            💡 Modal can be closed by clicking the close button or pressing Escape.
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>5. Simulated API Errors</h2>
+        <p>Simulate various HTTP error responses.</p>
+        
+        <div class="button-group">
+            <button onclick="simulateError(401)">Simulate 401 (Unauthorized)</button>
+            <button onclick="simulateError(404)">Simulate 404 (Not Found)</button>
+            <button onclick="simulateError(422)">Simulate 422 (Validation)</button>
+            <button onclick="simulateError(500)">Simulate 500 (Server Error)</button>
+            <button onclick="simulateNetworkError()">Simulate Network Error</button>
+        </div>
+        
+        <div class="info-box">
+            💡 These simulate API responses with appropriate error messages and handling.
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Test Status</h2>
+        <div class="test-status" id="testStatus">
+            Ready for testing. Click buttons above to test error handling system.
+            <br><br>
+            System loaded: <span id="systemStatus">Loading...</span>
+            <br>
+            Error Handler: <span id="errorHandlerStatus">Loading...</span>
+            <br>
+            Form Validator: <span id="formValidatorStatus">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Load error handling system -->
+    <script src="assets/js/error-messages.js"></script>
+    <script src="assets/js/error-handler.js"></script>
+    <script src="assets/js/form-handler.js"></script>
+
+    <script>
+        // Initialize system and check status
+        window.addEventListener('DOMContentLoaded', function() {
+            // Check if modules loaded
+            const errorHandlerReady = typeof window.KazixErrorHandler !== 'undefined';
+            const formValidatorReady = typeof window.KazixFormValidator !== 'undefined';
+            const errorMessagesReady = typeof window.KazixErrorMessages !== 'undefined';
+
+            document.getElementById('errorHandlerStatus').textContent = errorHandlerReady ? '✓ Ready' : '✗ Not Loaded';
+            document.getElementById('formValidatorStatus').textContent = formValidatorReady ? '✓ Ready' : '✗ Not Loaded';
+            document.getElementById('systemStatus').textContent = errorMessagesReady ? '✓ Ready' : '✗ Not Loaded';
+
+            if (errorHandlerReady && formValidatorReady && errorMessagesReady) {
+                document.getElementById('testStatus').style.color = '#28a745';
+                // Setup form validator
+                setupFormValidation();
+            }
+        });
+
+        // Toast test functions
+        function testErrorToast() {
+            window.KazixErrorHandler.showError('This is an error message. It will auto-dismiss after 4 seconds.');
+            logTest('Error toast displayed');
+        }
+
+        function testSuccessToast() {
+            window.KazixErrorHandler.showSuccess('Action completed successfully!');
+            logTest('Success toast displayed');
+        }
+
+        function testWarningToast() {
+            window.KazixErrorHandler.showWarning('This is a warning. Please be careful.');
+            logTest('Warning toast displayed');
+        }
+
+        function testInfoToast() {
+            window.KazixErrorHandler.showInfo('Here is some information for you.');
+            logTest('Info toast displayed');
+        }
+
+        function clearAllToasts() {
+            window.KazixErrorHandler.clearAllToasts();
+            logTest('All toasts cleared');
+        }
+
+        // Form validation setup
+        function setupFormValidation() {
+            const form = document.getElementById('testForm');
+            const schema = {
+                email: { required: true, pattern: window.KazixFormValidator.ValidationPatterns.EMAIL },
+                phone: { required: true, custom: window.KazixFormValidator.isValidPhoneKE },
+                url: { required: true, pattern: window.KazixFormValidator.ValidationPatterns.URL },
+                password: { required: true, minLength: 8 }
+            };
+
+            const validator = window.KazixFormValidator.createFormValidator(form, schema);
+            validator.setupBlurValidation();
+            logTest('Form validator setup complete');
+        }
+
+        function submitTestForm() {
+            const form = document.getElementById('testForm');
+            // Manual validation for demo
+            const email = document.getElementById('emailField').value;
+            const phone = document.getElementById('phoneField').value;
+            const url = document.getElementById('urlField').value;
+            const password = document.getElementById('passwordField').value;
+
+            let hasErrors = false;
+
+            // Validate email
+            if (!email || !window.KazixFormValidator.isValidEmail(email)) {
+                window.KazixErrorHandler.setFieldError('email', 'Please enter a valid email address');
+                hasErrors = true;
+            }
+
+            // Validate phone
+            if (!phone || !window.KazixFormValidator.isValidPhoneKE(phone)) {
+                window.KazixErrorHandler.setFieldError('phone', 'Please enter a valid Kenyan phone number');
+                hasErrors = true;
+            }
+
+            // Validate URL
+            if (!url || !window.KazixFormValidator.isValidUrl(url)) {
+                window.KazixErrorHandler.setFieldError('url', 'Please enter a valid URL starting with http:// or https://');
+                hasErrors = true;
+            }
+
+            // Validate password
+            if (!password || password.length < 8) {
+                window.KazixErrorHandler.setFieldError('password', 'Password must be at least 8 characters');
+                hasErrors = true;
+            }
+
+            if (!hasErrors) {
+                window.KazixErrorHandler.showSuccess('Form submitted successfully!');
+                logTest('Form submission successful');
+            } else {
+                window.KazixErrorHandler.showError('Please fix the errors above');
+                logTest('Form submission blocked - validation errors');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('testForm').reset();
+            window.KazixErrorHandler.clearAllFieldErrors(document.getElementById('testForm'));
+            logTest('Form cleared and errors reset');
+        }
+
+        // Field error test functions
+        function setManualFieldError() {
+            window.KazixErrorHandler.setFieldError('errorTestField', 'This is a test error message');
+            logTest('Manual field error set');
+        }
+
+        function clearManualFieldError() {
+            window.KazixErrorHandler.clearFieldError('errorTestField');
+            logTest('Manual field error cleared');
+        }
+
+        // Modal test function
+        function showTestModal() {
+            window.KazixErrorHandler.showErrorModal(
+                'Critical Error',
+                'This is a test error modal. It demonstrates how critical errors are displayed to users with proper focus management and keyboard support.'
+            );
+            logTest('Error modal displayed');
+        }
+
+        // API error simulation
+        function simulateError(statusCode) {
+            const messages = {
+                401: 'Your session has expired. Please log in again.',
+                404: 'The resource you requested could not be found.',
+                422: 'Please check your input. Some fields have validation errors.',
+                500: 'Something went wrong on our end. Our team has been notified.'
+            };
+
+            const errorResponse = {
+                status: statusCode,
+                message: messages[statusCode] || 'An error occurred'
+            };
+
+            window.KazixErrorHandler.displayApiError(errorResponse, {
+                showError: true
+            });
+            logTest(`Simulated HTTP ${statusCode} error`);
+        }
+
+        function simulateNetworkError() {
+            const networkError = new Error('Network error');
+            networkError.name = 'NetworkError';
+            window.KazixErrorHandler.displayApiError(networkError, {
+                showError: true
+            });
+            logTest('Simulated network error');
+        }
+
+        // Logging function
+        function logTest(message) {
+            console.log(`[TEST] ${message}`);
+            const status = document.getElementById('testStatus');
+            const timestamp = new Date().toLocaleTimeString();
+            status.innerHTML += `<br><span style="color: #28a745;">✓ [${timestamp}] ${message}</span>`;
+            status.scrollTop = status.scrollHeight;
+        }
+    </script>
+</body>
+</html>
