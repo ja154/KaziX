@@ -149,6 +149,15 @@
       <div class="auth-title">Sign in</div>
       <div class="auth-sub" id="authSub">Use your email and password to access your KaziX account.<br>New here? <a href="register.html">Create a free account →</a></div>
 
+      <div id="loginNextNotice" style="display:none;background:#FFF8E1;border:1px solid #F5A623;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.9rem;color:#0D0D0D;">
+        Please sign in to continue.
+      </div>
+      <script>
+        if (new URLSearchParams(location.search).get('next')) {
+          document.getElementById('loginNextNotice').style.display = 'block';
+        }
+      </script>
+
       <div class="method-toggle" style="display:none">
         <div class="method-option active" onclick="setAuthMethod(this,'email')">Email sign-in</div>
         <div class="method-option" onclick="setAuthMethod(this,'phone')">Phone OTP</div>
@@ -481,10 +490,25 @@ function persistSession(payload) {
   if (payload.token_type) localStorage.setItem('kazix_token_type', payload.token_type);
 }
 
+function getNextFromUrl() {
+  try {
+    const raw = new URLSearchParams(location.search).get('next');
+    if (!raw) return null;
+    const decoded = decodeURIComponent(raw);
+    // Only allow same-origin relative paths to prevent open-redirect attacks
+    if (decoded.startsWith('/') && !decoded.startsWith('//')) {
+      // Strip the leading "/pages/" so it matches the relative form used elsewhere
+      return decoded.replace(/^\/pages\//, '').replace(/^\//, '');
+    }
+    return null;
+  } catch (_e) { return null; }
+}
+
 function finishAuth(payload) {
   clearAuthTabWaiting();
   persistSession(payload);
-  const next = mapRedirectToPage(payload.redirect_to);
+  const fromUrl = getNextFromUrl();
+  const next = fromUrl || mapRedirectToPage(payload.redirect_to);
   window.location.href = next;
 }
 
@@ -554,7 +578,7 @@ function startMagicLinkPoll() {
   magicLinkPollTimer = setInterval(() => {
     if (localStorage.getItem('kazix_magic_link_complete') === '1') {
       clearInterval(magicLinkPollTimer);
-      const nextPage = localStorage.getItem('kazix_auth_next_page') || 'index.html';
+      const nextPage = getNextFromUrl() || localStorage.getItem('kazix_auth_next_page') || 'index.html';
       localStorage.removeItem('kazix_magic_link_complete');
       localStorage.removeItem('kazix_auth_next_page');
       clearAuthTabWaiting();
@@ -741,7 +765,7 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('storage', (e) => {
   if (e.key === 'kazix_magic_link_complete' && e.newValue === '1') {
     // Immediately redirect without waiting for the next poll interval
-    const nextPage = localStorage.getItem('kazix_auth_next_page') || 'index.html';
+    const nextPage = getNextFromUrl() || localStorage.getItem('kazix_auth_next_page') || 'index.html';
     clearAuthTabWaiting();
     persistSession({
       access_token: localStorage.getItem('kazix_access_token'),
