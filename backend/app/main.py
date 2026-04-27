@@ -7,14 +7,18 @@ All routers, middleware, and startup hooks are wired here.
 
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Any
 
 import sentry_sdk
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
 from prometheus_fastapi_instrumentator import Instrumentator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
@@ -124,14 +128,137 @@ def create_app() -> FastAPI:
     # ── Prometheus metrics (/metrics) ───────────────────────
     Instrumentator().instrument(app).expose(app)
 
+    # ── Exception handlers ──────────────────────────────────
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+        """
+        Handle HTTP exceptions with user-friendly error responses.
+        Maps technical errors to messages safe for frontend display.
+        """
+        status_code = exc.status_code
+        detail = exc.detail or "An error occurred"
+
+        # Build user-friendly error response
+        error_response: dict[str, Any] = {
+            "error": _get_error_code_from_status(status_code),
+            "message": detail if isinstance(detail, str) else str(detail),
+            "status_code": status_code,
+        }
+
+        # Add details array for validation errors
+        if isinstance(detail, list):
+            error_response["details"] = detail
+        elif isinstance(detail, dict):
+            # Already structured detail
+            error_response.update(detail)
+
+        # Log the error for debugging
+        logger.warning(
+            "HTTP exception",
+            status_code=status_code,
+            detail=str(detail),
+            path=str(request.url),
+        )
+
+        return JSONResponse(status_code=status_code, content=error_response)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """
+        Handle validation errors with structured field-level error messages.
+        """
+        # Extract field-level validation errors
+        details = []
+        field_errors = {}
+
+        for error in exc.errors():
+            field_path = ".".join(str(x) for x in error["loc"][1:])  # Skip "body"
+            field_errors[field_path] = error["msg"]
+            details.append(
+                {
+                    "field": field_path,
+                    "message": error["msg"],
+                    "type": error["type"],
+                }
+            )
+
+        error_response = {
+            "error": "validation_error",
+            "message": "Please check your input and try again.",
+            "status_code": 422,
+            "details": details,
+            "field_errors": field_errors,
+        }
+
+        logger.info(
+            "Validation error",
+            path=str(request.url),
+            errors=field_errors,
+        )
+
+        return JSONResponse(status_code=422, content=error_response)
+
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """
+        Catch-all exception handler for unexpected errors.
+        Logs full details internally, returns safe message to user.
+        """
+        error_id = f"{request.client.host if request.client else 'unknown'}_{id(exc)}"
+
+        # Log full error details for debugging
+        logger.error(
+            "Unhandled exception",
+            error_id=error_id,
+            path=str(request.url),
+            exception=str(exc),
+            exc_info=True,
+        )
+
+        # Return safe error message to user
+        error_response = {
+            "error": "internal_server_error",
+            "message": "Something went wrong. Our team has been notified.",
+            "status_code": 500,
+            "error_id": error_id,  # For user to report to support
+        }
+
+        # In production, send to Sentry via logger
+        if settings.is_production:
+            sentry_sdk.capture_exception(exc)
+
+        return JSONResponse(status_code=500, content=error_response)
+
+    def _get_error_code_from_status(status_code: int) -> str:
+        """
+        Map HTTP status code to error code string for frontend.
+        """
+        status_to_code = {
+            400: "bad_request",
+            401: "unauthorized",
+            403: "forbidden",
+            404: "not_found",
+            409: "conflict",
+            422: "validation_error",
+            429: "too_many_requests",
+            500: "internal_server_error",
+            502: "bad_gateway",
+            503: "service_unavailable",
+        }
+        return status_to_code.get(status_code, f"error_{status_code}")
+
     # ── Routers ─────────────────────────────────────────────
     from app.api.v1 import router as v1_router
     app.include_router(v1_router, prefix="/v1")
 
     # ── Health probe ─────────────────────────────────────────
     @app.get("/health", tags=["ops"])
-    @limiter.limit("10/minute")
-    async def health(request: Request):
+    async def health():
+        # Render probes health endpoints every few seconds during deploys
+        # and while the service is running, so this route must never be
+        # subject to app-level rate limiting.
         return {"status": "ok", "env": settings.app_env}
 
     # ── Frontend pages/assets ───────────────────────────────
