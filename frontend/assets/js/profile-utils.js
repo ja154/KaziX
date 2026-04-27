@@ -91,7 +91,7 @@
   }
 
   async function requestJson(path, options = {}) {
-    const { auth = false, method = 'GET', body } = options;
+    const { auth = false, method = 'GET', body, showSuccess = false, showError = true } = options;
     const headers = {};
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
@@ -99,24 +99,94 @@
     if (auth) {
       const token = getAccessToken();
       if (!token) {
+        if (window.KazixErrorHandler) {
+          window.KazixErrorHandler.showError('Please sign in to access your profile.');
+        }
         throw new Error('Please sign in to access your profile.');
       }
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const resp = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    try {
+      const resp = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers,
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
 
-    const text = await resp.text();
-    const data = text ? safeJson(text) : {};
-    if (!resp.ok) {
-      const message = data?.detail || data?.message || text || `Request failed (${resp.status})`;
-      throw new Error(message);
+      const text = await resp.text();
+      const data = text ? safeJson(text) : {};
+      
+      if (!resp.ok) {
+        // Prepare error info for display
+        const errorInfo = {
+          status: resp.status,
+          detail: data?.detail || data?.message,
+          message: text,
+        };
+
+        // Show error to user if requested
+        if (showError && window.KazixErrorHandler) {
+          const msgConfig = window.KazixErrorMessages?.mapApiError(errorInfo);
+          if (msgConfig) {
+            window.KazixErrorHandler.showError(msgConfig.message, { 
+              title: msgConfig.title,
+              duration: 5000
+            });
+
+            // Handle validation errors - extract field errors
+            if (resp.status === 422 && data?.detail) {
+              const fieldErrors = window.KazixErrorMessages?.extractValidationErrors(data);
+              if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+                Object.entries(fieldErrors).forEach(([field, error]) => {
+                  window.KazixErrorHandler.setFieldError(field, error);
+                });
+              }
+            }
+
+            // Redirect if auth error
+            if ((resp.status === 401 || resp.status === 403) && msgConfig.shouldRedirect) {
+              setTimeout(() => {
+                window.location.href = msgConfig.redirectTo || 'login.html';
+              }, 1500);
+            }
+          }
+        }
+
+        // Create error object for caller
+        const message = data?.detail || data?.message || text || `Request failed (${resp.status})`;
+        const error = new Error(message);
+        error.status = resp.status;
+        error.detail = data?.detail;
+        throw error;
+      }
+
+      // Show success message if requested
+      if (showSuccess && window.KazixErrorHandler) {
+        const successMsg = typeof showSuccess === 'string' ? showSuccess : 'Operation completed successfully';
+        window.KazixErrorHandler.showSuccess(successMsg);
+      }
+
+      return data;
+    } catch (error) {
+      // Network or other errors
+      if (showError && window.KazixErrorHandler) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+          window.KazixErrorHandler.showError('Unable to reach the server. Please check your connection.', {
+            title: 'Connection Error',
+            duration: 5000
+          });
+        } else if (!(error instanceof Error) || !error.status) {
+          // Only show if it's not an HTTP error (those are handled above)
+          if (!error.message?.includes('sign in') && !error.message?.includes('401')) {
+            window.KazixErrorHandler.showError(error.message || 'An unexpected error occurred', {
+              duration: 5000
+            });
+          }
+        }
+      }
+      throw error;
     }
-    return data;
   }
 
   function getMyProfile(options = {}) {

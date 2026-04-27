@@ -6,6 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Sign In — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/error-components.css">
 <style>
   :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -232,6 +233,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../env.js"></script>
+<script src="../assets/js/error-messages.js"></script>
+<script src="../assets/js/error-handler.js"></script>
 <script>
 function resolveApiBase() {
   const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
