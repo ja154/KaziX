@@ -51,6 +51,11 @@ class _FakeTableQuery:
         self._payload = dict(payload)
         return self
 
+    def insert(self, payload: dict):
+        self._operation = "insert"
+        self._payload = dict(payload)
+        return self
+
     def execute(self):
         table = self.tables.setdefault(self.table_name, {})
         rows = [
@@ -70,10 +75,16 @@ class _FakeTableQuery:
                 updated_rows.append(dict(row))
             return _FakeResult(updated_rows)
 
+        if self._operation == "insert":
+            row = dict(self._payload or {})
+            row.setdefault("id", f"{self.table_name}-{len(table) + 1}")
+            table[row["id"]] = row
+            return _FakeResult([dict(row)])
+
         raise AssertionError(f"Unexpected operation: {self._operation}")
 
 
-class _FakeAdminClient:
+class _FakeClient:
     def __init__(self, initial_tables: dict[str, dict[str, dict]]) -> None:
         self.tables = initial_tables
 
@@ -89,9 +100,53 @@ def _client_user(user_id: str = "client-123"):
     )
 
 
+def _fundi_user(user_id: str = "fundi-123"):
+    return deps_module.AuthenticatedUser(
+        user_id=user_id,
+        role="fundi",
+        phone="+254712345679",
+    )
+
+
+def _session(user_id: str = "user-123", access_token: str = "test-access-token"):
+    return deps_module.AuthenticatedSession(user_id=user_id, access_token=access_token)
+
+
+@pytest.mark.asyncio
+async def test_fundi_can_apply_to_open_job_with_user_scoped_client(monkeypatch) -> None:
+    fake_client = _FakeClient(
+        {
+            "jobs": {
+                "job-1": {
+                    "id": "job-1",
+                    "status": "open",
+                    "client_id": "client-123",
+                }
+            },
+            "applications": {},
+        }
+    )
+
+    monkeypatch.setattr(applications_module, "get_user_client", lambda _token: fake_client)
+
+    result = await applications_module.apply_to_job(
+        applications_module.ApplyRequest(
+            job_id="job-1",
+            bid_amount=2500,
+            cover_note="I can start tomorrow morning.",
+        ),
+        _fundi_user(),
+        _session(user_id="fundi-123"),
+    )
+
+    assert result["job_id"] == "job-1"
+    assert result["fundi_id"] == "fundi-123"
+    assert fake_client.tables["applications"]["applications-1"]["status"] == "pending"
+
+
 @pytest.mark.asyncio
 async def test_client_can_shortlist_application_and_mark_job_reviewing(monkeypatch) -> None:
-    fake_admin = _FakeAdminClient(
+    fake_client = _FakeClient(
         {
             "applications": {
                 "app-1": {
@@ -117,25 +172,26 @@ async def test_client_can_shortlist_application_and_mark_job_reviewing(monkeypat
         notifications.append(payload)
         return payload
 
-    monkeypatch.setattr(applications_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(applications_module, "get_user_client", lambda _token: fake_client)
     monkeypatch.setattr(applications_module, "create_notification", _fake_notification)
 
     result = await applications_module.update_application_for_client(
         "app-1",
         applications_module.ClientUpdateApplicationRequest(status="shortlisted"),
         _client_user(),
+        _session(user_id="client-123"),
     )
 
     assert result["status"] == "shortlisted"
-    assert fake_admin.tables["applications"]["app-1"]["status"] == "shortlisted"
-    assert fake_admin.tables["jobs"]["job-1"]["status"] == "reviewing"
+    assert fake_client.tables["applications"]["app-1"]["status"] == "shortlisted"
+    assert fake_client.tables["jobs"]["job-1"]["status"] == "reviewing"
     assert notifications[0]["user_id"] == "fundi-1"
     assert notifications[0]["metadata"]["status"] == "shortlisted"
 
 
 @pytest.mark.asyncio
 async def test_client_cannot_manage_another_clients_job(monkeypatch) -> None:
-    fake_admin = _FakeAdminClient(
+    fake_client = _FakeClient(
         {
             "applications": {
                 "app-1": {
@@ -159,7 +215,7 @@ async def test_client_cannot_manage_another_clients_job(monkeypatch) -> None:
     async def _fake_notification(**_payload):
         return {}
 
-    monkeypatch.setattr(applications_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(applications_module, "get_user_client", lambda _token: fake_client)
     monkeypatch.setattr(applications_module, "create_notification", _fake_notification)
 
     with pytest.raises(HTTPException) as exc:
@@ -167,6 +223,7 @@ async def test_client_cannot_manage_another_clients_job(monkeypatch) -> None:
             "app-1",
             applications_module.ClientUpdateApplicationRequest(status="rejected"),
             _client_user(),
+            _session(user_id="client-123"),
         )
 
     assert exc.value.status_code == 403
@@ -175,7 +232,7 @@ async def test_client_cannot_manage_another_clients_job(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_client_cannot_change_withdrawn_application(monkeypatch) -> None:
-    fake_admin = _FakeAdminClient(
+    fake_client = _FakeClient(
         {
             "applications": {
                 "app-1": {
@@ -199,7 +256,7 @@ async def test_client_cannot_change_withdrawn_application(monkeypatch) -> None:
     async def _fake_notification(**_payload):
         return {}
 
-    monkeypatch.setattr(applications_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(applications_module, "get_user_client", lambda _token: fake_client)
     monkeypatch.setattr(applications_module, "create_notification", _fake_notification)
 
     with pytest.raises(HTTPException) as exc:
@@ -207,6 +264,7 @@ async def test_client_cannot_change_withdrawn_application(monkeypatch) -> None:
             "app-1",
             applications_module.ClientUpdateApplicationRequest(status="pending"),
             _client_user(),
+            _session(user_id="client-123"),
         )
 
     assert exc.value.status_code == 400
