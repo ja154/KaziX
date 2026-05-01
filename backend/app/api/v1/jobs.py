@@ -15,11 +15,12 @@ GET    /v1/jobs/{id}/applications → client views applicants
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
+from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field
 
-from app.api.deps import ClientUser, CurrentUser
+from app.api.deps import ClientUser, CurrentSession, CurrentUser
 from app.core.logging import get_logger
-from app.core.supabase import get_admin_client, get_anon_client
+from app.core.supabase import get_anon_client, get_user_client
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -56,6 +57,44 @@ class UpdateJobRequest(BaseModel):
     urgency:            Literal["flexible","urgent"] | None = None
     preferred_date:     str | None      = None
     status:             Literal["open","cancelled"] | None = None
+
+
+def _job_write_http_error(exc: Exception, *, default_detail: str) -> HTTPException:
+    if isinstance(exc, PostgrestAPIError):
+        error_blob = " ".join(
+            str(part or "")
+            for part in (exc.code, exc.message, exc.details, exc.hint)
+        ).lower()
+
+        if (
+            exc.code in {"42501", "PGRST301", "PGRST302"}
+            or "row-level security" in error_blob
+            or "permission denied" in error_blob
+        ):
+            return HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to modify this job.",
+            )
+
+        if exc.code == "23514" and "ck_jobs_budget_range" in error_blob:
+            return HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Maximum budget must be greater than or equal to minimum budget.",
+            )
+
+        if exc.code in {"22007", "22P02"} and "preferred_date" in error_blob:
+            return HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Please choose a valid preferred date.",
+            )
+
+        if exc.code in {"23514", "22P02"} and "trade" in error_blob:
+            return HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Please select a valid trade.",
+            )
+
+    return HTTPException(status_code=500, detail=default_detail)
 
 
 # ── Routes ───────────────────────────────────────────────────
@@ -98,12 +137,12 @@ async def list_jobs(
 
 
 @router.get("/mine")
-async def list_my_jobs(user: ClientUser):
+async def list_my_jobs(user: ClientUser, session: CurrentSession):
     """Client-only — list jobs posted by the authenticated user."""
-    admin = get_admin_client()
+    client = get_user_client(session.access_token)
     try:
         result = (
-            admin.table("jobs")
+            client.table("jobs")
             .select(
                 "id, title, description, trade, county, area, street, budget_min, "
                 "budget_max, payment_type, urgency, preferred_date, preferred_time, "
@@ -142,34 +181,43 @@ async def get_job(job_id: str):
 
 
 @router.post("/", status_code=201)
-async def create_job(body: CreateJobRequest, user: ClientUser):
+async def create_job(body: CreateJobRequest, user: ClientUser, session: CurrentSession):
     """Client creates a new job post."""
-    admin = get_admin_client()
+    client = get_user_client(session.access_token)
     data = body.model_dump()
     data["client_id"] = user.user_id
     data["status"] = "open"
 
     try:
-        result = admin.table("jobs").insert(data).execute()
+        result = client.table("jobs").insert(data).execute()
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create job")
 
         job = result.data[0]
         logger.info("Job created", job_id=job["id"], client=user.user_id)
         return job
+    except HTTPException:
+        raise
     except Exception as exc:
-        logger.error("Job creation failed", client_id=user.user_id, error=str(exc))
-        raise HTTPException(status_code=500, detail="Failed to create job. Please try again.")
+        logger.error(
+            "Job creation failed",
+            client_id=user.user_id,
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            details=getattr(exc, "details", None) if hasattr(exc, "details") else None,
+            hint=getattr(exc, "hint", None) if hasattr(exc, "hint") else None,
+        )
+        raise _job_write_http_error(exc, default_detail="Failed to create job. Please try again.")
 
 
 @router.patch("/{job_id}")
-async def update_job(job_id: str, body: UpdateJobRequest, user: CurrentUser):
+async def update_job(job_id: str, body: UpdateJobRequest, user: CurrentUser, session: CurrentSession):
     """Client updates their own job."""
-    admin = get_admin_client()
+    client = get_user_client(session.access_token)
 
     # Ownership check
     try:
-        existing = admin.table("jobs").select("client_id").eq("id", job_id).single().execute()
+        existing = client.table("jobs").select("id, client_id").eq("id", job_id).maybe_single().execute()
         if not existing.data or existing.data["client_id"] != user.user_id:
             raise HTTPException(status_code=403, detail="Not your job")
 
@@ -177,21 +225,35 @@ async def update_job(job_id: str, body: UpdateJobRequest, user: CurrentUser):
         if not updates:
             raise HTTPException(status_code=400, detail="No fields to update")
 
-        result = admin.table("jobs").update(updates).eq("id", job_id).execute()
+        result = client.table("jobs").update(updates).eq("id", job_id).execute()
         return result.data[0] if result.data else {}
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("Job update failed", job_id=job_id, user_id=user.user_id, error=str(exc))
-        raise HTTPException(status_code=500, detail="Failed to update job.")
+        logger.error(
+            "Job update failed",
+            job_id=job_id,
+            user_id=user.user_id,
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            details=getattr(exc, "details", None) if hasattr(exc, "details") else None,
+            hint=getattr(exc, "hint", None) if hasattr(exc, "hint") else None,
+        )
+        raise _job_write_http_error(exc, default_detail="Failed to update job.")
 
 
 @router.delete("/{job_id}", status_code=204)
-async def delete_job(job_id: str, user: CurrentUser):
+async def delete_job(job_id: str, user: CurrentUser, session: CurrentSession):
     """Client cancels/removes their job."""
-    admin = get_admin_client()
+    client = get_user_client(session.access_token)
     try:
-        existing = admin.table("jobs").select("client_id, status").eq("id", job_id).single().execute()
+        existing = (
+            client.table("jobs")
+            .select("id, client_id, status")
+            .eq("id", job_id)
+            .maybe_single()
+            .execute()
+        )
 
         if not existing.data or existing.data["client_id"] != user.user_id:
             raise HTTPException(status_code=403, detail="Not your job")
@@ -202,28 +264,36 @@ async def delete_job(job_id: str, user: CurrentUser):
                 detail="Cannot delete an active booking. Raise a dispute instead.",
             )
 
-        admin.table("jobs").update({"status": "cancelled"}).eq("id", job_id).execute()
+        client.table("jobs").update({"status": "cancelled"}).eq("id", job_id).execute()
         logger.info("Job cancelled", job_id=job_id, client_id=user.user_id)
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error("Job deletion failed", job_id=job_id, user_id=user.user_id, error=str(exc))
-        raise HTTPException(status_code=500, detail="Failed to cancel job.")
+        logger.error(
+            "Job deletion failed",
+            job_id=job_id,
+            user_id=user.user_id,
+            error=str(exc),
+            code=getattr(exc, "code", None),
+            details=getattr(exc, "details", None) if hasattr(exc, "details") else None,
+            hint=getattr(exc, "hint", None) if hasattr(exc, "hint") else None,
+        )
+        raise _job_write_http_error(exc, default_detail="Failed to cancel job.")
 
 
 @router.get("/{job_id}/applications")
-async def list_job_applications(job_id: str, user: CurrentUser):
+async def list_job_applications(job_id: str, user: CurrentUser, session: CurrentSession):
     """Client views applications for their job."""
-    admin = get_admin_client()
+    client = get_user_client(session.access_token)
 
     try:
         # Verify ownership
-        job = admin.table("jobs").select("client_id").eq("id", job_id).single().execute()
+        job = client.table("jobs").select("id, client_id").eq("id", job_id).maybe_single().execute()
         if not job.data or job.data["client_id"] != user.user_id:
             raise HTTPException(status_code=403, detail="Not your job")
 
         result = (
-            admin.table("applications")
+            client.table("applications")
             .select(
                 "*, "
                 "profiles!fundi_id(full_name, avatar_url, county, area, is_verified), "

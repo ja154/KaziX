@@ -1,19 +1,16 @@
 """
 app/core/supabase.py
 ────────────────────
-Two Supabase client factories:
- 
-  get_anon_client()     → uses ANON key.  Safe for user-scoped operations
-                          (RLS enforced).  Import in route handlers.
- 
-  get_admin_client()    → uses SERVICE ROLE key.  Bypasses RLS entirely.
-                          ONLY import in internal services / background jobs.
-                          NEVER expose to browser or pass to client responses.
- 
-Both clients are module-level singletons (created once, reused).
+Supabase client factories:
+
+  get_anon_client()     → uses ANON key. Safe for public/user-scoped reads.
+  get_admin_client()    → uses SERVICE ROLE key. Server-side only.
+  get_user_client()     → request-scoped client authenticated as a user.
+
+These clients are intentionally created per call. Supabase auth/session state is
+mutable, so caching a shared client can leak headers between requests and cause
+unexpected RLS failures.
 """
- 
-from functools import lru_cache
 
 import httpx
 
@@ -48,7 +45,6 @@ def _patch_auth_timeout(client: Client) -> Client:
     return client
 
 
-@lru_cache
 def get_anon_client() -> Client:
     """
     Public Supabase client — respects RLS policies.
@@ -59,7 +55,6 @@ def get_anon_client() -> Client:
     return _patch_auth_timeout(client)
  
  
-@lru_cache
 def get_admin_client() -> Client:
     """
     Admin Supabase client — bypasses RLS (service role key).
