@@ -116,115 +116,49 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.6}
   </aside>
   <main class="main">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;animation:slideUp 0.4s ease both">
-      <div><div class="page-title">Find Jobs</div><div class="page-sub">Open plumbing jobs near Westlands, Nairobi</div></div>
+      <div><div class="page-title">Find Jobs</div><div class="page-sub" id="jobsPageSubtitle">Loading jobs that match your profile…</div></div>
     </div>
     <div class="jobs-layout">
       <aside class="filters">
         <div class="filter-title">Filters <span class="filter-clear">Clear all</span></div>
         <div class="filter-section">
-          <div class="filter-label">Distance</div>
-          <label class="filter-option"><input type="radio" name="dist" checked> Within 5 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Within 10 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Within 25 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Any distance</label>
+          <div class="filter-label">Trade</div>
+          <label class="filter-option"><input type="checkbox" id="matchTradeOnly" checked> Match my trade only</label>
+          <label class="filter-option"><input type="checkbox" id="myCountyOnly" checked> Match my county only</label>
         </div>
         <div class="filter-section">
           <div class="filter-label">Budget (KES)</div>
           <div class="range-row">
-            <input class="range-input" type="number" placeholder="Min">
+            <input class="range-input" id="minBudgetInput" type="number" placeholder="Min">
             <span style="font-size:0.75rem;color:var(--muted)">–</span>
-            <input class="range-input" type="number" placeholder="Max">
+            <input class="range-input" id="maxBudgetInput" type="number" placeholder="Max">
           </div>
         </div>
         <div class="filter-section">
-          <div class="filter-label">Job Type</div>
-          <label class="filter-option"><input type="checkbox" checked> 🔴 Urgent only</label>
-          <label class="filter-option"><input type="checkbox" checked> 🆕 Posted today</label>
+          <div class="filter-label">Timing</div>
+          <label class="filter-option"><input type="checkbox" id="urgentOnly"> 🔴 Urgent only</label>
+          <label class="filter-option"><input type="checkbox" id="postedToday"> 🆕 Posted today</label>
         </div>
         <div class="filter-section">
-          <div class="filter-label">Applications</div>
-          <label class="filter-option"><input type="checkbox" checked> Few applicants (0–3)</label>
-          <label class="filter-option"><input type="checkbox"> Under 8</label>
+          <div class="filter-label">Sort</div>
+          <select class="sort-sel" id="sortSelect" style="width:100%">
+            <option value="newest">Newest first</option>
+            <option value="highest_budget">Highest budget</option>
+            <option value="lowest_budget">Lowest budget</option>
+          </select>
         </div>
         <button class="apply-filter-btn">Apply Filters</button>
       </aside>
       <div>
         <div class="results-header">
-          <div class="results-count">42 plumbing jobs near Westlands</div>
-          <select class="sort-sel"><option>Nearest first</option><option>Highest budget</option><option>Newest first</option><option>Fewest applicants</option></select>
+          <div class="results-count" id="resultsCount">Loading open jobs…</div>
         </div>
-        <div class="active-filters">
-          <span class="active-tag">Plumber <button onclick="this.parentElement.remove()">✕</button></span>
-          <span class="active-tag">Within 5km <button onclick="this.parentElement.remove()">✕</button></span>
+        <div class="active-filters" id="activeFilters">
         </div>
-        <div class="jobs-list">
-          <div class="job-card urgent" style="animation-delay:0.05s">
-            <div class="jc-top">
-              <div class="jc-icon">🚿</div>
-              <div class="jc-info"><div class="jc-title">Burst pipe emergency — kitchen <span class="utag utag-urgent">Urgent</span></div><div class="jc-meta"><span>📍 Kilimani · 1.8km</span><span>12 min ago</span><span>0 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 1,500</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Kitchen sink pipe burst — water leaking under the cabinet. Need someone today urgently.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏠</div>Private client · ★★★★★ 4.9</div>
-              <button class="apply-btn" onclick="openApply('Burst pipe — Kilimani')">Apply →</button>
-            </div>
+        <div class="jobs-list" id="jobsList">
+          <div class="job-card" style="cursor:default">
+            <div class="jc-desc" style="margin-bottom:0">Loading live jobs from the backend…</div>
           </div>
-          <div class="job-card" style="animation-delay:0.1s">
-            <div class="jc-top">
-              <div class="jc-icon">🚿</div>
-              <div class="jc-info"><div class="jc-title">Install bathroom fixtures — Westlands <span class="utag utag-new">New</span></div><div class="jc-meta"><span>📍 Westlands · 0.9km</span><span>2 hrs ago</span><span>1 applicant</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 3,500</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Install new toilet, shower and basin fittings in a newly renovated bathroom. Materials ready on site.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏡</div>Homeowner · ★★★★★ 5.0</div>
-              <button class="apply-btn" onclick="openApply('Bathroom fixtures — Westlands')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.15s">
-            <div class="jc-top">
-              <div class="jc-icon">💧</div>
-              <div class="jc-info"><div class="jc-title">Water tank repair — Parklands</div><div class="jc-meta"><span>📍 Parklands · 3.1km</span><span>4 hrs ago</span><span>2 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 2,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">10,000L polyethylene tank has a small crack near the outlet pipe. Need it repaired or outlet connection replaced.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏠</div>Repeat client · ★★★★★ 4.8 · 15 jobs posted</div>
-              <button class="apply-btn" onclick="openApply('Water tank — Parklands')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.2s">
-            <div class="jc-top">
-              <div class="jc-icon">☀️</div>
-              <div class="jc-info"><div class="jc-title">Solar water heater installation — Karen</div><div class="jc-meta"><span>📍 Karen · 8.4km</span><span>Yesterday</span><span>3 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 8,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Installation of a 200L Solahart solar water heater. Client has the unit. Need piping and full setup.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏡</div>Homeowner · ★★★★★ 4.7</div>
-              <button class="apply-btn" onclick="openApply('Solar heater — Karen')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.25s">
-            <div class="jc-top">
-              <div class="jc-icon">🏗️</div>
-              <div class="jc-info"><div class="jc-title">Commercial plumbing — CBD office block</div><div class="jc-meta"><span>📍 CBD · 5.1km</span><span>3 days ago</span><span>2 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 18,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">3-storey office block, floors 2 and 3. Approx 3–4 days. NCA certification preferred.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏢</div>FutureBuilds Ltd · ★★★★★ 4.9 · 8 jobs</div>
-              <button class="apply-btn" onclick="openApply('Commercial piping — CBD')">Apply →</button>
-            </div>
-          </div>
-        </div>
-        <div class="pagination">
-          <button class="pg-btn" disabled>←</button>
-          <button class="pg-btn active">1</button>
-          <button class="pg-btn">2</button>
-          <button class="pg-btn">3</button>
-          <button class="pg-btn">→</button>
         </div>
       </div>
     </div>
@@ -234,159 +168,393 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.6}
   <div class="modal">
     <div class="modal-title">Apply: <span id="applyJobName"></span></div>
     <div class="modal-sub">Your profile and 4.9★ rating will be shared with the client.</div>
+    <div id="applyModalStatus" style="display:none;margin-bottom:1rem;padding:0.75rem 0.9rem;border-radius:4px;font-size:0.82rem;line-height:1.6"></div>
     <label class="field-label">Your Bid (KES) *</label>
     <input class="field-input" type="number" id="bidInput" placeholder="e.g. 1200">
     <label class="field-label">Cover Note (optional)</label>
     <textarea class="field-input" id="coverInput" placeholder="Tell the client why you're the best fundi for this job…"></textarea>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="document.getElementById('applyModal').classList.remove('open')">Cancel</button>
-      <button class="btn-submit" onclick="submitApply()">Submit Application →</button>
+      <button class="btn-cancel" type="button" onclick="closeApplyModal()">Cancel</button>
+      <button class="btn-submit" id="submitApplicationButton" type="button" onclick="submitApply()">Submit Application →</button>
     </div>
   </div>
 </div>
 <script>
-var currentBtn=null;
-function openApply(title){document.getElementById('applyJobName').textContent=title;document.getElementById('applyModal').classList.add('open')}
-function submitApply(){
-  var bid=document.getElementById('bidInput').value;
-  if(!bid){alert('Please enter your bid');return}
-  document.getElementById('applyModal').classList.remove('open');
-  document.getElementById('bidInput').value='';
-  document.getElementById('coverInput').value='';
-}
-document.getElementById('applyModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})
-document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventListener('click',function(){if(this.textContent==='←'||this.textContent==='→')return;document.querySelectorAll('.pg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')})})
+const TRADE_ICONS = {
+  plumber: '🚿',
+  electrician: '⚡',
+  mason: '🧱',
+  mama_fua: '👗',
+  carpenter: '🪚',
+  painter: '🎨',
+  roofer: '🏠',
+  gardener: '🌿',
+  driver_mover: '🛻',
+  security: '🔒',
+};
+const TRADE_LABELS = {
+  plumber: 'Plumber',
+  electrician: 'Electrician',
+  mason: 'Mason',
+  mama_fua: 'Mama Fua',
+  carpenter: 'Carpenter',
+  painter: 'Painter',
+  roofer: 'Roofer',
+  gardener: 'Gardener',
+  driver_mover: 'Driver / Mover',
+  security: 'Security',
+};
 
-// Filtering Logic
-const applyBtn = document.querySelector('.apply-filter-btn');
-if (applyBtn) {
-  applyBtn.addEventListener('click', applyFilters);
+let profilePayload = null;
+let allJobs = [];
+let currentJobId = null;
+let isApplying = false;
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatBudget(job) {
+  const min = Number.isFinite(job.budget_min) ? job.budget_min : null;
+  const max = Number.isFinite(job.budget_max) ? job.budget_max : null;
+  if (min !== null && max !== null) {
+    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  }
+  if (min !== null) {
+    return `From KES ${min.toLocaleString()}`;
+  }
+  if (max !== null) {
+    return `Up to KES ${max.toLocaleString()}`;
+  }
+  return 'Budget on request';
+}
+
+function formatRelativeDate(value) {
+  if (!value) return 'Recently posted';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently posted';
+
+  const diffMs = Date.now() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  return `${diffDays} days ago`;
+}
+
+function formatClientName(job) {
+  return job?.profiles?.full_name || 'Private client';
+}
+
+function getClientInitial(job) {
+  const name = formatClientName(job);
+  return name.trim().charAt(0).toUpperCase() || 'C';
+}
+
+function getFilterState() {
+  return {
+    matchTradeOnly: document.getElementById('matchTradeOnly').checked,
+    myCountyOnly: document.getElementById('myCountyOnly').checked,
+    urgentOnly: document.getElementById('urgentOnly').checked,
+    postedToday: document.getElementById('postedToday').checked,
+    minBudget: Number.parseInt(document.getElementById('minBudgetInput').value, 10),
+    maxBudget: Number.parseInt(document.getElementById('maxBudgetInput').value, 10),
+    sort: document.getElementById('sortSelect').value || 'newest',
+  };
+}
+
+function getWorkerTrade() {
+  return profilePayload?.fundi_profile?.trade || '';
+}
+
+function getWorkerCounty() {
+  return profilePayload?.profile?.county || '';
+}
+
+function matchesFilters(job, state) {
+  if (state.matchTradeOnly && getWorkerTrade() && job.trade !== getWorkerTrade()) {
+    return false;
+  }
+  if (state.myCountyOnly && getWorkerCounty() && job.county !== getWorkerCounty()) {
+    return false;
+  }
+  if (state.urgentOnly && job.urgency !== 'urgent') {
+    return false;
+  }
+  if (state.postedToday) {
+    const createdDate = new Date(job.created_at);
+    const now = new Date();
+    if (
+      Number.isNaN(createdDate.getTime())
+      || createdDate.getFullYear() !== now.getFullYear()
+      || createdDate.getMonth() !== now.getMonth()
+      || createdDate.getDate() !== now.getDate()
+    ) {
+      return false;
+    }
+  }
+
+  const minBudget = Number.isFinite(state.minBudget) ? state.minBudget : null;
+  const maxBudget = Number.isFinite(state.maxBudget) ? state.maxBudget : null;
+  const jobBudgetFloor = Number.isFinite(job.budget_min) ? job.budget_min : (Number.isFinite(job.budget_max) ? job.budget_max : null);
+  const jobBudgetCeiling = Number.isFinite(job.budget_max) ? job.budget_max : (Number.isFinite(job.budget_min) ? job.budget_min : null);
+
+  if (minBudget !== null && jobBudgetCeiling !== null && jobBudgetCeiling < minBudget) {
+    return false;
+  }
+  if (maxBudget !== null && jobBudgetFloor !== null && jobBudgetFloor > maxBudget) {
+    return false;
+  }
+
+  return true;
+}
+
+function compareJobs(left, right, state) {
+  if (state.sort === 'highest_budget') {
+    return (right.budget_max || right.budget_min || 0) - (left.budget_max || left.budget_min || 0);
+  }
+  if (state.sort === 'lowest_budget') {
+    return (left.budget_min || left.budget_max || 0) - (right.budget_min || right.budget_max || 0);
+  }
+  return new Date(right.created_at).getTime() - new Date(left.created_at).getTime();
+}
+
+function renderActiveFilters(state) {
+  const tags = [];
+  if (state.matchTradeOnly && getWorkerTrade()) {
+    tags.push(TRADE_LABELS[getWorkerTrade()] || getWorkerTrade());
+  }
+  if (state.myCountyOnly && getWorkerCounty()) {
+    tags.push(getWorkerCounty());
+  }
+  if (state.urgentOnly) {
+    tags.push('Urgent only');
+  }
+  if (state.postedToday) {
+    tags.push('Posted today');
+  }
+  if (Number.isFinite(state.minBudget) || Number.isFinite(state.maxBudget)) {
+    const min = Number.isFinite(state.minBudget) ? state.minBudget.toLocaleString() : '0';
+    const max = Number.isFinite(state.maxBudget) ? state.maxBudget.toLocaleString() : 'any';
+    tags.push(`Budget ${min}-${max}`);
+  }
+
+  document.getElementById('activeFilters').innerHTML = tags
+    .map((tag) => `<span class="active-tag">${escapeHtml(tag)}</span>`)
+    .join('');
+}
+
+function renderEmptyState(message) {
+  document.getElementById('jobsList').innerHTML = `
+    <div class="job-card" style="cursor:default">
+      <div class="jc-desc" style="margin-bottom:0">${escapeHtml(message)}</div>
+    </div>
+  `;
+}
+
+function jobCardMarkup(job, index) {
+  const tradeIcon = TRADE_ICONS[job.trade] || '🛠️';
+  const tradeLabel = TRADE_LABELS[job.trade] || 'Skilled Worker';
+  const location = [job.area, job.county].filter(Boolean).join(', ');
+  const description = job.description && job.description.length > 170
+    ? `${job.description.slice(0, 167)}...`
+    : (job.description || 'No description added yet.');
+  const urgentTag = job.urgency === 'urgent'
+    ? '<span class="utag utag-urgent">Urgent</span>'
+    : '';
+  const newTag = (() => {
+    const createdDate = new Date(job.created_at);
+    return !Number.isNaN(createdDate.getTime()) && (Date.now() - createdDate.getTime()) < (1000 * 60 * 60 * 24)
+      ? '<span class="utag utag-new">New</span>'
+      : '';
+  })();
+
+  return `
+    <div class="job-card ${job.urgency === 'urgent' ? 'urgent' : ''}" style="animation-delay:${(index + 1) * 0.05}s" onclick="openJobDetail('${escapeHtml(job.id)}')">
+      <div class="jc-top">
+        <div class="jc-icon">${tradeIcon}</div>
+        <div class="jc-info">
+          <div class="jc-title">${escapeHtml(job.title)} ${urgentTag}${newTag}</div>
+          <div class="jc-meta">
+            <span>📍 ${escapeHtml(location || 'Location pending')}</span>
+            <span>${escapeHtml(formatRelativeDate(job.created_at))}</span>
+            <span>${escapeHtml(tradeLabel)}</span>
+          </div>
+        </div>
+        <div class="jc-right">
+          <div class="jc-budget">${escapeHtml(formatBudget(job))}</div>
+          <div class="jc-budget-sub">${escapeHtml(job.payment_type || 'fixed')}</div>
+        </div>
+      </div>
+      <div class="jc-desc">${escapeHtml(description)}</div>
+      <div class="jc-footer">
+        <div class="jc-client"><div class="jc-client-av">${escapeHtml(getClientInitial(job))}</div>${escapeHtml(formatClientName(job))}</div>
+        <button class="apply-btn" type="button" onclick="openApply('${escapeHtml(job.id)}', event)">Apply →</button>
+        <div class="jc-posted">${escapeHtml(job.preferred_date || 'Flexible start')}</div>
+      </div>
+    </div>
+  `;
 }
 
 function applyFilters() {
-  // 1. Get Budget
-  const minBudgetInput = document.querySelectorAll('.range-input')[0];
-  const maxBudgetInput = document.querySelectorAll('.range-input')[1];
-  const minBudget = minBudgetInput && minBudgetInput.value ? parseFloat(minBudgetInput.value) : 0;
-  const maxBudget = maxBudgetInput && maxBudgetInput.value ? parseFloat(maxBudgetInput.value) : Infinity;
+  const state = getFilterState();
+  const visibleJobs = allJobs
+    .filter((job) => matchesFilters(job, state))
+    .sort((left, right) => compareJobs(left, right, state));
 
-  // 2. Get Job Type
-  const filterSections = Array.from(document.querySelectorAll('.filter-section'));
-  const jobTypeSection = filterSections.find(s => s.querySelector('.filter-label')?.textContent.includes('Job Type'));
-  let urgentOnly = false;
-  let postedToday = false;
-  if (jobTypeSection) {
-     const jobTypeInputs = jobTypeSection.querySelectorAll('input');
-     if (jobTypeInputs.length >= 2) {
-        urgentOnly = jobTypeInputs[0].checked;
-        postedToday = jobTypeInputs[1].checked;
-     }
+  renderActiveFilters(state);
+  document.getElementById('resultsCount').textContent = `${visibleJobs.length} open jobs`;
+
+  if (!visibleJobs.length) {
+    renderEmptyState('No live jobs match these filters yet. Try widening the budget or county settings.');
+    return;
   }
 
-  // 3. Get Applications
-  const appsSection = filterSections.find(s => s.querySelector('.filter-label')?.textContent.includes('Applications'));
-  let fewApps = false;
-  let under8Apps = false;
-  if (appsSection) {
-     const appsInputs = appsSection.querySelectorAll('input');
-     if (appsInputs.length >= 2) {
-        fewApps = appsInputs[0].checked;
-        under8Apps = appsInputs[1].checked;
-     }
+  document.getElementById('jobsList').innerHTML = visibleJobs
+    .map((job, index) => jobCardMarkup(job, index))
+    .join('');
+}
+
+function openJobDetail(jobId) {
+  window.location.href = `job-detail.html?id=${encodeURIComponent(jobId)}`;
+}
+
+function showModalStatus(message, tone) {
+  const status = document.getElementById('applyModalStatus');
+  status.style.display = 'block';
+  status.textContent = message;
+  if (tone === 'success') {
+    status.style.background = 'rgba(27,107,58,0.08)';
+    status.style.border = '1px solid rgba(27,107,58,0.2)';
+    status.style.color = 'var(--green)';
+    return;
+  }
+  status.style.background = 'rgba(192,57,43,0.08)';
+  status.style.border = '1px solid rgba(192,57,43,0.2)';
+  status.style.color = 'var(--rust)';
+}
+
+function clearModalStatus() {
+  const status = document.getElementById('applyModalStatus');
+  status.style.display = 'none';
+  status.textContent = '';
+}
+
+function openApply(jobId, event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  const job = allJobs.find((entry) => entry.id === jobId);
+  currentJobId = jobId;
+  clearModalStatus();
+  document.getElementById('applyJobName').textContent = job?.title || 'Selected job';
+  document.getElementById('applyModal').classList.add('open');
+}
+
+function closeApplyModal() {
+  document.getElementById('applyModal').classList.remove('open');
+  document.getElementById('bidInput').value = '';
+  document.getElementById('coverInput').value = '';
+  clearModalStatus();
+  currentJobId = null;
+}
+
+function setApplyBusy(isBusy) {
+  isApplying = isBusy;
+  const button = document.getElementById('submitApplicationButton');
+  button.disabled = isBusy;
+  button.textContent = isBusy ? 'Submitting…' : 'Submit Application →';
+}
+
+async function submitApply() {
+  if (isApplying) {
+    return;
   }
 
-  // Filter Cards
-  const cards = document.querySelectorAll('.job-card');
-  let visibleCount = 0;
-  cards.forEach(card => {
-    let show = true;
-
-    // Budget
-    const budgetText = card.querySelector('.jc-budget')?.textContent || '';
-    const budgetMatch = budgetText.match(/[\d,]+/);
-    if (budgetMatch) {
-       const budget = parseFloat(budgetMatch[0].replace(/,/g, ''));
-       if (budget < minBudget || budget > maxBudget) show = false;
-    }
-
-    // Urgent
-    if (urgentOnly && !card.classList.contains('urgent')) show = false;
-
-    // Posted Today
-    if (postedToday) {
-       const metaSpans = card.querySelectorAll('.jc-meta span');
-       let isToday = false;
-       metaSpans.forEach(span => {
-          const txt = span.textContent.toLowerCase();
-          if (txt.includes('min') || txt.includes('hr') || txt.includes('today')) {
-             isToday = true;
-          }
-       });
-       if (!isToday && card.querySelector('.utag-new')) isToday = true;
-       if (!isToday) show = false;
-    }
-
-    // Applications
-    if (fewApps || under8Apps) {
-       const metaSpans = card.querySelectorAll('.jc-meta span');
-       let totalApps = 999;
-       metaSpans.forEach(span => {
-          const txt = span.textContent.toLowerCase();
-          if (txt.includes('applicant')) {
-             const match = txt.match(/\d+/);
-             if (match) totalApps = parseInt(match[0]);
-             else totalApps = 0; // "no applicants"
-          }
-       });
-       if (fewApps && totalApps > 3) show = false;
-       if (under8Apps && totalApps >= 8) show = false;
-    }
-
-    card.style.display = show ? '' : 'none';
-    if(show) visibleCount++;
-  });
-
-  // Handle Empty State
-  let emptyMsg = document.getElementById('noResultsMsg');
-  const jobsList = document.querySelector('.jobs-list');
-  if (visibleCount === 0) {
-    if (!emptyMsg) {
-       emptyMsg = document.createElement('div');
-       emptyMsg.id = 'noResultsMsg';
-       emptyMsg.style.padding = '3rem';
-       emptyMsg.style.textAlign = 'center';
-       emptyMsg.style.color = 'var(--muted)';
-       emptyMsg.style.border = '1px solid var(--border)';
-       emptyMsg.style.borderRadius = '6px';
-       emptyMsg.style.background = 'white';
-       emptyMsg.innerHTML = '<h3>No jobs found matching your criteria.</h3><p style="margin-top:0.5rem; font-size:0.9rem;">Try relaxing your budget or applicant filters to see more results.</p>';
-       if (jobsList) jobsList.appendChild(emptyMsg);
-    }
-    emptyMsg.style.display = 'block';
-  } else if (emptyMsg) {
-    emptyMsg.style.display = 'none';
+  const bidValue = Number.parseInt(document.getElementById('bidInput').value, 10);
+  if (!currentJobId) {
+    showModalStatus('Pick a job before sending an application.', 'error');
+    return;
+  }
+  if (!Number.isFinite(bidValue) || bidValue < 1) {
+    showModalStatus('Enter your bid amount before submitting.', 'error');
+    return;
   }
 
-  // Update Result Count
-  const cntText = document.querySelector('.results-count');
-  if (cntText) {
-    cntText.textContent = `${visibleCount} plumbing jobs near Westlands`;
+  try {
+    setApplyBusy(true);
+    clearModalStatus();
+    await window.KazixProfile.requestJson('/v1/applications', {
+      auth: true,
+      method: 'POST',
+      body: {
+        job_id: currentJobId,
+        bid_amount: bidValue,
+        cover_note: document.getElementById('coverInput').value.trim() || null,
+      },
+      showError: false,
+    });
+    showModalStatus('Application submitted successfully. The client can now review your bid.', 'success');
+    window.setTimeout(closeApplyModal, 900);
+  } catch (error) {
+    console.error('Failed to submit application', error);
+    showModalStatus(error.message || 'Could not submit your application right now.', 'error');
+  } finally {
+    setApplyBusy(false);
   }
 }
 
-// Clear all filters
-const clearBtn = document.querySelector('.filter-clear');
-if (clearBtn) {
-  clearBtn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-section input[type="checkbox"]').forEach(i => i.checked = false);
-    const rangeInputs = document.querySelectorAll('.range-input');
-    if (rangeInputs[0]) rangeInputs[0].value = '';
-    if (rangeInputs[1]) rangeInputs[1].value = '';
-    const distInputs = document.querySelectorAll('input[name="dist"]');
-    if (distInputs.length > 0) distInputs[0].checked = true;
+async function initWorkerJobsPage() {
+  try {
+    profilePayload = await window.KazixProfile.getMyProfile();
+    const role = profilePayload?.profile?.role || '';
+    if (!['fundi', 'admin'].includes(role)) {
+      renderEmptyState('This jobs board is only available to worker accounts.');
+      return;
+    }
+
+    const tradeLabel = TRADE_LABELS[getWorkerTrade()] || 'all trades';
+    const county = getWorkerCounty() || 'all counties';
+    document.getElementById('jobsPageSubtitle').textContent = `Open ${tradeLabel.toLowerCase()} jobs in ${county}`;
+
+    const payload = await window.KazixProfile.requestJson('/v1/jobs?limit=100', { showError: false });
+    allJobs = Array.isArray(payload?.data) ? payload.data : [];
     applyFilters();
-  });
+  } catch (error) {
+    console.error('Failed to load jobs board', error);
+    renderEmptyState(error.message || 'Could not load jobs right now.');
+    document.getElementById('resultsCount').textContent = 'Jobs unavailable';
+    document.getElementById('jobsPageSubtitle').textContent = 'We could not load live jobs at the moment.';
+  }
 }
+
+document.getElementById('applyModal').addEventListener('click', function (event) {
+  if (event.target === this) {
+    closeApplyModal();
+  }
+});
+
+document.querySelector('.apply-filter-btn').addEventListener('click', applyFilters);
+document.getElementById('sortSelect').addEventListener('change', applyFilters);
+
+document.querySelector('.filter-clear').addEventListener('click', function () {
+  document.getElementById('minBudgetInput').value = '';
+  document.getElementById('maxBudgetInput').value = '';
+  document.getElementById('urgentOnly').checked = false;
+  document.getElementById('postedToday').checked = false;
+  document.getElementById('matchTradeOnly').checked = Boolean(getWorkerTrade());
+  document.getElementById('myCountyOnly').checked = Boolean(getWorkerCounty());
+  document.getElementById('sortSelect').value = 'newest';
+  applyFilters();
+});
+
+document.addEventListener('DOMContentLoaded', initWorkerJobsPage);
 </script>
 
 <nav class="mobile-nav" aria-label="Primary">

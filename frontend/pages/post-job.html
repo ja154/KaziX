@@ -186,41 +186,41 @@
       <div class="field-group">
         <label class="field-label">Select Trade <span class="field-required">*</span></label>
         <div class="trade-grid">
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🚿</span><div class="t-name">Plumber</div></div>
-          <div class="trade-option selected" onclick="selectTrade(this)"><span class="t-icon">⚡</span><div class="t-name">Electrician</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🧱</span><div class="t-name">Mason</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">👗</span><div class="t-name">Mama Fua</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🪚</span><div class="t-name">Carpenter</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🎨</span><div class="t-name">Painter</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🏠</span><div class="t-name">Roofer</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🌿</span><div class="t-name">Gardener</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🛻</span><div class="t-name">Driver/Mover</div></div>
-          <div class="trade-option" onclick="selectTrade(this)"><span class="t-icon">🔒</span><div class="t-name">Security</div></div>
+          <div class="trade-option" data-trade="plumber" data-icon="🚿" onclick="selectTrade(this)"><span class="t-icon">🚿</span><div class="t-name">Plumber</div></div>
+          <div class="trade-option" data-trade="electrician" data-icon="⚡" onclick="selectTrade(this)"><span class="t-icon">⚡</span><div class="t-name">Electrician</div></div>
+          <div class="trade-option" data-trade="mason" data-icon="🧱" onclick="selectTrade(this)"><span class="t-icon">🧱</span><div class="t-name">Mason</div></div>
+          <div class="trade-option" data-trade="mama_fua" data-icon="👗" onclick="selectTrade(this)"><span class="t-icon">👗</span><div class="t-name">Mama Fua</div></div>
+          <div class="trade-option" data-trade="carpenter" data-icon="🪚" onclick="selectTrade(this)"><span class="t-icon">🪚</span><div class="t-name">Carpenter</div></div>
+          <div class="trade-option" data-trade="painter" data-icon="🎨" onclick="selectTrade(this)"><span class="t-icon">🎨</span><div class="t-name">Painter</div></div>
+          <div class="trade-option" data-trade="roofer" data-icon="🏠" onclick="selectTrade(this)"><span class="t-icon">🏠</span><div class="t-name">Roofer</div></div>
+          <div class="trade-option" data-trade="gardener" data-icon="🌿" onclick="selectTrade(this)"><span class="t-icon">🌿</span><div class="t-name">Gardener</div></div>
+          <div class="trade-option" data-trade="driver_mover" data-icon="🛻" onclick="selectTrade(this)"><span class="t-icon">🛻</span><div class="t-name">Driver/Mover</div></div>
+          <div class="trade-option" data-trade="security" data-icon="🔒" onclick="selectTrade(this)"><span class="t-icon">🔒</span><div class="t-name">Security</div></div>
         </div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Job Title <span class="field-required">*</span></label>
-        <input class="field-input" type="text" placeholder="e.g. Fix electrical fault in living room" value="Install CCTV cameras in my house">
+        <input class="field-input" id="jobTitle" type="text" placeholder="e.g. Fix electrical fault in living room">
         <div class="field-hint">Be specific — clear titles attract better fundis</div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Job Description <span class="field-required">*</span></label>
-        <textarea class="field-input" placeholder="Describe the job in detail: what needs to be done, any specific requirements, materials needed…">I need 4 CCTV cameras installed around my compound — 2 at the gate, 1 at the front door, 1 at the back. Cables to be hidden where possible. Include setup of the recording unit (NVR).</textarea>
+        <textarea class="field-input" id="jobDescription" placeholder="Describe the job in detail: what needs to be done, any specific requirements, materials needed…"></textarea>
         <div class="field-hint">Minimum 30 characters. More detail = faster match</div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Urgency</label>
         <div class="urgency-row">
-          <div class="urgency-option normal selected" onclick="selectUrgency(this,'normal')">🗓️ Flexible timing</div>
-          <div class="urgency-option" onclick="selectUrgency(this,'urgent')">🔴 Urgent — ASAP</div>
+          <div class="urgency-option normal selected" data-urgency="flexible" onclick="selectUrgency(this,'flexible')">🗓️ Flexible timing</div>
+          <div class="urgency-option" data-urgency="urgent" onclick="selectUrgency(this,'urgent')">🔴 Urgent — ASAP</div>
         </div>
       </div>
 
       <div class="form-btns" style="border-top:none;margin-top:0.5rem;padding-top:0">
-        <button class="btn-next" onclick="goStep(2)">Continue → Location</button>
+        <button class="btn-next" type="button" onclick="goStep(2)">Continue → Location</button>
       </div>
     </div>
 
@@ -231,8 +231,9 @@
       <div class="field-row">
         <div class="field-group">
           <label class="field-label">County <span class="field-required">*</span></label>
-          <select class="field-input">
-            <option selected>Nairobi</option>
+          <select class="field-input" id="jobCounty">
+            <option value="">Select county</option>
+            <option>Nairobi</option>
             <option>Mombasa</option>
             <option>Kisumu</option>
             <option>Nakuru</option>
@@ -244,33 +245,33 @@
         </div>
         <div class="field-group">
           <label class="field-label">Town / Area <span class="field-required">*</span></label>
-          <input class="field-input" type="text" placeholder="e.g. Westlands" value="Kilimani">
+          <input class="field-input" id="jobArea" type="text" placeholder="e.g. Westlands">
         </div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Street / Building Name</label>
-        <input class="field-input" type="text" placeholder="e.g. Kilimani Road, near Yaya Centre">
+        <input class="field-input" id="jobStreet" type="text" placeholder="e.g. Kilimani Road, near Yaya Centre">
         <div class="field-hint">This is only shared with your hired fundi</div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Preferred Date <span class="field-required">*</span></label>
-        <input class="field-input" type="date">
+        <input class="field-input" id="jobPreferredDate" type="date">
       </div>
       <div class="field-group">
         <label class="field-label">Preferred Time</label>
-        <select class="field-input">
+        <select class="field-input" id="jobPreferredTime">
+          <option value="">Flexible / Anytime</option>
           <option>Morning (7am – 12pm)</option>
           <option>Afternoon (12pm – 5pm)</option>
           <option>Evening (5pm – 8pm)</option>
-          <option>Flexible / Anytime</option>
         </select>
       </div>
 
       <div class="form-btns">
-        <button class="btn-back" onclick="goStep(1)">← Back</button>
-        <button class="btn-next" onclick="goStep(3)">Continue → Budget</button>
+        <button class="btn-back" type="button" onclick="goStep(1)">← Back</button>
+        <button class="btn-next" type="button" onclick="goStep(3)">Continue → Budget</button>
       </div>
     </div>
 
@@ -289,28 +290,28 @@
             <div style="font-size:0.82rem;font-weight:500;color:var(--green)">KES 1,500 – 5,000</div>
           </div>
         </div>
-        <input type="range" min="500" max="50000" step="500" value="2500" oninput="document.getElementById('budgetVal').textContent=parseInt(this.value).toLocaleString()">
+        <input id="budgetEstimate" type="range" min="500" max="50000" step="500" value="2500" oninput="updateBudgetEstimate(this.value)">
         <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-top:0.25rem"><span>KES 500</span><span>KES 50,000+</span></div>
       </div>
 
       <div class="field-row">
         <div class="field-group">
           <label class="field-label">Minimum (KES)</label>
-          <input class="field-input" type="number" placeholder="1,000" value="1500">
+          <input class="field-input" id="budgetMin" type="number" placeholder="1,000">
         </div>
         <div class="field-group">
           <label class="field-label">Maximum (KES)</label>
-          <input class="field-input" type="number" placeholder="5,000" value="5000">
+          <input class="field-input" id="budgetMax" type="number" placeholder="5,000">
         </div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Payment Type</label>
-        <select class="field-input">
-          <option>Fixed price for the job</option>
-          <option>Hourly rate</option>
-          <option>Daily rate</option>
-          <option>Negotiable</option>
+        <select class="field-input" id="paymentType">
+          <option value="fixed">Fixed price for the job</option>
+          <option value="hourly">Hourly rate</option>
+          <option value="daily">Daily rate</option>
+          <option value="negotiable">Negotiable</option>
         </select>
       </div>
 
@@ -319,8 +320,8 @@
       </div>
 
       <div class="form-btns">
-        <button class="btn-back" onclick="goStep(2)">← Back</button>
-        <button class="btn-next" onclick="goStep(4)">Continue → Review</button>
+        <button class="btn-back" type="button" onclick="goStep(2)">← Back</button>
+        <button class="btn-next" type="button" onclick="goStep(4)">Continue → Review</button>
       </div>
     </div>
 
@@ -328,36 +329,38 @@
     <div class="form-step" id="step4">
       <div class="form-section-title">Review your job post</div>
 
+      <div id="postJobStatus" style="display:none;margin-bottom:1rem;padding:0.85rem 1rem;border-radius:4px;font-size:0.85rem;line-height:1.6"></div>
+
       <div style="border:1.5px solid var(--ink);border-radius:4px;padding:1.5rem;margin-bottom:1.5rem">
         <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-          <div style="font-size:2rem">⚡</div>
+          <div id="reviewTradeIcon" style="font-size:2rem">🛠️</div>
           <div>
-            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Install CCTV cameras in my house</div>
-            <div style="font-size:0.78rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Electrician</div>
+            <div id="reviewTitle" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Your job title will appear here</div>
+            <div id="reviewTrade" style="font-size:0.78rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Select a trade</div>
           </div>
           <div style="margin-left:auto;background:var(--saffron);color:var(--ink);font-size:0.68rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em">Open</div>
         </div>
-        <div style="font-size:0.85rem;line-height:1.65;color:var(--steel);margin-bottom:1.25rem">I need 4 CCTV cameras installed around my compound — 2 at the gate, 1 at the front door, 1 at the back. Cables to be hidden where possible…</div>
+        <div id="reviewDescription" style="font-size:0.85rem;line-height:1.65;color:var(--steel);margin-bottom:1.25rem">Add a description in the previous steps and it will appear here.</div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
-          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Location</div><div style="font-size:0.875rem;margin-top:0.2rem">📍 Kilimani, Nairobi</div></div>
-          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Budget</div><div style="font-size:0.875rem;margin-top:0.2rem;font-weight:700">KES 1,500 – 5,000</div></div>
-          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Timing</div><div style="font-size:0.875rem;margin-top:0.2rem">🗓️ Flexible</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Location</div><div id="reviewLocation" style="font-size:0.875rem;margin-top:0.2rem">📍 Add a county and area</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Budget</div><div id="reviewBudget" style="font-size:0.875rem;margin-top:0.2rem;font-weight:700">Add your budget</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Timing</div><div id="reviewTiming" style="font-size:0.875rem;margin-top:0.2rem">🗓️ Flexible</div></div>
         </div>
       </div>
 
       <div class="field-group">
         <label class="field-label">Your Name <span class="field-required">*</span></label>
-        <input class="field-input" type="text" placeholder="Full name">
+        <input class="field-input" id="clientName" type="text" placeholder="Full name">
       </div>
       <div class="field-group">
-        <label class="field-label">Phone Number <span class="field-required">*</span></label>
-        <input class="field-input" type="tel" placeholder="+254 7XX XXX XXX">
-        <div class="field-hint">Workers will contact you on this number</div>
+        <label class="field-label">Phone Number on Your Account <span class="field-required">*</span></label>
+        <input class="field-input" id="clientPhone" type="tel" placeholder="+254 7XX XXX XXX" readonly>
+        <div class="field-hint">Workers will contact you on this verified number from your KaziX account.</div>
       </div>
 
       <div class="form-btns">
-        <button class="btn-back" onclick="goStep(3)">← Back</button>
-        <button class="btn-submit" onclick="submitJob()">🚀 Post Job Now</button>
+        <button class="btn-back" type="button" onclick="goStep(3)">← Back</button>
+        <button class="btn-submit" id="submitJobButton" type="button" onclick="submitJob()">🚀 Post Job Now</button>
       </div>
     </div>
 
@@ -365,10 +368,10 @@
     <div class="success-state" id="successState">
       <div class="success-icon">🎉</div>
       <div class="success-title">Job Posted Successfully!</div>
-      <div class="success-sub">Your job has been posted. Nearby electricians in Kilimani are being notified right now.<br><br>You'll receive SMS alerts as fundis apply. Average response time is <strong>under 20 minutes</strong>.</div>
+      <div class="success-sub" id="successMessage">Your job has been posted and is now visible to matching fundis nearby.</div>
       <div class="success-actions">
-        <a href="find-workers.html" style="background:var(--ink);color:var(--cream);padding:0.9rem 2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border-radius:2px;text-decoration:none;display:inline-block">Browse Workers</a>
-        <a href="index.html" style="background:transparent;color:var(--ink);padding:0.9rem 2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:1.5px solid var(--ink);border-radius:2px;text-decoration:none;display:inline-block">Back to Home</a>
+        <a href="my-jobs.html" style="background:var(--ink);color:var(--cream);padding:0.9rem 2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border-radius:2px;text-decoration:none;display:inline-block">View My Jobs</a>
+        <a href="find-workers.html" style="background:transparent;color:var(--ink);padding:0.9rem 2rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:1.5px solid var(--ink);border-radius:2px;text-decoration:none;display:inline-block">Browse Workers</a>
       </div>
     </div>
 
@@ -409,31 +412,395 @@
 </div>
 
 <script>
+const TRADE_LABELS = {
+  plumber: 'Plumber',
+  electrician: 'Electrician',
+  mason: 'Mason',
+  mama_fua: 'Mama Fua',
+  carpenter: 'Carpenter',
+  painter: 'Painter',
+  roofer: 'Roofer',
+  gardener: 'Gardener',
+  driver_mover: 'Driver / Mover',
+  security: 'Security',
+};
+const PAYMENT_LABELS = {
+  fixed: 'Fixed price',
+  hourly: 'Hourly rate',
+  daily: 'Daily rate',
+  negotiable: 'Negotiable',
+};
+
 let currentStep = 1;
-function goStep(n) {
-  document.getElementById('step'+currentStep).classList.remove('active');
-  document.getElementById('snode'+currentStep).classList.remove('active');
-  document.getElementById('snode'+currentStep).classList.add('done');
-  currentStep = n;
-  document.getElementById('step'+n).classList.add('active');
-  document.getElementById('snode'+n).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+let isSubmittingJob = false;
+let initialClientName = '';
+
+function el(id) {
+  return document.getElementById(id);
 }
-function selectTrade(el) {
-  document.querySelectorAll('.trade-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
+
+function updateBudgetEstimate(value) {
+  el('budgetVal').textContent = Number(value || 0).toLocaleString();
 }
-function selectUrgency(el,type) {
-  document.querySelectorAll('.urgency-option').forEach(o => o.classList.remove('selected','normal'));
-  el.classList.add('selected');
-  if(type==='normal') el.classList.add('normal');
+
+function getSelectedTradeOption() {
+  return document.querySelector('.trade-option.selected');
 }
-function submitJob() {
-  document.getElementById('step4').classList.remove('active');
-  document.querySelectorAll('.step-node').forEach(n => { n.classList.remove('active'); n.classList.add('done'); });
-  document.getElementById('successState').classList.add('show');
-  window.scrollTo({top:0,behavior:'smooth'});
+
+function getUrgencyValue() {
+  return document.querySelector('.urgency-option.selected')?.dataset.urgency || 'flexible';
 }
+
+function getFormSnapshot() {
+  const tradeOption = getSelectedTradeOption();
+  const budgetMin = Number.parseInt(el('budgetMin').value, 10);
+  const budgetMax = Number.parseInt(el('budgetMax').value, 10);
+
+  return {
+    trade: tradeOption?.dataset.trade || '',
+    tradeLabel: tradeOption?.querySelector('.t-name')?.textContent?.trim() || '',
+    tradeIcon: tradeOption?.dataset.icon || '🛠️',
+    title: el('jobTitle').value.trim(),
+    description: el('jobDescription').value.trim(),
+    urgency: getUrgencyValue(),
+    county: el('jobCounty').value.trim(),
+    area: el('jobArea').value.trim(),
+    street: el('jobStreet').value.trim(),
+    preferred_date: el('jobPreferredDate').value,
+    preferred_time: el('jobPreferredTime').value,
+    budget_min: Number.isFinite(budgetMin) ? budgetMin : null,
+    budget_max: Number.isFinite(budgetMax) ? budgetMax : null,
+    payment_type: el('paymentType').value || 'fixed',
+    clientName: el('clientName').value.trim(),
+    clientPhone: el('clientPhone').value.trim(),
+  };
+}
+
+function formatBudget(snapshot) {
+  const { budget_min: min, budget_max: max, payment_type: paymentType } = snapshot;
+  if (Number.isFinite(min) && Number.isFinite(max)) {
+    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  }
+  if (Number.isFinite(min)) {
+    return `From KES ${min.toLocaleString()}`;
+  }
+  if (Number.isFinite(max)) {
+    return `Up to KES ${max.toLocaleString()}`;
+  }
+  return PAYMENT_LABELS[paymentType] || 'Budget to be agreed';
+}
+
+function formatTiming(snapshot) {
+  if (snapshot.urgency === 'urgent') {
+    return '🔴 Urgent - ASAP';
+  }
+
+  if (snapshot.preferred_date && snapshot.preferred_time) {
+    return `🗓️ ${snapshot.preferred_date} · ${snapshot.preferred_time}`;
+  }
+  if (snapshot.preferred_date) {
+    return `🗓️ ${snapshot.preferred_date}`;
+  }
+  if (snapshot.preferred_time) {
+    return `🗓️ ${snapshot.preferred_time}`;
+  }
+  return '🗓️ Flexible';
+}
+
+function showStatus(message, tone) {
+  const status = el('postJobStatus');
+  if (!status) return;
+
+  status.style.display = 'block';
+  status.textContent = message;
+
+  if (tone === 'success') {
+    status.style.background = 'rgba(27,107,58,0.08)';
+    status.style.border = '1px solid rgba(27,107,58,0.2)';
+    status.style.color = 'var(--green)';
+    return;
+  }
+
+  status.style.background = 'rgba(192,57,43,0.08)';
+  status.style.border = '1px solid rgba(192,57,43,0.2)';
+  status.style.color = 'var(--rust)';
+}
+
+function clearStatus() {
+  const status = el('postJobStatus');
+  if (!status) return;
+  status.style.display = 'none';
+  status.textContent = '';
+}
+
+function focusField(target) {
+  if (!target) return;
+  target.focus();
+  if (typeof target.scrollIntoView === 'function') {
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+function validateStep(step) {
+  clearStatus();
+  const snapshot = getFormSnapshot();
+
+  if (step === 1) {
+    if (!snapshot.trade) {
+      showStatus('Choose the type of fundi you need for this job.', 'error');
+      focusField(document.querySelector('.trade-option'));
+      return false;
+    }
+    if (!snapshot.title || snapshot.title.length < 5) {
+      showStatus('Add a clear job title with at least 5 characters.', 'error');
+      focusField(el('jobTitle'));
+      return false;
+    }
+    if (!snapshot.description || snapshot.description.length < 20) {
+      showStatus('Describe the job in a bit more detail so fundis can quote properly.', 'error');
+      focusField(el('jobDescription'));
+      return false;
+    }
+  }
+
+  if (step === 2) {
+    if (!snapshot.county) {
+      showStatus('Select the county where the job will happen.', 'error');
+      focusField(el('jobCounty'));
+      return false;
+    }
+    if (!snapshot.area || snapshot.area.length < 2) {
+      showStatus('Add the town or area for this job.', 'error');
+      focusField(el('jobArea'));
+      return false;
+    }
+    if (!snapshot.preferred_date) {
+      showStatus('Choose the date you would like the work to happen.', 'error');
+      focusField(el('jobPreferredDate'));
+      return false;
+    }
+  }
+
+  if (step === 3) {
+    if (snapshot.budget_min !== null && snapshot.budget_min < 0) {
+      showStatus('Minimum budget cannot be negative.', 'error');
+      focusField(el('budgetMin'));
+      return false;
+    }
+    if (snapshot.budget_max !== null && snapshot.budget_max < 0) {
+      showStatus('Maximum budget cannot be negative.', 'error');
+      focusField(el('budgetMax'));
+      return false;
+    }
+    if (
+      snapshot.budget_min !== null
+      && snapshot.budget_max !== null
+      && snapshot.budget_max < snapshot.budget_min
+    ) {
+      showStatus('Maximum budget should be greater than or equal to minimum budget.', 'error');
+      focusField(el('budgetMax'));
+      return false;
+    }
+  }
+
+  if (step === 4) {
+    if (!snapshot.clientName || snapshot.clientName.length < 2) {
+      showStatus('Add your name so workers know who posted the job.', 'error');
+      focusField(el('clientName'));
+      return false;
+    }
+    if (!snapshot.clientPhone) {
+      showStatus('Your account needs a verified phone number before the job can be posted.', 'error');
+      focusField(el('clientPhone'));
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function syncStepIndicators() {
+  document.querySelectorAll('.step-node').forEach((node, index) => {
+    const step = index + 1;
+    node.classList.remove('active', 'done');
+    if (step < currentStep) {
+      node.classList.add('done');
+    } else if (step === currentStep) {
+      node.classList.add('active');
+    }
+  });
+}
+
+function updateReviewCard() {
+  const snapshot = getFormSnapshot();
+  const shortDescription = snapshot.description.length > 180
+    ? `${snapshot.description.slice(0, 177)}...`
+    : (snapshot.description || 'Add a description in the previous steps and it will appear here.');
+  const location = [snapshot.area, snapshot.county].filter(Boolean).join(', ');
+
+  el('reviewTradeIcon').textContent = snapshot.tradeIcon;
+  el('reviewTitle').textContent = snapshot.title || 'Your job title will appear here';
+  el('reviewTrade').textContent = snapshot.tradeLabel || 'Select a trade';
+  el('reviewDescription').textContent = shortDescription;
+  el('reviewLocation').textContent = location ? `📍 ${location}` : '📍 Add a county and area';
+  el('reviewBudget').textContent = formatBudget(snapshot);
+  el('reviewTiming').textContent = formatTiming(snapshot);
+}
+
+function goStep(nextStep) {
+  if (nextStep > currentStep && !validateStep(currentStep)) {
+    return;
+  }
+
+  if (nextStep === 4) {
+    updateReviewCard();
+  }
+
+  el(`step${currentStep}`).classList.remove('active');
+  currentStep = nextStep;
+  el(`step${currentStep}`).classList.add('active');
+  syncStepIndicators();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectTrade(target) {
+  document.querySelectorAll('.trade-option').forEach((option) => option.classList.remove('selected'));
+  target.classList.add('selected');
+  clearStatus();
+}
+
+function selectUrgency(target, type) {
+  document.querySelectorAll('.urgency-option').forEach((option) => option.classList.remove('selected', 'normal'));
+  target.classList.add('selected');
+  if (type === 'flexible') {
+    target.classList.add('normal');
+  }
+}
+
+function setSubmittingState(isBusy) {
+  isSubmittingJob = isBusy;
+  const submitButton = el('submitJobButton');
+  if (!submitButton) return;
+  submitButton.disabled = isBusy;
+  submitButton.style.opacity = isBusy ? '0.7' : '1';
+  submitButton.textContent = isBusy ? 'Posting job...' : '🚀 Post Job Now';
+}
+
+async function loadProfileDefaults() {
+  try {
+    const payload = await window.KazixProfile.getMyProfile();
+    const profile = payload?.profile || {};
+
+    if (profile.role && !['client', 'admin'].includes(profile.role)) {
+      showStatus('Only employer accounts can post jobs from this page.', 'error');
+      document.querySelectorAll('.btn-next, .btn-submit').forEach((button) => {
+        button.disabled = true;
+        button.style.opacity = '0.6';
+      });
+      return;
+    }
+
+    if (profile.county && !el('jobCounty').value) {
+      el('jobCounty').value = profile.county;
+    }
+    if (profile.area && !el('jobArea').value) {
+      el('jobArea').value = profile.area;
+    }
+
+    initialClientName = profile.full_name || '';
+    el('clientName').value = initialClientName;
+    el('clientPhone').value = profile.phone || '';
+
+    const preferredDate = el('jobPreferredDate');
+    const today = new Date().toISOString().slice(0, 10);
+    preferredDate.min = today;
+    if (!preferredDate.value) {
+      preferredDate.value = today;
+    }
+
+    updateReviewCard();
+  } catch (error) {
+    console.error('Failed to load employer profile defaults', error);
+    showStatus('We could not load your employer profile. Refresh and try again.', 'error');
+  }
+}
+
+async function submitJob() {
+  if (isSubmittingJob) {
+    return;
+  }
+
+  if (!validateStep(4)) {
+    return;
+  }
+
+  const snapshot = getFormSnapshot();
+  const profileUpdate = {};
+
+  if (snapshot.clientName && snapshot.clientName !== initialClientName) {
+    profileUpdate.full_name = snapshot.clientName;
+  }
+
+  try {
+    setSubmittingState(true);
+    clearStatus();
+
+    if (Object.keys(profileUpdate).length > 0) {
+      await window.KazixProfile.requestJson('/v1/profiles/me', {
+        auth: true,
+        method: 'PATCH',
+        body: profileUpdate,
+        showError: false,
+      });
+      initialClientName = snapshot.clientName;
+    }
+
+    const createdJob = await window.KazixProfile.requestJson('/v1/jobs', {
+      auth: true,
+      method: 'POST',
+      body: {
+        title: snapshot.title,
+        description: snapshot.description,
+        trade: snapshot.trade,
+        county: snapshot.county,
+        area: snapshot.area,
+        street: snapshot.street || null,
+        budget_min: snapshot.budget_min,
+        budget_max: snapshot.budget_max,
+        payment_type: snapshot.payment_type,
+        urgency: snapshot.urgency,
+        preferred_date: snapshot.preferred_date || null,
+        preferred_time: snapshot.preferred_time || null,
+        materials_provided: false,
+      },
+      showError: false,
+    });
+
+    document.querySelectorAll('.step-node').forEach((node) => {
+      node.classList.remove('active');
+      node.classList.add('done');
+    });
+    el('step4').classList.remove('active');
+    el('successState').classList.add('show');
+    el('successMessage').innerHTML = `Your job <strong>${snapshot.title}</strong> is now live for ${snapshot.tradeLabel || 'nearby fundis'} in ${snapshot.area || snapshot.county}. You can track applications from <a href="my-jobs.html" style="color:var(--green);font-weight:700;text-decoration:none">My Jobs</a>.`;
+
+    if (createdJob?.id) {
+      sessionStorage.setItem('kazix_last_posted_job_id', createdJob.id);
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (error) {
+    console.error('Failed to submit job', error);
+    showStatus(error.message || 'We could not post your job right now. Please try again.', 'error');
+  } finally {
+    setSubmittingState(false);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateBudgetEstimate(el('budgetEstimate').value);
+  loadProfileDefaults();
+});
 </script>
 <script src="../assets/js/error-messages.js"></script>
 <script src="../assets/js/error-handler.js"></script>

@@ -4,6 +4,7 @@ app/api/v1/jobs.py
 CRUD for jobs + application listing.
 
 GET    /v1/jobs            → list open jobs (filterable)
+GET    /v1/jobs/mine       → client views their own jobs
 POST   /v1/jobs            → client creates a job
 GET    /v1/jobs/{id}       → get one job
 PATCH  /v1/jobs/{id}       → client updates their job
@@ -73,7 +74,7 @@ async def list_jobs(
         q = (
             client.table("jobs")
             .select(
-                "id, title, trade, county, area, budget_min, budget_max, "
+                "id, title, description, trade, county, area, budget_min, budget_max, "
                 "payment_type, urgency, preferred_date, materials_provided, "
                 "status, expires_at, created_at, "
                 "profiles!client_id(full_name, avatar_url)"
@@ -94,6 +95,28 @@ async def list_jobs(
     except Exception as exc:
         logger.error("Job listing failed", error=str(exc))
         raise HTTPException(status_code=500, detail="Failed to fetch jobs.")
+
+
+@router.get("/mine")
+async def list_my_jobs(user: ClientUser):
+    """Client-only — list jobs posted by the authenticated user."""
+    admin = get_admin_client()
+    try:
+        result = (
+            admin.table("jobs")
+            .select(
+                "id, title, description, trade, county, area, street, budget_min, "
+                "budget_max, payment_type, urgency, preferred_date, preferred_time, "
+                "materials_provided, status, expires_at, created_at, updated_at"
+            )
+            .eq("client_id", user.user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return {"data": result.data, "count": len(result.data)}
+    except Exception as exc:
+        logger.error("Failed to fetch client jobs", client_id=user.user_id, error=str(exc))
+        raise HTTPException(status_code=500, detail="Failed to fetch your jobs.")
 
 
 @router.get("/{job_id}")

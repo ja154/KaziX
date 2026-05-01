@@ -122,195 +122,274 @@
 
     <!-- TABS -->
     <div class="status-tabs">
-      <div class="stab active" onclick="filterJobs('all',this)">All Jobs <span class="tab-count">15</span></div>
-      <div class="stab" onclick="filterJobs('open',this)">Open <span class="tab-count">2</span></div>
-      <div class="stab" onclick="filterJobs('reviewing',this)">Reviewing <span class="tab-count">1</span></div>
-      <div class="stab" onclick="filterJobs('in_progress',this)">In Progress <span class="tab-count">1</span></div>
-      <div class="stab" onclick="filterJobs('completed',this)">Completed <span class="tab-count">10</span></div>
-      <div class="stab" onclick="filterJobs('expired',this)">Expired <span class="tab-count">1</span></div>
+      <div class="stab active" data-status="all" onclick="filterJobs('all',this)">All Jobs <span class="tab-count">0</span></div>
+      <div class="stab" data-status="open" onclick="filterJobs('open',this)">Open <span class="tab-count">0</span></div>
+      <div class="stab" data-status="reviewing" onclick="filterJobs('reviewing',this)">Reviewing <span class="tab-count">0</span></div>
+      <div class="stab" data-status="active" onclick="filterJobs('active',this)">In Progress <span class="tab-count">0</span></div>
+      <div class="stab" data-status="completed" onclick="filterJobs('completed',this)">Completed <span class="tab-count">0</span></div>
+      <div class="stab" data-status="closed" onclick="filterJobs('closed',this)">Closed <span class="tab-count">0</span></div>
     </div>
 
     <!-- JOB CARDS -->
     <div class="jobs-list" id="jobsList">
-
-      <!-- Reviewing -->
-      <div class="job-card reviewing" data-status="reviewing" style="animation-delay:0.05s">
-        <div class="jc-top">
-          <div class="jc-icon">⚡</div>
-          <div class="jc-meta">
-            <div class="jc-title">Install CCTV cameras — Kilimani</div>
-            <div class="jc-sub">
-              <span>⚡ Electrician</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Posted 2 days ago</span>
-              <span>⏰ Expires in 1 day</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-review">Reviewing Applicants</span>
-            <div class="jc-budget">KES 3,000 – 7,000</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val highlight">5</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">2</div><div class="jc-stat-label">New Today</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">4.7★</div><div class="jc-stat-label">Avg Rating</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">KES 4,200</div><div class="jc-stat-label">Avg Bid</div></div>
-          <div class="jc-actions">
-            <a href="job-applicants.html" class="jc-btn jc-btn-primary">👥 Review Applicants (5)</a>
-            <button class="jc-btn jc-btn-secondary">✎ Edit</button>
-            <button class="jc-btn jc-btn-danger">✕ Close</button>
-          </div>
-        </div>
+      <div class="empty-state">
+        <div class="es-icon">⏳</div>
+        <div class="es-title">Loading your jobs…</div>
+        <div class="es-sub">Fetching the latest postings from the backend.</div>
       </div>
-
-      <!-- Open -->
-      <div class="job-card open" data-status="open" style="animation-delay:0.1s">
-        <div class="jc-top">
-          <div class="jc-icon">🚿</div>
-          <div class="jc-meta">
-            <div class="jc-title">Fix leaking pipe under kitchen sink</div>
-            <div class="jc-sub">
-              <span>🚿 Plumber</span>
-              <span>📍 Westlands, Nairobi</span>
-              <span>📅 Posted today</span>
-              <span>⏰ Expires in 3 days</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-open">Open</span>
-            <div class="jc-budget">KES 500 – 1,500</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">2</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">0</div><div class="jc-stat-label">New Today</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">4.8★</div><div class="jc-stat-label">Avg Rating</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">KES 900</div><div class="jc-stat-label">Avg Bid</div></div>
-          <div class="jc-actions">
-            <a href="job-applicants.html" class="jc-btn jc-btn-primary">👥 View Applicants</a>
-            <button class="jc-btn jc-btn-secondary">✎ Edit</button>
-            <button class="jc-btn jc-btn-danger">✕ Close</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- In progress -->
-      <div class="job-card in_progress" data-status="in_progress" style="animation-delay:0.15s">
-        <div class="jc-top">
-          <div class="jc-icon">🎨</div>
-          <div class="jc-meta">
-            <div class="jc-title">Paint bedroom + living room (3-bed house)</div>
-            <div class="jc-sub">
-              <span>🎨 Painter</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Started yesterday</span>
-              <span>⏱ Est. 2 more days</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-active">In Progress</span>
-            <div class="jc-budget">KES 3,200</div>
-          </div>
-        </div>
-        <div style="margin-top:0.75rem;margin-bottom:0.75rem">
-          <div class="hired-worker">
-            <div class="hw-avatar">🎨</div>
-            <div><div class="hw-name">Mary Akinyi</div></div>
-            <div class="hw-stars">★★★★★ 4.7</div>
-            <div style="margin-left:auto;font-size:0.72rem;color:var(--green);font-weight:600">● Active now</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">KES 3,200</div><div class="jc-stat-label">Escrow Held</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">Day 1/3</div><div class="jc-stat-label">Progress</div></div>
-          <div class="jc-actions">
-            <a href="messages.html" class="jc-btn jc-btn-secondary">💬 Message Mary</a>
-            <button class="jc-btn jc-btn-primary" onclick="alert('Confirm job completion and release M-Pesa escrow?')">✅ Mark Complete</button>
-            <a href="my-hires.html" class="jc-btn jc-btn-secondary">View Booking</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Completed -->
-      <div class="job-card completed" data-status="completed" style="animation-delay:0.2s">
-        <div class="jc-top">
-          <div class="jc-icon">🪚</div>
-          <div class="jc-meta">
-            <div class="jc-title">Repair wooden fence — backyard</div>
-            <div class="jc-sub">
-              <span>🪚 Carpenter</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Completed 3 days ago</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-done">Completed</span>
-            <div class="jc-budget">KES 3,500</div>
-          </div>
-        </div>
-        <div style="margin-top:0.75rem;margin-bottom:0.75rem">
-          <div class="hired-worker">
-            <div class="hw-avatar">🪚</div>
-            <div><div class="hw-name">Peter Odhiambo</div></div>
-            <div class="hw-stars">★★★★★ 4.8</div>
-            <div style="margin-left:auto;font-size:0.72rem;color:var(--green);font-weight:600">Paid · KES 3,500</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">KES 3,500</div><div class="jc-stat-label">Paid out</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">1 day</div><div class="jc-stat-label">Duration</div></div>
-          <div class="jc-actions">
-            <button class="jc-btn jc-btn-primary" style="background:var(--saffron);color:var(--ink)">⭐ Leave Review</button>
-            <button class="jc-btn jc-btn-secondary">🔁 Hire Again</button>
-            <a href="javascript:void(0)" class="jc-btn jc-btn-secondary" onclick="alert('Receipt download coming soon')">View Receipt</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Expired -->
-      <div class="job-card expired" data-status="expired" style="animation-delay:0.25s">
-        <div class="jc-top">
-          <div class="jc-icon" style="opacity:0.5">🏠</div>
-          <div class="jc-meta">
-            <div class="jc-title" style="color:var(--muted)">Replace roof tiles — garage</div>
-            <div class="jc-sub">
-              <span>🏠 Roofer</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Expired 1 week ago · No applications received</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-exp">Expired</span>
-            <div class="jc-budget" style="color:var(--muted)">KES 8,000 – 15,000</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val" style="color:var(--muted)">0</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-actions">
-            <button class="jc-btn jc-btn-primary">🔁 Repost Job</button>
-            <button class="jc-btn jc-btn-secondary">✎ Edit & Repost</button>
-            <button class="jc-btn jc-btn-danger">🗑 Delete</button>
-          </div>
-        </div>
-      </div>
-
     </div><!-- /jobs-list -->
   </main>
 </div>
 
 <script>
-function filterJobs(status, el) {
-  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.job-card').forEach(card => {
-    if (status === 'all' || card.dataset.status === status) {
-      card.style.display = 'block';
-    } else {
-      card.style.display = 'none';
+const TRADE_ICONS = {
+  plumber: '🚿',
+  electrician: '⚡',
+  mason: '🧱',
+  mama_fua: '👗',
+  carpenter: '🪚',
+  painter: '🎨',
+  roofer: '🏠',
+  gardener: '🌿',
+  driver_mover: '🛻',
+  security: '🔒',
+};
+const TRADE_LABELS = {
+  plumber: 'Plumber',
+  electrician: 'Electrician',
+  mason: 'Mason',
+  mama_fua: 'Mama Fua',
+  carpenter: 'Carpenter',
+  painter: 'Painter',
+  roofer: 'Roofer',
+  gardener: 'Gardener',
+  driver_mover: 'Driver / Mover',
+  security: 'Security',
+};
+const STATUS_META = {
+  open: { label: 'Open', badgeClass: 'sb-open', cardClass: 'open' },
+  reviewing: { label: 'Reviewing', badgeClass: 'sb-review', cardClass: 'reviewing' },
+  active: { label: 'In Progress', badgeClass: 'sb-active', cardClass: 'in_progress' },
+  completed: { label: 'Completed', badgeClass: 'sb-done', cardClass: 'completed' },
+  cancelled: { label: 'Cancelled', badgeClass: 'sb-exp', cardClass: 'expired' },
+  expired: { label: 'Expired', badgeClass: 'sb-exp', cardClass: 'expired' },
+};
+
+let allJobs = [];
+let currentFilter = 'all';
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatBudget(job) {
+  const min = Number.isFinite(job.budget_min) ? job.budget_min : null;
+  const max = Number.isFinite(job.budget_max) ? job.budget_max : null;
+  if (min !== null && max !== null) {
+    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
+  }
+  if (min !== null) {
+    return `From KES ${min.toLocaleString()}`;
+  }
+  if (max !== null) {
+    return `Up to KES ${max.toLocaleString()}`;
+  }
+  return 'Budget on request';
+}
+
+function formatRelativeDate(value) {
+  if (!value) return 'Recently';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+
+  const diffMs = Date.now() - date.getTime();
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'Posted just now';
+  if (diffHours < 24) return `Posted ${diffHours}h ago`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays === 1) return 'Posted yesterday';
+  return `Posted ${diffDays} days ago`;
+}
+
+function formatPreferredDate(value) {
+  if (!value) return 'Flexible timing';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function isClosedStatus(status) {
+  return status === 'cancelled' || status === 'expired';
+}
+
+function getVisibleJobs() {
+  if (currentFilter === 'all') {
+    return allJobs;
+  }
+  if (currentFilter === 'closed') {
+    return allJobs.filter((job) => isClosedStatus(job.status));
+  }
+  return allJobs.filter((job) => job.status === currentFilter);
+}
+
+function renderTabs() {
+  const counts = {
+    all: allJobs.length,
+    open: allJobs.filter((job) => job.status === 'open').length,
+    reviewing: allJobs.filter((job) => job.status === 'reviewing').length,
+    active: allJobs.filter((job) => job.status === 'active').length,
+    completed: allJobs.filter((job) => job.status === 'completed').length,
+    closed: allJobs.filter((job) => isClosedStatus(job.status)).length,
+  };
+
+  document.querySelectorAll('.stab').forEach((tab) => {
+    const status = tab.dataset.status;
+    const countNode = tab.querySelector('.tab-count');
+    if (countNode && Object.prototype.hasOwnProperty.call(counts, status)) {
+      countNode.textContent = counts[status];
     }
+    tab.classList.toggle('active', status === currentFilter);
   });
 }
+
+function renderEmptyState(message, body) {
+  document.getElementById('jobsList').innerHTML = `
+    <div class="empty-state">
+      <div class="es-icon">📭</div>
+      <div class="es-title">${escapeHtml(message)}</div>
+      <div class="es-sub">${escapeHtml(body)}</div>
+      <a href="post-job.html" class="post-btn">➕ Post New Job</a>
+    </div>
+  `;
+}
+
+function jobCardMarkup(job, index) {
+  const statusMeta = STATUS_META[job.status] || STATUS_META.open;
+  const tradeLabel = TRADE_LABELS[job.trade] || 'Skilled Worker';
+  const tradeIcon = TRADE_ICONS[job.trade] || '🛠️';
+  const location = [job.area, job.county].filter(Boolean).join(', ');
+  const summary = job.description
+    ? escapeHtml(job.description.length > 170 ? `${job.description.slice(0, 167)}...` : job.description)
+    : 'No description provided yet.';
+  const timingLabel = job.preferred_time
+    ? `${formatPreferredDate(job.preferred_date)} · ${escapeHtml(job.preferred_time)}`
+    : formatPreferredDate(job.preferred_date);
+  const canClose = ['open', 'reviewing'].includes(job.status);
+
+  return `
+    <div class="job-card ${statusMeta.cardClass}" data-status="${escapeHtml(job.status)}" style="animation-delay:${(index + 1) * 0.05}s">
+      <div class="jc-top">
+        <div class="jc-icon">${tradeIcon}</div>
+        <div class="jc-meta">
+          <div class="jc-title">${escapeHtml(job.title)}</div>
+          <div class="jc-sub">
+            <span>${tradeIcon} ${escapeHtml(tradeLabel)}</span>
+            <span>📍 ${escapeHtml(location || 'Location pending')}</span>
+            <span>📅 ${escapeHtml(formatRelativeDate(job.created_at))}</span>
+            <span>🗓️ ${escapeHtml(timingLabel)}</span>
+          </div>
+        </div>
+        <div class="jc-right">
+          <span class="status-badge ${statusMeta.badgeClass}">${escapeHtml(statusMeta.label)}</span>
+          <div class="jc-budget">${escapeHtml(formatBudget(job))}</div>
+        </div>
+      </div>
+      <div style="font-size:0.84rem;line-height:1.65;color:var(--muted);margin-bottom:1rem">${summary}</div>
+      <div class="jc-stats">
+        <div class="jc-stat">
+          <div class="jc-stat-val">${escapeHtml(job.urgency === 'urgent' ? 'Urgent' : 'Flexible')}</div>
+          <div class="jc-stat-label">Urgency</div>
+        </div>
+        <div class="jc-stat">
+          <div class="jc-stat-val">${escapeHtml(job.payment_type || 'fixed')}</div>
+          <div class="jc-stat-label">Payment</div>
+        </div>
+        <div class="jc-stat">
+          <div class="jc-stat-val">${escapeHtml(job.street || 'Private')}</div>
+          <div class="jc-stat-label">Street</div>
+        </div>
+        <div class="jc-actions">
+          <a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="jc-btn jc-btn-primary">🔎 Open Listing</a>
+          ${canClose ? `<button class="jc-btn jc-btn-danger" type="button" onclick="closeJob('${escapeHtml(job.id)}')">✕ Close Job</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderJobs() {
+  renderTabs();
+  const visibleJobs = getVisibleJobs();
+
+  if (!visibleJobs.length) {
+    const emptyCopy = currentFilter === 'all'
+      ? ['No jobs posted yet', 'Create your first job and it will appear here right away.']
+      : ['No jobs in this status', 'Switch tabs or post a new job to keep hiring moving.'];
+    renderEmptyState(emptyCopy[0], emptyCopy[1]);
+    return;
+  }
+
+  document.getElementById('jobsList').innerHTML = visibleJobs
+    .map((job, index) => jobCardMarkup(job, index))
+    .join('');
+}
+
+function filterJobs(status, target) {
+  currentFilter = status;
+  if (target) {
+    document.querySelectorAll('.stab').forEach((tab) => tab.classList.remove('active'));
+    target.classList.add('active');
+  }
+  renderJobs();
+}
+
+async function fetchJobs() {
+  try {
+    const payload = await window.KazixProfile.requestJson('/v1/jobs/mine', {
+      auth: true,
+      showError: false,
+    });
+    allJobs = Array.isArray(payload?.data) ? payload.data : [];
+    renderJobs();
+  } catch (error) {
+    console.error('Failed to load employer jobs', error);
+    renderEmptyState(
+      'Could not load your jobs',
+      error.message || 'Try refreshing the page in a moment.'
+    );
+  }
+}
+
+async function closeJob(jobId) {
+  const confirmed = window.confirm('Close this job? It will stop accepting new applications.');
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await window.KazixProfile.requestJson(`/v1/jobs/${encodeURIComponent(jobId)}`, {
+      auth: true,
+      method: 'DELETE',
+      showError: false,
+    });
+    allJobs = allJobs.map((job) => (
+      job.id === jobId
+        ? { ...job, status: 'cancelled' }
+        : job
+    ));
+    renderJobs();
+  } catch (error) {
+    console.error('Failed to close job', error);
+    window.alert(error.message || 'Could not close this job right now.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', fetchJobs);
 </script>
 
 <nav class="mobile-nav" aria-label="Primary">
