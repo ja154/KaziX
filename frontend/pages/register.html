@@ -454,10 +454,14 @@ const API_BASE = resolveApiBase();
 const API_BASE_LABEL = API_BASE || window.location.origin;
 const SUPABASE_URL = window.SUPABASE_URL || window.KAZIX_CONFIG?.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPABASE_ANON_KEY;
-if (!window.supabase || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase configuration. Generate frontend/env.js and load Supabase before the register flow.');
-}
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_CONFIG_ERROR = !window.supabase
+  ? 'Supabase browser client failed to load. Refresh the page and try again.'
+  : (!SUPABASE_URL || !SUPABASE_ANON_KEY
+      ? 'Missing Supabase configuration. Generate frontend/env.js and load Supabase before the register flow.'
+      : null);
+const supabaseClient = SUPABASE_CONFIG_ERROR
+  ? null
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let regRole = 'client';
 let regCurrentStep = 1;
@@ -521,8 +525,16 @@ function isRecoverableEmailSendError(err) {
   return err instanceof TypeError || message === 'Failed to fetch';
 }
 
+function requireSupabaseClient() {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+  throw new Error(SUPABASE_CONFIG_ERROR || 'Supabase configuration is unavailable.');
+}
+
 async function sendMagicLinkViaSupabase(email, callbackUrl) {
-  const { error } = await supabaseClient.auth.signInWithOtp({
+  const authClient = requireSupabaseClient();
+  const { error } = await authClient.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
@@ -1019,6 +1031,9 @@ async function resumePendingRegistration() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (isCanonicalRedirectPending) return;
+  if (SUPABASE_CONFIG_ERROR) {
+    console.error(SUPABASE_CONFIG_ERROR);
+  }
   restoreRegFormData();
   const params = new URLSearchParams(window.location.search);
   if (params.get('step') === '4' && localStorage.getItem('kazix_access_token')) {

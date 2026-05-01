@@ -119,6 +119,26 @@ def _override_user(role: str, user_id: str):
     )
 
 
+class _NullResultQuery:
+    def select(self, _columns: str):
+        return self
+
+    def eq(self, _field: str, _value):
+        return self
+
+    def order(self, _field: str, desc: bool = False):
+        del desc
+        return self
+
+    def execute(self):
+        return None
+
+
+class _NullResultAdminClient:
+    def table(self, _table_name: str):
+        return _NullResultQuery()
+
+
 @pytest.mark.asyncio
 async def test_send_message_uses_application_context_and_creates_notification(monkeypatch) -> None:
     fake_admin = _FakeAdminClient(
@@ -206,3 +226,14 @@ async def test_get_message_thread_marks_incoming_messages_as_read(monkeypatch) -
     assert result["messages"][0]["read_at"] is not None
     assert fake_admin.tables["messages"][0]["read_at"] is not None
     assert result["thread"]["participant_trade"] is None
+
+
+def test_fetch_rows_returns_empty_list_when_supabase_returns_none() -> None:
+    result = messages_module._fetch_rows(
+        _NullResultAdminClient(),
+        "messages",
+        "*",
+        {"sender_id": "user-1"},
+    )
+
+    assert result == []

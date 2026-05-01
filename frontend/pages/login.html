@@ -271,16 +271,6 @@ const API_BASE = resolveApiBase();
 const API_BASE_LABEL = API_BASE || window.location.origin;
 const SUPABASE_URL = window.SUPABASE_URL || window.KAZIX_CONFIG?.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPABASE_ANON_KEY;
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase configuration. Generate frontend/env.js from frontend/.env and include it before page scripts.');
-}
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let countdownTimer;
-let emailCountdownTimer;
-let magicLinkPollTimer;
-let currentRole = 'client';
-let currentAuthMethod = 'email';
 const AUTH_WAITER_SESSION_KEY = 'kazix_auth_waiter_id';
 const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
@@ -288,8 +278,29 @@ const AUTH_WAITING_HEARTBEAT_KEY = 'kazix_auth_waiting_heartbeat';
 const AUTH_WAITING_STARTED_KEY = 'kazix_auth_waiting_started_at';
 const authWaiterId = sessionStorage.getItem(AUTH_WAITER_SESSION_KEY)
   || (window.crypto?.randomUUID?.() || `auth-${Date.now()}-${Math.random().toString(16).slice(2)}`);
-let authWaitHeartbeatTimer;
+let authWaitHeartbeatTimer = null;
 sessionStorage.setItem(AUTH_WAITER_SESSION_KEY, authWaiterId);
+const SUPABASE_CONFIG_ERROR = !window.supabase
+  ? 'Supabase browser client failed to load. Refresh the page and try again.'
+  : (!SUPABASE_URL || !SUPABASE_ANON_KEY
+      ? 'Missing Supabase configuration. Generate frontend/env.js from frontend/.env and include it before page scripts.'
+      : null);
+const supabaseClient = SUPABASE_CONFIG_ERROR
+  ? null
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let countdownTimer;
+let emailCountdownTimer;
+let magicLinkPollTimer;
+let currentRole = 'client';
+let currentAuthMethod = 'email';
+
+function requireSupabaseClient() {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+  throw new Error(SUPABASE_CONFIG_ERROR || 'Supabase configuration is unavailable.');
+}
 
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
@@ -433,11 +444,12 @@ async function startOAuth(provider) {
   if (btn) btn.disabled = true;
 
   try {
+    const authClient = requireSupabaseClient();
     const redirectTo = getMagicLinkCallbackUrl('login');
     localStorage.setItem('kazix_auth_flow', 'login');
     markAuthTabWaiting('login');
 
-    const { error } = await supabaseClient.auth.signInWithOAuth({
+    const { error } = await authClient.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo,
@@ -546,8 +558,9 @@ async function requestMagicLink(email) {
     if (!isRecoverableEmailSendError(error)) {
       throw error;
     }
+    const authClient = requireSupabaseClient();
     console.warn('Magic link API unavailable, falling back to Supabase browser auth.', error);
-    const { error: supabaseError } = await supabaseClient.auth.signInWithOtp({
+    const { error: supabaseError } = await authClient.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false,
@@ -763,6 +776,11 @@ async function verifyOTP() {
 document.addEventListener('DOMContentLoaded', () => {
   validateEmail();
   validatePhone();
+  if (SUPABASE_CONFIG_ERROR) {
+    console.error(SUPABASE_CONFIG_ERROR);
+    document.getElementById('oauthGoogleBtn').disabled = true;
+    document.getElementById('oauthGithubBtn').disabled = true;
+  }
 });
 
 // Listen for storage changes from other tabs (e.g., when auth-callback.html sets kazix_magic_link_complete)

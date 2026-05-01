@@ -75,10 +75,6 @@ const API_BASE = resolveApiBase();
 const API_BASE_LABEL = API_BASE || window.location.origin;
 const SUPABASE_URL = window.SUPABASE_URL || window.KAZIX_CONFIG?.SUPABASE_URL;
 const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPABASE_ANON_KEY;
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error('Missing Supabase configuration. Generate frontend/env.js from frontend/.env and include it before page scripts.');
-}
-
 const initialSearchParams = new URLSearchParams(window.location.search);
 const initialHashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 const authFlow = initialSearchParams.get('flow') || localStorage.getItem('kazix_auth_flow') || 'register';
@@ -87,9 +83,16 @@ const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
 const AUTH_WAITING_HEARTBEAT_KEY = 'kazix_auth_waiting_heartbeat';
 const AUTH_WAITING_MAX_AGE_MS = 30000;
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { detectSessionInUrl: false },
-});
+const SUPABASE_CONFIG_ERROR = !window.supabase
+  ? 'Supabase browser client failed to load. Refresh the page and try again.'
+  : (!SUPABASE_URL || !SUPABASE_ANON_KEY
+      ? 'Missing Supabase configuration. Generate frontend/env.js from frontend/.env and include it before page scripts.'
+      : null);
+const supabaseClient = SUPABASE_CONFIG_ERROR
+  ? null
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { detectSessionInUrl: false },
+    });
 
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
@@ -455,7 +458,12 @@ async function handleCallback() {
 
 if (!isCanonicalRedirectPending) {
   configureFlowUi(authFlow);
-  handleCallback();
+  if (SUPABASE_CONFIG_ERROR) {
+    console.error(SUPABASE_CONFIG_ERROR);
+    showError(SUPABASE_CONFIG_ERROR);
+  } else {
+    handleCallback();
+  }
 }
 </script>
 </body>

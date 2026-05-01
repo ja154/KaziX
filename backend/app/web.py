@@ -28,19 +28,29 @@ def _resolve_frontend_dir() -> Path | None:
 def mount_frontend(app: FastAPI) -> None:
     """Serve the static site from the FastAPI app."""
     frontend_dir = _resolve_frontend_dir()
+    checked_paths = [
+        str(Path(__file__).resolve().parents[1].parent / "frontend"),
+        str(Path(__file__).resolve().parents[1] / "frontend"),
+    ]
 
     if frontend_dir is None:
-        logger.warning(
-            "Frontend directory not found",
-            checked_paths=[
-                str(Path(__file__).resolve().parents[1].parent / "frontend"),
-                str(Path(__file__).resolve().parents[1] / "frontend"),
-            ],
-        )
+        log_message = "Frontend directory not found"
+        log_kwargs = {"checked_paths": checked_paths}
+        if settings.is_production:
+            log_message = "Frontend directory not found; serving API-only backend"
+            log_kwargs["frontend_url"] = settings.frontend_url
+            logger.info(log_message, **log_kwargs)
+        else:
+            logger.warning(log_message, **log_kwargs)
 
         @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
         async def root_redirect_missing_frontend() -> RedirectResponse:
             return RedirectResponse(url=settings.frontend_url, status_code=307)
+
+        @app.api_route("/pages", methods=["GET", "HEAD"], include_in_schema=False)
+        @app.api_route("/pages/", methods=["GET", "HEAD"], include_in_schema=False)
+        async def pages_redirect_missing_frontend() -> RedirectResponse:
+            return RedirectResponse(url=f"{settings.frontend_url}/pages/index.html", status_code=307)
 
         return
 

@@ -75,7 +75,10 @@ def _fetch_rows(
         if value is None:
             continue
         query = query.eq(field, value)
-    return query.order("created_at", desc=desc).execute().data or []
+    result = query.order("created_at", desc=desc).execute()
+    if result is None:
+        return []
+    return result.data or []
 
 
 def _merge_messages(*collections: list[dict]) -> list[dict]:
