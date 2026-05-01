@@ -818,6 +818,8 @@ async function updateApplicationStatus(applicationId, nextStatus) {
         : `Application updated successfully. The worker can now see this ${actionLabel}.`,
       'success'
     );
+    window.KazixProfile.clearDashboardStateCache();
+    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
     updateLocalBadges();
     renderBanner();
     renderApplicants();
@@ -869,6 +871,8 @@ async function confirmHire() {
     document.getElementById('hireConfirmButton').disabled = false;
     closeHireModal();
     setPageMessage('Hire created successfully. The worker has been moved into your hires flow.', 'success');
+    window.KazixProfile.clearDashboardStateCache();
+    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
     updateLocalBadges();
     renderBanner();
     renderApplicants();

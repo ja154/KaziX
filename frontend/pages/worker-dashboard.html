@@ -137,7 +137,7 @@
   <main class="main">
     <div style="animation:slideUp 0.4s ease both">
       <div class="page-title" id="dashboardGreeting">Welcome back 👋</div>
-      <div class="page-sub">You have 8 new job alerts near you today</div>
+      <div class="page-sub" id="workerDashboardSub">Checking the latest opportunities in your area...</div>
     </div>
     <div class="avail-banner" style="animation:slideUp 0.4s 0.05s ease both">
       <div class="avail-left">
@@ -146,90 +146,53 @@
       </div>
       <div class="avail-toggle-row">
         <span id="availLabel">Available</span>
-        <label class="toggle-switch"><input type="checkbox" checked onchange="toggleAvail(this.checked)"><span class="toggle-slider"></span></label>
+        <label class="toggle-switch"><input type="checkbox" id="availabilityToggle" checked onchange="toggleAvail(this.checked)"><span class="toggle-slider"></span></label>
       </div>
     </div>
     <div class="quick-actions" style="animation:slideUp 0.4s 0.08s ease both">
       <a href="worker-jobs.html" class="qa-btn primary">🔍 Browse Jobs</a>
-      <a href="my-applications.html" class="qa-btn">📋 Applications</a>
-      <a href="messages.html" class="qa-btn">💬 Messages</a>
+      <a href="my-applications.html" class="qa-btn">📋 Applications <span id="workerApplicationsBadge" style="background:var(--saffron);color:var(--ink);font-size:0.65rem;padding:0.1rem 0.45rem;border-radius:10px;margin-left:4px">0</span></a>
+      <a href="worker-hires.html" class="qa-btn">🤝 Contracts</a>
       <a href="worker-earnings.html" class="qa-btn">💳 Earnings</a>
     </div>
     <div class="stats-row" style="animation:slideUp 0.4s 0.1s ease both">
-      <div class="stat-card c-green"><div class="sc-label">This Month (KES)</div><div class="sc-value">87,400</div><div class="sc-delta">↑ 16% vs last month</div></div>
-      <div class="stat-card c-saffron"><div class="sc-label">Active Contracts</div><div class="sc-value">2</div><div class="sc-delta">1 starts tomorrow</div></div>
-      <div class="stat-card c-ink"><div class="sc-label">Jobs Completed</div><div class="sc-value">127</div><div class="sc-delta">↑ 24 this month</div></div>
-      <div class="stat-card c-rust"><div class="sc-label">My Rating</div><div class="sc-value">4.9★</div><div class="sc-delta">Top 5% of plumbers</div></div>
+      <div class="stat-card c-green"><div class="sc-label">This Month (KES)</div><div class="sc-value" id="workerMonthValue">0</div><div class="sc-delta" id="workerMonthDelta">No released payouts yet</div></div>
+      <div class="stat-card c-saffron"><div class="sc-label">Active Contracts</div><div class="sc-value" id="workerContractsValue">0</div><div class="sc-delta" id="workerContractsDelta">No active contracts right now</div></div>
+      <div class="stat-card c-ink"><div class="sc-label">Jobs Completed</div><div class="sc-value" id="workerCompletedValue">0</div><div class="sc-delta" id="workerCompletedDelta">Completed work will appear here</div></div>
+      <div class="stat-card c-rust"><div class="sc-label">My Rating</div><div class="sc-value" id="workerRatingValue">0.0★</div><div class="sc-delta" id="workerRatingDelta">No ratings recorded yet</div></div>
     </div>
     <div class="dash-grid" style="animation:slideUp 0.4s 0.15s ease both">
       <div class="card">
         <div class="card-head">
-          <div class="card-title">Nearby Job Alerts <span style="background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:10px;margin-left:0.4rem">8 new</span></div>
+          <div class="card-title">Nearby Job Alerts <span id="workerAlertCountBadge" style="background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:10px;margin-left:0.4rem">0 live</span></div>
           <a href="worker-jobs.html" class="card-link">View all →</a>
         </div>
-        <div>
-          <div class="job-row">
-            <div class="jr-icon">🚿</div>
-            <div class="jr-info"><div class="jr-title">Burst pipe — kitchen <span class="utag utag-urgent">Urgent</span></div><div class="jr-meta"><span>📍 Kilimani 1.8km</span><span>12 min ago</span><span>0 apps</span></div></div>
-            <div style="text-align:right"><div class="jr-budget">KES 1,500</div><button class="apply-btn" style="margin-top:0.3rem" onclick="location.href='job-detail.html'">Apply →</button></div>
-          </div>
-          <div class="job-row">
-            <div class="jr-icon">🚿</div>
-            <div class="jr-info"><div class="jr-title">Install bathroom fixtures — Westlands <span class="utag utag-new">New</span></div><div class="jr-meta"><span>📍 Westlands 0.9km</span><span>2 hrs ago</span><span>1 app</span></div></div>
-            <div style="text-align:right"><div class="jr-budget">KES 3,500</div><button class="apply-btn" style="margin-top:0.3rem" onclick="location.href='job-detail.html'">Apply →</button></div>
-          </div>
-          <div class="job-row">
-            <div class="jr-icon">💧</div>
-            <div class="jr-info"><div class="jr-title">Water tank repair — Parklands</div><div class="jr-meta"><span>📍 Parklands 3.1km</span><span>4 hrs ago</span><span>2 apps</span></div></div>
-            <div style="text-align:right"><div class="jr-budget">KES 2,000</div><button class="apply-btn" style="margin-top:0.3rem" onclick="location.href='job-detail.html'">Apply →</button></div>
-          </div>
-          <div class="job-row">
-            <div class="jr-icon">☀️</div>
-            <div class="jr-info"><div class="jr-title">Solar water heater — Karen</div><div class="jr-meta"><span>📍 Karen 8.4km</span><span>Yesterday</span><span>3 apps</span></div></div>
-            <div style="text-align:right"><div class="jr-budget">KES 8,000</div><button class="apply-btn" style="margin-top:0.3rem" onclick="location.href='job-detail.html'">Apply →</button></div>
-          </div>
+        <div id="workerAlertsList">
+          <div style="padding:1.5rem;color:var(--muted);font-size:0.82rem">Loading job alerts...</div>
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:1.5rem">
         <div class="card">
-          <div class="rating-block"><div class="rating-big">4.9</div><div class="rating-stars">★★★★★</div><div class="rating-count">127 reviews</div></div>
+          <div class="rating-block"><div class="rating-big" id="workerProfileRating">0.0</div><div class="rating-stars" id="workerProfileStars">☆☆☆☆☆</div><div class="rating-count" id="workerProfileCount">No completed jobs yet</div></div>
           <div style="padding:0.75rem 1.25rem">
-            <div class="mini-review"><div class="mr-top"><span class="mr-name">Recent client</span><span class="mr-stars">★★★★★</span></div><div class="mr-text">"Fixed burst pipe in 2 hours. Highly reliable."</div></div>
-            <div class="mini-review"><div class="mr-top"><span class="mr-name">Purity N.</span><span class="mr-stars">★★★★★</span></div><div class="mr-text">"Solar heater installed perfectly. Very professional."</div></div>
+            <div class="mini-review"><div class="mr-top"><span class="mr-name">Profile snapshot</span><span class="mr-stars" id="workerProfileTrade">KaziX Pro</span></div><div class="mr-text" id="workerProfileNote">Your live reputation summary appears here as jobs are completed and rated.</div></div>
             <a href="worker-reviews.html" class="card-link" style="display:block;margin-top:0.75rem;font-size:0.78rem">View all →</a>
           </div>
         </div>
         <div class="card">
           <div class="card-head"><div class="card-title">Monthly Earnings</div><a href="worker-earnings.html" class="card-link">Details →</a></div>
           <div class="card-body">
-            <div class="bar-chart">
-              <div class="bar-wrap"><div class="bar filled" style="height:52%"></div><div class="bar-label">Oct</div></div>
-              <div class="bar-wrap"><div class="bar filled" style="height:48%"></div><div class="bar-label">Nov</div></div>
-              <div class="bar-wrap"><div class="bar filled" style="height:65%"></div><div class="bar-label">Dec</div></div>
-              <div class="bar-wrap"><div class="bar filled" style="height:60%"></div><div class="bar-label">Feb</div></div>
-              <div class="bar-wrap"><div class="bar current" style="height:87%"></div><div class="bar-label now">Mar</div></div>
-            </div>
-            <div class="earn-total">KES 87,400</div>
-            <div class="earn-sub">This month · <span style="color:var(--green);font-weight:600">↑ 16%</span></div>
+            <div class="bar-chart" id="workerEarningsBars"></div>
+            <div class="earn-total" id="workerEarningsTotal">KES 0</div>
+            <div class="earn-sub" id="workerEarningsSub">This month · no released earnings yet</div>
           </div>
         </div>
       </div>
     </div>
     <div class="card" style="animation:slideUp 0.4s 0.2s ease both">
       <div class="card-head"><div class="card-title">Active Contracts</div><a href="worker-hires.html" class="card-link">View all →</a></div>
-      <div>
-        <div class="contract-row">
-          <div class="cr-avatar">🏠</div>
-          <div class="cr-info"><div class="cr-title">Fix leaking pipe — Westlands kitchen</div><div class="cr-sub">Client account · Booking #KX-0187 · Today</div></div>
-          <span class="status-pill sp-active">● In Progress</span>
-          <div class="cr-amount">KES 800<div class="cr-amount-sub">in escrow</div></div>
-        </div>
-        <div class="contract-row">
-          <div class="cr-avatar">🏢</div>
-          <div class="cr-info"><div class="cr-title">Commercial pipe installation — CBD office</div><div class="cr-sub">FutureBuilds Ltd · Booking #KX-0201 · Tomorrow 9AM</div></div>
-          <span class="status-pill sp-pending">Confirmed · Thu</span>
-          <div class="cr-amount">KES 12,000<div class="cr-amount-sub">in escrow</div></div>
-        </div>
+      <div id="workerContractsList">
+        <div style="padding:1.5rem;color:var(--muted);font-size:0.82rem">Loading contracts...</div>
       </div>
     </div>
   </main>
@@ -242,6 +205,187 @@ function toggleAvail(on){
   document.getElementById('availTitle').textContent=on?'You are available for work':'You are offline';
   document.getElementById('availSub').textContent=on?'Clients and job alerts can reach you · ' + workerAvailabilityLocation:'Job alerts and messages are paused';
   document.getElementById('availLabel').textContent=on?'Available':'Offline';
+}
+
+const WORKER_DASHBOARD_TRADE_ICONS = {
+  plumber: '🚿',
+  electrician: '⚡',
+  mason: '🧱',
+  mama_fua: '👗',
+  carpenter: '🪚',
+  painter: '🎨',
+  roofer: '🏠',
+  gardener: '🌿',
+  driver_mover: '🛻',
+  security: '🔒',
+  other: '🛠️',
+};
+
+function workerDashboardEscape(value) {
+  return window.KazixProfile.escapeHtml(value);
+}
+
+function workerDashboardCurrency(value) {
+  return `KES ${Number(value || 0).toLocaleString()}`;
+}
+
+function workerDashboardRelativeTime(value) {
+  if (!value) return 'Just posted';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Just posted';
+  const diffHours = Math.round((Date.now() - date.getTime()) / (1000 * 60 * 60));
+  if (diffHours <= 1) return 'Just posted';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  return `${diffDays} days ago`;
+}
+
+function workerDashboardContractLabel(status) {
+  if (status === 'in_progress') return { pill: 'sp-active', label: '● In Progress' };
+  if (status === 'confirmed') return { pill: 'sp-pending', label: 'Confirmed' };
+  return { pill: 'sp-pending', label: 'Tracked' };
+}
+
+function workerDashboardTradeIcon(trade) {
+  return WORKER_DASHBOARD_TRADE_ICONS[trade] || WORKER_DASHBOARD_TRADE_ICONS.other;
+}
+
+function workerDashboardStars(rating) {
+  const rounded = Math.round(Number(rating || 0));
+  return '★★★★★'.slice(0, rounded).padEnd(5, '☆');
+}
+
+function renderWorkerAlerts(data) {
+  const root = document.getElementById('workerAlertsList');
+  if (!root) return;
+
+  if (!data.recent_alerts.length) {
+    root.innerHTML = `
+      <div style="padding:1.5rem;color:var(--muted);font-size:0.82rem;line-height:1.6">
+        No matching job alerts yet. As new ${workerDashboardEscape(window.KazixProfile.formatTrade(data.availability.trade || 'other')).toLowerCase()} work appears, it will show up here automatically.
+      </div>
+    `;
+    return;
+  }
+
+  root.innerHTML = data.recent_alerts.map((job) => {
+    const location = [job.area, job.county].filter(Boolean).join(', ');
+    const urgentTag = job.urgency === 'urgent'
+      ? '<span class="utag utag-urgent">Urgent</span>'
+      : '<span class="utag utag-new">Open</span>';
+    const budgetBits = [];
+    if (Number(job.budget_min || 0) > 0) budgetBits.push(Number(job.budget_min).toLocaleString());
+    if (Number(job.budget_max || 0) > 0 && Number(job.budget_max) !== Number(job.budget_min || 0)) budgetBits.push(Number(job.budget_max).toLocaleString());
+    const budgetLabel = budgetBits.length ? `KES ${budgetBits.join(' - ')}` : 'Budget open';
+
+    return `
+      <div class="job-row">
+        <div class="jr-icon">${workerDashboardTradeIcon(job.trade)}</div>
+        <div class="jr-info"><div class="jr-title">${workerDashboardEscape(job.title)} ${urgentTag}</div><div class="jr-meta"><span>📍 ${workerDashboardEscape(location || 'Location pending')}</span><span>${workerDashboardEscape(workerDashboardRelativeTime(job.created_at))}</span></div></div>
+        <div style="text-align:right"><div class="jr-budget">${workerDashboardEscape(budgetLabel)}</div><button class="apply-btn" style="margin-top:0.3rem" onclick="location.href='job-detail.html?id=${encodeURIComponent(job.id)}'">Open →</button></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWorkerContracts(data) {
+  const root = document.getElementById('workerContractsList');
+  if (!root) return;
+
+  const activeContracts = data.recent_contracts.filter((contract) => ['confirmed', 'in_progress'].includes(contract.status));
+  if (!activeContracts.length) {
+    root.innerHTML = `
+      <div style="padding:1.5rem;color:var(--muted);font-size:0.82rem;line-height:1.6">
+        No active contracts yet. When a client hires you, the booking will appear here together with its escrow status.
+      </div>
+    `;
+    return;
+  }
+
+  root.innerHTML = activeContracts.map((contract) => {
+    const location = [contract.area, contract.county].filter(Boolean).join(', ');
+    const statusMeta = workerDashboardContractLabel(contract.status);
+    return `
+      <div class="contract-row">
+        <div class="cr-avatar">${workerDashboardTradeIcon(contract.trade)}</div>
+        <div class="cr-info"><div class="cr-title">${workerDashboardEscape(contract.title)}</div><div class="cr-sub">${workerDashboardEscape(location || 'Location pending')} · ${workerDashboardEscape(contract.start_date || 'Start date flexible')}</div></div>
+        <span class="status-pill ${statusMeta.pill}">${workerDashboardEscape(statusMeta.label)}</span>
+        <div class="cr-amount">${workerDashboardEscape(workerDashboardCurrency(contract.agreed_amount))}<div class="cr-amount-sub">${workerDashboardEscape(contract.escrow_status || 'pending escrow')}</div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderWorkerEarnings(data) {
+  const root = document.getElementById('workerEarningsBars');
+  const total = document.getElementById('workerEarningsTotal');
+  const sub = document.getElementById('workerEarningsSub');
+  if (!root || !total || !sub) return;
+
+  const series = Array.isArray(data.monthly_earnings) ? data.monthly_earnings : [];
+  const maxAmount = Math.max(1, ...series.map((item) => Number(item.net || 0)));
+  const previous = series.length > 1 ? Number(series[series.length - 2].net || 0) : 0;
+  const current = series.length ? Number(series[series.length - 1].net || 0) : 0;
+
+  root.innerHTML = series.map((item, index) => {
+    const amount = Number(item.net || 0);
+    const height = Math.max((amount / maxAmount) * 100, amount > 0 ? 12 : 6);
+    const currentMonth = index === (series.length - 1);
+    return `
+      <div class="bar-wrap"><div class="bar ${currentMonth ? 'current' : 'filled'}" style="height:${height}%"></div><div class="bar-label ${currentMonth ? 'now' : ''}">${workerDashboardEscape(item.label)}</div></div>
+    `;
+  }).join('');
+
+  total.textContent = workerDashboardCurrency(current);
+  if (!current && !previous) {
+    sub.textContent = 'This month · no released earnings yet';
+  } else if (!previous) {
+    sub.textContent = 'This month · first payout in the current window';
+  } else {
+    const diff = current - previous;
+    const direction = diff >= 0 ? '↑' : '↓';
+    const color = diff >= 0 ? 'var(--green)' : 'var(--rust)';
+    const magnitude = Math.round((Math.abs(diff) / Math.max(previous, 1)) * 100);
+    sub.innerHTML = `This month · <span style="color:${color};font-weight:600">${direction} ${magnitude}% vs last month</span>`;
+  }
+}
+
+function renderWorkerDashboard(data) {
+  const toggle = document.getElementById('availabilityToggle');
+  if (toggle) {
+    toggle.checked = Boolean(data.availability.is_available);
+    toggleAvail(toggle.checked);
+  }
+
+  document.getElementById('workerDashboardSub').textContent = data.alerts.total
+    ? `You have ${data.alerts.total} matching job alert${data.alerts.total === 1 ? '' : 's'} right now`
+    : 'No matching job alerts yet. We will surface new work here as it opens.';
+  document.getElementById('workerApplicationsBadge').textContent = String(data.applications.total);
+  document.getElementById('workerAlertCountBadge').textContent = `${data.alerts.total} live`;
+  document.getElementById('workerMonthValue').textContent = Number(data.earnings.this_month_net || 0).toLocaleString();
+  document.getElementById('workerMonthDelta').textContent = `Released gross this month: ${workerDashboardCurrency(data.earnings.this_month_gross)}`;
+  document.getElementById('workerContractsValue').textContent = String(data.contracts.active);
+  document.getElementById('workerContractsDelta').textContent = `${workerDashboardCurrency(data.contracts.in_escrow)} currently held in escrow`;
+  document.getElementById('workerCompletedValue').textContent = String(data.rating.completed_jobs);
+  document.getElementById('workerCompletedDelta').textContent = `${data.applications.hired} hire${data.applications.hired === 1 ? '' : 's'} confirmed from your applications`;
+  document.getElementById('workerRatingValue').textContent = `${Number(data.rating.average || 0).toFixed(1)}★`;
+  document.getElementById('workerRatingDelta').textContent = data.rating.completed_jobs
+    ? `${data.rating.completed_jobs} completed jobs on your worker profile`
+    : 'No ratings recorded yet';
+  document.getElementById('workerProfileRating').textContent = Number(data.rating.average || 0).toFixed(1);
+  document.getElementById('workerProfileStars').textContent = workerDashboardStars(data.rating.average);
+  document.getElementById('workerProfileCount').textContent = data.rating.completed_jobs
+    ? `${data.rating.completed_jobs} completed jobs tracked on KaziX`
+    : 'No completed jobs tracked yet';
+  document.getElementById('workerProfileTrade').textContent = window.KazixProfile.formatTrade(data.availability.trade || 'other');
+  document.getElementById('workerProfileNote').textContent = data.alerts.total
+    ? `You currently match ${data.alerts.total} open ${window.KazixProfile.formatTrade(data.availability.trade || 'other').toLowerCase()} ${data.alerts.total === 1 ? 'job' : 'jobs'}.`
+    : 'Stay available to start receiving matching work as new jobs are posted.';
+
+  renderWorkerAlerts(data);
+  renderWorkerContracts(data);
+  renderWorkerEarnings(data);
 }
 </script>
 
@@ -277,6 +421,21 @@ document.addEventListener('DOMContentLoaded', function () {
       if (document.getElementById('availLabel').textContent === 'Available') {
         document.getElementById('availSub').textContent = 'Clients and job alerts can reach you · ' + workerAvailabilityLocation;
       }
+      return window.KazixProfile.getDashboardState({ silent: false });
+    })
+    .then(function (state) {
+      if (state && state.fundi) {
+        renderWorkerDashboard(state.fundi);
+      }
+      var locationEl = document.getElementById('availabilityLocation');
+      if (!locationEl) return;
+      workerAvailabilityLocation = locationEl.textContent || workerAvailabilityLocation;
+      if (document.getElementById('availLabel').textContent === 'Available') {
+        document.getElementById('availSub').textContent = 'Clients and job alerts can reach you · ' + workerAvailabilityLocation;
+      }
+    })
+    .catch(function (error) {
+      console.error('Failed to render worker dashboard state', error);
     });
 });
 </script>

@@ -120,17 +120,17 @@
 
     <!-- SPEND SUMMARY -->
     <div class="spend-grid" style="animation:slideUp 0.4s 0.05s ease both">
-      <div class="spend-card sc-ink"><div class="sc-label">Total spent</div><div class="sc-value">48,200</div><div class="sc-sub">All time · KES</div><div class="sc-icon">💳</div></div>
-      <div class="spend-card sc-saffron"><div class="sc-label">In escrow now</div><div class="sc-value">7,700</div><div class="sc-sub">2 active bookings</div><div class="sc-icon">🔒</div></div>
-      <div class="spend-card sc-green"><div class="sc-label">This month</div><div class="sc-value">8,400</div><div class="sc-sub">March 2026 · 3 jobs</div><div class="sc-icon">📅</div></div>
-      <div class="spend-card sc-muted"><div class="sc-label">Avg job value</div><div class="sc-value">4,017</div><div class="sc-sub">Across 12 completed jobs</div><div class="sc-icon">📊</div></div>
+      <div class="spend-card sc-ink"><div class="sc-label">Total spent</div><div class="sc-value" id="paymentsTotalSpent">0</div><div class="sc-sub">All time · KES</div><div class="sc-icon">💳</div></div>
+      <div class="spend-card sc-saffron"><div class="sc-label">In escrow now</div><div class="sc-value" id="paymentsInEscrow">0</div><div class="sc-sub" id="paymentsEscrowSub">0 active bookings</div><div class="sc-icon">🔒</div></div>
+      <div class="spend-card sc-green"><div class="sc-label">This month</div><div class="sc-value" id="paymentsThisMonth">0</div><div class="sc-sub" id="paymentsThisMonthSub">No confirmed payments yet</div><div class="sc-icon">📅</div></div>
+      <div class="spend-card sc-muted"><div class="sc-label">Avg job value</div><div class="sc-value" id="paymentsAverageValue">0</div><div class="sc-sub" id="paymentsAverageSub">Across funded bookings</div><div class="sc-icon">📊</div></div>
     </div>
 
     <!-- ESCROW -->
     <div class="escrow-summary" style="animation:slideUp 0.4s 0.1s ease both">
-      <div><div class="es-label">Held in M-Pesa Escrow</div><div class="es-val">KES 7,700</div></div>
+      <div><div class="es-label">Held in M-Pesa Escrow</div><div class="es-val" id="paymentsEscrowHeld">KES 0</div></div>
       <div class="es-divider"></div>
-      <div><div class="es-label">Escrow accounts</div><div class="es-val">2</div></div>
+      <div><div class="es-label">Escrow accounts</div><div class="es-val" id="paymentsEscrowAccounts">0</div></div>
       <div class="es-divider"></div>
       <div class="es-note">🔒 Your escrow funds are held securely. They are released to the fundi only when you confirm the job is done — or automatically after 48 hours. Disputes are resolved by KaziX admin.</div>
       <a href="my-hires.html" style="padding:0.65rem 1.25rem;background:var(--saffron);color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;text-decoration:none;white-space:nowrap">View Active Bookings →</a>
@@ -158,64 +158,13 @@
             <th></th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="paymentsTxRows">
           <tr>
-            <td><div class="tx-icon tx-saffron">🔒</div></td>
-            <td><div class="tx-type">Escrow held</div><div class="tx-job">Install CCTV · Faith Njeri · #KX-0198</div></td>
-            <td><div class="tx-ref">QST7GHJK2P</div><div class="tx-mpesa">M-Pesa confirmed</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">Today, 14:32</td>
-            <td><div class="tx-amount held">- 4,500</div></td>
-            <td><span class="tx-status ts-held">In Escrow</span></td>
-            <td><button class="tx-receipt" onclick="showReceipt('QST7GHJK2P')">📄 Receipt</button></td>
-          </tr>
-          <tr>
-            <td><div class="tx-icon tx-saffron">🔒</div></td>
-            <td><div class="tx-type">Escrow held</div><div class="tx-job">Paint rooms · Mary Akinyi · #KX-0192</div></td>
-            <td><div class="tx-ref">QHP2MKLRT5</div><div class="tx-mpesa">M-Pesa confirmed</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">Yesterday, 10:14</td>
-            <td><div class="tx-amount held">- 3,200</div></td>
-            <td><span class="tx-status ts-held">In Escrow</span></td>
-            <td><button class="tx-receipt" onclick="showReceipt('QHP2MKLRT5')">📄 Receipt</button></td>
-          </tr>
-          <tr>
-            <td><div class="tx-icon tx-green">✅</div></td>
-            <td><div class="tx-type">Escrow released</div><div class="tx-job">Fix fence · Peter Odhiambo · #KX-0181</div></td>
-            <td><div class="tx-ref">QHJ4MKPL8R</div><div class="tx-mpesa">M-Pesa confirmed</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">3 days ago</td>
-            <td><div class="tx-amount debit">- 3,500</div></td>
-            <td><span class="tx-status ts-success">Paid Out</span></td>
-            <td><button class="tx-receipt" onclick="showReceipt('QHJ4MKPL8R')">📄 Receipt</button></td>
-          </tr>
-          <tr>
-            <td><div class="tx-icon tx-green">✅</div></td>
-            <td><div class="tx-type">Escrow released</div><div class="tx-job">Kitchen pipe repair · James Kamau · #KX-0187</div></td>
-            <td><div class="tx-ref">QKL8NPJR4T</div><div class="tx-mpesa">M-Pesa confirmed</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">1 week ago</td>
-            <td><div class="tx-amount debit">- 1,800</div></td>
-            <td><span class="tx-status ts-success">Paid Out</span></td>
-            <td><button class="tx-receipt">📄 Receipt</button></td>
-          </tr>
-          <tr>
-            <td><div class="tx-icon tx-green">✅</div></td>
-            <td><div class="tx-type">Escrow released</div><div class="tx-job">Electrical repair · David M. · #KX-0175</div></td>
-            <td><div class="tx-ref">QMN5KLPR2T</div><div class="tx-mpesa">M-Pesa confirmed</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">2 weeks ago</td>
-            <td><div class="tx-amount debit">- 2,400</div></td>
-            <td><span class="tx-status ts-success">Paid Out</span></td>
-            <td><button class="tx-receipt">📄 Receipt</button></td>
-          </tr>
-          <tr>
-            <td><div class="tx-icon tx-rust">↩</div></td>
-            <td><div class="tx-type">Refund issued</div><div class="tx-job">Cancelled booking · #KX-0168</div></td>
-            <td><div class="tx-ref">Reversal</div></td>
-            <td style="color:var(--muted);font-size:0.78rem">3 weeks ago</td>
-            <td><div class="tx-amount credit">+ 1,500</div></td>
-            <td><span class="tx-status ts-refunded">Refunded</span></td>
-            <td><button class="tx-receipt">📄 Receipt</button></td>
+            <td colspan="7" style="padding:1.5rem;color:var(--muted);text-align:center">Loading transactions...</td>
           </tr>
         </tbody>
       </table>
-      <div class="pagination">
+      <div class="pagination" id="paymentsPagination" style="display:none">
         <button class="pg-btn" disabled>←</button>
         <button class="pg-btn active">1</button>
         <button class="pg-btn">2</button>
@@ -238,7 +187,7 @@
     </div>
     <div style="background:rgba(27,107,58,0.08);border-radius:4px;padding:1rem;margin-top:1.25rem;text-align:center">
       <div style="font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:0.25rem">Amount</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--green)">KES 4,500</div>
+      <div id="rAmount" style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;color:var(--green)">KES 0</div>
     </div>
     <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
       <button onclick="document.getElementById('receiptModal').style.display='none'" style="flex:1;padding:0.75rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">Close</button>
@@ -248,11 +197,137 @@
 </div>
 
 <script>
-function showReceipt(ref) {
+function showReceipt(ref, amount) {
   document.getElementById('rRef').textContent = ref;
+  document.getElementById('rAmount').textContent = `KES ${Number(amount || 0).toLocaleString()}`;
   const modal = document.getElementById('receiptModal');
   modal.style.display = 'flex';
 }
+
+function paymentsEscape(value) {
+  return window.KazixProfile.escapeHtml(value);
+}
+
+function paymentsCurrency(value) {
+  return Number(value || 0).toLocaleString();
+}
+
+function paymentsDateLabel(value) {
+  if (!value) return 'Recently';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function paymentsTransactionMeta(transaction) {
+  if (transaction.type === 'refund') {
+    return {
+      iconClass: 'tx-rust',
+      icon: '↩',
+      title: 'Refund issued',
+      amountClass: 'credit',
+      amountPrefix: '+ ',
+      statusClass: 'ts-refunded',
+      statusLabel: 'Refunded',
+      helper: 'Returned to your M-Pesa number',
+    };
+  }
+
+  if (transaction.escrow_status === 'held' || transaction.status === 'pending') {
+    return {
+      iconClass: 'tx-saffron',
+      icon: '🔒',
+      title: 'Escrow funded',
+      amountClass: 'held',
+      amountPrefix: '- ',
+      statusClass: 'ts-held',
+      statusLabel: transaction.status === 'pending' ? 'Pending' : 'In Escrow',
+      helper: transaction.status === 'pending' ? 'Waiting for M-Pesa confirmation' : 'Funds protected until completion',
+    };
+  }
+
+  return {
+    iconClass: 'tx-green',
+    icon: '✅',
+    title: 'Escrow released',
+    amountClass: 'debit',
+    amountPrefix: '- ',
+    statusClass: 'ts-success',
+    statusLabel: 'Paid Out',
+    helper: 'M-Pesa confirmed',
+  };
+}
+
+function renderPaymentsPage(data) {
+  document.getElementById('paymentsTotalSpent').textContent = paymentsCurrency(data.payments.total_spent);
+  document.getElementById('paymentsInEscrow').textContent = paymentsCurrency(data.payments.in_escrow);
+  document.getElementById('paymentsEscrowSub').textContent = `${data.payments.active_escrows} active booking${data.payments.active_escrows === 1 ? '' : 's'}`;
+  document.getElementById('paymentsThisMonth').textContent = paymentsCurrency(data.payments.this_month);
+  document.getElementById('paymentsThisMonthSub').textContent = data.payments.this_month
+    ? `${new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} funded activity`
+    : 'No confirmed payments yet this month';
+  document.getElementById('paymentsAverageValue').textContent = paymentsCurrency(data.payments.avg_job_value);
+  document.getElementById('paymentsAverageSub').textContent = data.payments.avg_job_value
+    ? 'Across funded bookings'
+    : 'No funded bookings yet';
+  document.getElementById('paymentsEscrowHeld').textContent = `KES ${paymentsCurrency(data.payments.in_escrow)}`;
+  document.getElementById('paymentsEscrowAccounts').textContent = String(data.payments.active_escrows);
+
+  const rows = document.getElementById('paymentsTxRows');
+  if (!rows) return;
+
+  if (!data.recent_transactions.length) {
+    rows.innerHTML = `
+      <tr>
+        <td colspan="7" style="padding:1.5rem;color:var(--muted);text-align:center;line-height:1.6">
+          No transactions recorded yet. Once you fund a booking through M-Pesa escrow, the receipt trail will appear here.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  rows.innerHTML = data.recent_transactions.map((transaction) => {
+    const meta = paymentsTransactionMeta(transaction);
+    return `
+      <tr>
+        <td><div class="tx-icon ${meta.iconClass}">${meta.icon}</div></td>
+        <td><div class="tx-type">${paymentsEscape(meta.title)}</div><div class="tx-job">${paymentsEscape(transaction.title || 'Untitled job')}</div></td>
+        <td><div class="tx-ref">${paymentsEscape(transaction.mpesa_ref || 'Pending')}</div><div class="tx-mpesa">${paymentsEscape(meta.helper)}</div></td>
+        <td style="color:var(--muted);font-size:0.78rem">${paymentsEscape(paymentsDateLabel(transaction.created_at))}</td>
+        <td><div class="tx-amount ${meta.amountClass}">${meta.amountPrefix}${paymentsCurrency(transaction.amount)}</div></td>
+        <td><span class="tx-status ${meta.statusClass}">${paymentsEscape(meta.statusLabel)}</span></td>
+        <td><button class="tx-receipt" onclick="showReceipt('${paymentsEscape(transaction.mpesa_ref || 'Pending')}', ${Number(transaction.amount || 0)})">📄 Receipt</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  window.KazixProfile
+    .hydrateShell({ silent: false })
+    .then(function () {
+      return window.KazixProfile.getDashboardState({ silent: false });
+    })
+    .then(function (state) {
+      if (state && state.client) {
+        renderPaymentsPage(state.client);
+      }
+    })
+    .catch(function (error) {
+      console.error('Failed to render payments state', error);
+      var rows = document.getElementById('paymentsTxRows');
+      if (rows) {
+        rows.innerHTML = '<tr><td colspan="7" style="padding:1.5rem;color:var(--rust);text-align:center">Could not load payment history right now.</td></tr>';
+      }
+    });
+});
 </script>
 
 <nav class="mobile-nav" aria-label="Primary">

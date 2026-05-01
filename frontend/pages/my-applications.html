@@ -423,6 +423,8 @@ async function withdrawApplication(applicationId) {
         ? { ...application, ...updated }
         : application
     ));
+    window.KazixProfile.clearDashboardStateCache();
+    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
     setPageMessage('Application withdrawn successfully.', 'success');
     renderApplications();
   } catch (error) {

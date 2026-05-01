@@ -59,6 +59,8 @@
     fundi: 'worker-profile-edit.html',
     admin: 'admin-dashboard.html',
   };
+  const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
+  const DASHBOARD_STATE_MAX_AGE_MS = 60 * 1000;
   const AUTH_STORAGE_KEYS = new Set([
     'kazix_access_token',
     'kazix_refresh_token',
@@ -76,9 +78,11 @@
     'kazix_auth_waiting_heartbeat',
     'kazix_auth_waiting_started_at',
     'kazix_reg_pending_profile',
+    DASHBOARD_STATE_STORAGE_KEY,
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   let myProfilePromise = null;
+  let dashboardStatePromise = null;
 
   function getAccessToken() {
     return localStorage.getItem('kazix_access_token');
@@ -399,8 +403,148 @@
 
   function clearAuthStorage() {
     myProfilePromise = null;
+    dashboardStatePromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
+  }
+
+  function readCachedDashboardState(maxAgeMs) {
+    try {
+      const raw = window.sessionStorage.getItem(DASHBOARD_STATE_STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = safeJson(raw);
+      if (!parsed || !parsed.data || !parsed.saved_at) {
+        return null;
+      }
+
+      if ((Date.now() - Number(parsed.saved_at)) > (maxAgeMs || DASHBOARD_STATE_MAX_AGE_MS)) {
+        return null;
+      }
+
+      return parsed.data;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeCachedDashboardState(data) {
+    try {
+      window.sessionStorage.setItem(DASHBOARD_STATE_STORAGE_KEY, JSON.stringify({
+        saved_at: Date.now(),
+        data,
+      }));
+    } catch (_error) {
+      // Ignore storage errors; the state can still live in memory for this page.
+    }
+  }
+
+  function clearDashboardStateCache() {
+    dashboardStatePromise = null;
+    try {
+      window.sessionStorage.removeItem(DASHBOARD_STATE_STORAGE_KEY);
+    } catch (_error) {
+      // Ignore storage cleanup failures.
+    }
+  }
+
+  function findNavLinks(href) {
+    return Array.from(document.querySelectorAll(`.nav-item[href="${href}"]`));
+  }
+
+  function ensureBadge(link) {
+    if (!link) return null;
+    var badge = link.querySelector('.ni-badge');
+    if (badge) return badge;
+
+    badge = document.createElement('span');
+    badge.className = 'ni-badge';
+    link.appendChild(badge);
+    return badge;
+  }
+
+  function setNavBadge(href, value) {
+    findNavLinks(href).forEach(function (link) {
+      var badge = ensureBadge(link);
+      if (!badge) return;
+      badge.textContent = String(value);
+    });
+  }
+
+  function clearNavBadge(href) {
+    findNavLinks(href).forEach(function (link) {
+      var badge = link.querySelector('.ni-badge');
+      if (badge) {
+        badge.remove();
+      }
+    });
+  }
+
+  function applyDashboardNavState(state) {
+    if (!state || !state.role) return;
+
+    if (state.role === 'client') {
+      setNavBadge('my-jobs.html', state.nav?.jobs ?? 0);
+      setNavBadge('job-applicants.html', state.nav?.applications ?? 0);
+      setNavBadge('my-hires.html', state.nav?.hires ?? 0);
+      clearNavBadge('saved-workers.html');
+      clearNavBadge('messages.html');
+      return;
+    }
+
+    if (state.role === 'fundi') {
+      setNavBadge('worker-jobs.html', state.nav?.find_jobs ?? 0);
+      setNavBadge('my-applications.html', state.nav?.applications ?? 0);
+      setNavBadge('worker-hires.html', state.nav?.contracts ?? 0);
+      clearNavBadge('messages.html');
+    }
+  }
+
+  async function getDashboardState(options = {}) {
+    const { force = false, silent = true, maxAgeMs = DASHBOARD_STATE_MAX_AGE_MS } = options;
+
+    if (!getAccessToken()) {
+      return Promise.reject(new Error('Please sign in to access your dashboard.'));
+    }
+
+    if (!force) {
+      const cached = readCachedDashboardState(maxAgeMs);
+      if (cached) {
+        applyDashboardNavState(cached);
+        return cached;
+      }
+    }
+
+    if (!force && dashboardStatePromise) {
+      return dashboardStatePromise;
+    }
+
+    dashboardStatePromise = requestJson('/v1/dashboard/state', {
+      auth: true,
+      showError: !silent,
+    }).then((data) => {
+      writeCachedDashboardState(data);
+      applyDashboardNavState(data);
+      if (typeof window.CustomEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('kazix:dashboard-state', { detail: data }));
+      }
+      return data;
+    }).catch((error) => {
+      dashboardStatePromise = null;
+      throw error;
+    });
+
+    return dashboardStatePromise;
+  }
+
+  async function hydrateDashboardState(options = {}) {
+    const { silent = true } = options;
+    try {
+      return await getDashboardState(options);
+    } catch (error) {
+      if (!silent) throw error;
+      return null;
+    }
   }
 
   async function hydrateShell(options = {}) {
@@ -425,6 +569,7 @@
       setDestination('.topnav .user-chip', accountHref);
       setDestination('.sidebar-bottom .sidebar-profile', accountHref);
       wireNotificationButtons();
+      hydrateDashboardState({ silent: true });
 
       return shellData;
     } catch (error) {
@@ -462,8 +607,10 @@
     formatPhone,
     formatTrade,
     getAccessToken,
+    getDashboardState,
     getMyProfile,
     getProfileIdFromQuery,
+    hydrateDashboardState,
     hydrateShell,
     initials,
     logout,
@@ -471,6 +618,7 @@
     requestJson,
     roleHomePath,
     roleLabel,
+    clearDashboardStateCache,
     setHtml,
     setText,
     show,

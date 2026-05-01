@@ -116,6 +116,9 @@
       var greeting = greetingForHour(new Date()) + ", " + greetingName + " 👋";
       setText("#dashboardGreeting", greeting);
       setText("#availabilityLocation", location);
+      if (typeof helpers.hydrateDashboardState === "function") {
+        helpers.hydrateDashboardState({ silent: true });
+      }
 
       if (options.updateDocumentTitle !== false) {
         document.title = role === "fundi"

@@ -788,6 +788,9 @@ async function submitJob() {
       sessionStorage.setItem('kazix_last_posted_job_id', createdJob.id);
     }
 
+    window.KazixProfile.clearDashboardStateCache();
+    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
     console.error('Failed to submit job', error);

@@ -382,6 +382,8 @@ async function closeJob(jobId) {
         ? { ...job, status: 'cancelled' }
         : job
     ));
+    window.KazixProfile.clearDashboardStateCache();
+    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
     renderJobs();
   } catch (error) {
     console.error('Failed to close job', error);
