@@ -656,6 +656,13 @@ function renderApplicants() {
       ? '<div class="ac-verified">✓</div>'
       : '';
     const trade = fundi.trade || job.trade;
+    const messageHref = application.fundi_id && window.KazixProfile && typeof window.KazixProfile.buildMessagesPath === 'function'
+      ? window.KazixProfile.buildMessagesPath({
+        participantId: application.fundi_id,
+        jobId: job.id,
+        applicationId: application.id,
+      })
+      : 'messages.html';
     const profileHref = window.KazixProfile && typeof window.KazixProfile.profilePath === 'function'
       ? window.KazixProfile.profilePath('fundi', application.fundi_id)
       : `worker-profile.html?id=${encodeURIComponent(application.fundi_id || '')}`;
@@ -699,7 +706,7 @@ function renderApplicants() {
             ? '<a href="my-hires.html" class="ac-btn ac-btn-hire">✅ View Hire</a>'
             : `<button class="ac-btn ac-btn-hire" type="button" data-action="hire" data-id="${escapeHtml(application.id)}" ${canHire && !isBusy ? '' : 'disabled'}>✅ Hire ${escapeHtml(name.split(' ')[0] || 'Worker')}</button>`
           }
-          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
+          <a href="${escapeHtml(messageHref)}" class="ac-btn ac-btn-msg">💬 Message</a>
           <a href="${escapeHtml(profileHref)}" class="ac-btn ac-btn-view">View Profile</a>
           ${canShortlist
             ? `<button class="ac-btn ac-btn-short" type="button" data-action="status" data-id="${escapeHtml(application.id)}" data-status="shortlisted" ${isBusy ? 'disabled' : ''}>☆ Shortlist</button>`

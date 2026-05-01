@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from app.api.deps import ClientUser, CurrentSession, FundiUser
 from app.core.supabase import get_user_client
+from app.core.supabase import get_admin_client
 from app.core.logging import get_logger
 from app.services.notifications import create_notification
 
@@ -73,7 +74,7 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser, session: CurrentSess
 
     try:
         # Verify job exists and is open
-        result = client.table("jobs").select("id, status, client_id").eq("id", body.job_id).single().execute()
+        result = client.table("jobs").select("id, title, status, client_id").eq("id", body.job_id).single().execute()
         job = result.data
         
         if not job:
@@ -101,6 +102,39 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser, session: CurrentSess
 
         insert_result = client.table("applications").insert(data).execute()
         application = insert_result.data[0]
+
+        applicant_profile = None
+        try:
+            applicant_profile = (
+                get_admin_client()
+                .table("profiles")
+                .select("full_name")
+                .eq("id", user.user_id)
+                .maybe_single()
+                .execute()
+                .data
+            )
+        except Exception as notification_lookup_error:
+            logger.warning(
+                "Could not resolve applicant name for notification",
+                fundi_id=user.user_id,
+                error=str(notification_lookup_error),
+            )
+
+        applicant_name = (applicant_profile or {}).get("full_name") or "A worker"
+        await create_notification(
+            user_id=job["client_id"],
+            type_="application",
+            title="New application received",
+            body=f"{applicant_name} applied to {job['title']}.",
+            action_url=f"/job-applicants.html?job={body.job_id}",
+            metadata={
+                "application_id": application["id"],
+                "job_id": body.job_id,
+                "fundi_id": user.user_id,
+                "submitted_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
         
         logger.info("Application submitted", job_id=body.job_id, fundi_id=user.user_id)
         return application
@@ -132,7 +166,13 @@ async def my_applications(user: FundiUser, session: CurrentSession):
     try:
         result = (
             client.table("applications")
-            .select("*, jobs!job_id(id, title, trade, county, area, budget_min, budget_max, status)")
+            .select(
+                "*, "
+                "jobs!job_id("
+                "id, title, trade, county, area, budget_min, budget_max, status, client_id, "
+                "profiles!client_id(full_name, avatar_url)"
+                ")"
+            )
             .eq("fundi_id", user.user_id)
             .order("created_at", desc=True)
             .execute()

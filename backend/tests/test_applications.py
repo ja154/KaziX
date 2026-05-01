@@ -46,6 +46,9 @@ class _FakeTableQuery:
     def single(self):
         return self
 
+    def maybe_single(self):
+        return self
+
     def update(self, payload: dict):
         self._operation = "update"
         self._payload = dict(payload)
@@ -119,6 +122,7 @@ async def test_fundi_can_apply_to_open_job_with_user_scoped_client(monkeypatch) 
             "jobs": {
                 "job-1": {
                     "id": "job-1",
+                    "title": "Fix sink",
                     "status": "open",
                     "client_id": "client-123",
                 }
@@ -126,8 +130,23 @@ async def test_fundi_can_apply_to_open_job_with_user_scoped_client(monkeypatch) 
             "applications": {},
         }
     )
+    fake_admin = _FakeClient(
+        {
+            "profiles": {
+                "fundi-123": {
+                    "id": "fundi-123",
+                    "full_name": "Jane Fundi",
+                }
+            }
+        }
+    )
+
+    async def _fake_notification(**_payload):
+        return {}
 
     monkeypatch.setattr(applications_module, "get_user_client", lambda _token: fake_client)
+    monkeypatch.setattr(applications_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(applications_module, "create_notification", _fake_notification)
 
     result = await applications_module.apply_to_job(
         applications_module.ApplyRequest(

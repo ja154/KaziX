@@ -362,6 +362,27 @@
     };
   }
 
+  function buildPagePath(page, params = {}) {
+    const search = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      const normalized = String(value).trim();
+      if (!normalized) return;
+      search.set(key, normalized);
+    });
+    const query = search.toString();
+    return query ? `${page}?${query}` : page;
+  }
+
+  function buildMessagesPath(options = {}) {
+    return buildPagePath('messages.html', {
+      participant: options.participantId || options.participant || null,
+      job: options.jobId || options.job || null,
+      application: options.applicationId || options.application || null,
+      booking: options.bookingId || options.booking || null,
+    });
+  }
+
   function wireNotificationButtons() {
     document.querySelectorAll('.notif-btn').forEach((button) => {
       if (button.dataset.notificationsWired === 'true') return;
@@ -619,6 +640,8 @@
     roleHomePath,
     roleLabel,
     clearDashboardStateCache,
+    buildMessagesPath,
+    buildPagePath,
     setHtml,
     setText,
     show,

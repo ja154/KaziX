@@ -358,6 +358,13 @@ function renderApplications() {
     const meta = STATUS_META[application.status] || STATUS_META.pending;
     const banner = bannerForApplication(application);
     const jobLink = job.id ? `job-detail.html?id=${encodeURIComponent(job.id)}` : 'worker-jobs.html';
+    const messageHref = job.client_id && window.KazixProfile && typeof window.KazixProfile.buildMessagesPath === 'function'
+      ? window.KazixProfile.buildMessagesPath({
+        participantId: job.client_id,
+        jobId: job.id,
+        applicationId: application.id,
+      })
+      : 'messages.html';
     const bidAmount = Number(application.bid_amount);
     const isBusy = busyApplicationIds.has(application.id);
     const canWithdraw = ['pending', 'shortlisted'].includes(application.status);
@@ -388,7 +395,7 @@ function renderApplications() {
             ? '<a href="worker-hires.html" class="btn-view">✅ View Contract</a>'
             : `<a href="${escapeHtml(jobLink)}" class="btn-view">👁 View Job</a>`
           }
-          <a href="messages.html" class="btn-msg">💬 Message</a>
+          <a href="${escapeHtml(messageHref)}" class="btn-msg">💬 Message</a>
           ${canWithdraw
             ? `<button class="btn-withdraw" type="button" data-action="withdraw" data-id="${escapeHtml(application.id)}" ${isBusy ? 'disabled' : ''}>Withdraw</button>`
             : ''
