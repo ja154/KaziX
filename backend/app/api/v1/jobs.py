@@ -226,8 +226,8 @@ async def list_job_applications(job_id: str, user: CurrentUser):
             admin.table("applications")
             .select(
                 "*, "
-                "profiles!fundi_id(full_name, avatar_url, county, area), "
-                "fundi_profiles!fundi_id(trade, rating_avg, jobs_completed, rate_min, rate_max, skills)"
+                "profiles!fundi_id(full_name, avatar_url, county, area, is_verified), "
+                "fundi_profiles!fundi_id(trade, rating_avg, jobs_completed, rate_min, rate_max, skills, experience_years, kyc_status)"
             )
             .eq("job_id", job_id)
             .order("created_at", desc=False)
