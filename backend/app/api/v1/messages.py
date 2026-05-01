@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, status
+from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser
@@ -18,6 +19,32 @@ class SendMessageRequest(BaseModel):
     job_id: str | None = None
     application_id: str | None = None
     booking_id: str | None = None
+
+
+def _messages_http_error(exc: Exception, *, default_detail: str) -> HTTPException:
+    if isinstance(exc, PostgrestAPIError):
+        error_blob = " ".join(
+            str(part or "")
+            for part in (exc.code, exc.message, exc.details, exc.hint)
+        ).lower()
+
+        if exc.code == "PGRST205" and "public.messages" in error_blob:
+            return HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Messaging is not ready yet. The database migration for messages still needs to be applied.",
+            )
+
+        if (
+            exc.code in {"42501", "PGRST301", "PGRST302"}
+            or "row-level security" in error_blob
+            or "permission denied" in error_blob
+        ):
+            return HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access this conversation.",
+            )
+
+    return HTTPException(status_code=500, detail=default_detail)
 
 
 def _now_iso() -> str:
@@ -413,7 +440,7 @@ async def list_message_threads(user: CurrentUser):
         raise
     except Exception as exc:
         logger.error("Failed to load message threads", user_id=user.user_id, error=str(exc))
-        raise HTTPException(status_code=500, detail="Failed to fetch messages.")
+        raise _messages_http_error(exc, default_detail="Failed to fetch messages.")
 
 
 @router.get("/thread")
@@ -492,7 +519,7 @@ async def get_message_thread(
             participant_id=participant_id,
             error=str(exc),
         )
-        raise HTTPException(status_code=500, detail="Failed to fetch this conversation.")
+        raise _messages_http_error(exc, default_detail="Failed to fetch this conversation.")
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
@@ -566,4 +593,4 @@ async def send_message(body: SendMessageRequest, user: CurrentUser):
             participant_id=body.participant_id,
             error=str(exc),
         )
-        raise HTTPException(status_code=500, detail="Failed to send your message.")
+        raise _messages_http_error(exc, default_detail="Failed to send your message.")

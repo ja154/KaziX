@@ -38,7 +38,7 @@ def mount_frontend(app: FastAPI) -> None:
             ],
         )
 
-        @app.get("/", include_in_schema=False)
+        @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
         async def root_redirect_missing_frontend() -> RedirectResponse:
             return RedirectResponse(url=settings.frontend_url, status_code=307)
 
@@ -49,12 +49,12 @@ def mount_frontend(app: FastAPI) -> None:
     env_js_path = frontend_dir / "env.js"
     favicon_path = frontend_dir / "favicon.svg"
 
-    @app.get("/", include_in_schema=False)
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     async def root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/pages/index.html", status_code=307)
 
-    @app.get("/pages", include_in_schema=False)
-    @app.get("/pages/", include_in_schema=False)
+    @app.api_route("/pages", methods=["GET", "HEAD"], include_in_schema=False)
+    @app.api_route("/pages/", methods=["GET", "HEAD"], include_in_schema=False)
     async def pages_redirect() -> RedirectResponse:
         return RedirectResponse(url="/pages/index.html", status_code=307)
 
