@@ -57,3 +57,7 @@ venv/
 env/
 ENV/
 backend/venv/
+
+# Supabase local CLI state
+supabase/.temp/
+supabase/.branches/

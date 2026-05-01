@@ -10,7 +10,7 @@ This repo is now wired for a `Vercel + Render` deployment:
 
 - `frontend/package.json` gives Vercel a build step that generates `env.js`.
 - `frontend/vercel.json` redirects `/` to `/pages/index.html` and disables caching for `env.js`.
-- `frontend/generate-env.js` now publishes `KAZIX_API_BASE` so frontend API calls can target Render consistently.
+- `frontend/scripts/generate-env.js` now publishes `KAZIX_API_BASE` so frontend API calls can target Render consistently.
 - `render.yaml` defines a Render Blueprint for the backend service.
 - `backend/app/core/config.py` now accepts `PORT` and configurable `ALLOWED_HOSTS`.
 - `backend/Dockerfile` now binds Uvicorn to `PORT` when a platform sets it.

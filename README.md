@@ -24,25 +24,21 @@ KaziX is a modern marketplace designed to connect skilled Kenyan workers (fundis
   - `DM Sans`: For clean, readable body text.
 - **Design Aesthetic:** High-contrast "Modern Brutalist" style with a focus on usability and accessibility.
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 KaziX/
+├── backend/
+│   ├── app/            # FastAPI application code
+│   ├── scripts/        # Backend utility scripts
+│   ├── supabase/       # Schema, migrations, and seed data
+│   └── tests/          # Backend test suite
 ├── frontend/
-│   ├── pages/
-│   │   ├── index.html              # Landing page
-│   │   ├── client-dashboard.html   # Dashboard for clients to manage jobs
-│   │   ├── worker-dashboard.html   # Dashboard for workers (Fundis)
-│   │   └── ...                     # All frontend HTML pages
-│   └── assets/
-│       ├── css/
-│       │   ├── styles.css          # Global styles and design tokens
-│       │   └── admin.css
-│       └── js/
-│           ├── mobile-nav.js
-│           ├── admin-shell.js
-│           └── admin-disputes.js
-├── backend/                    # FastAPI app and API
+│   ├── assets/         # Shared CSS and JavaScript
+│   ├── pages/          # Static HTML pages
+│   └── scripts/        # Frontend build utilities
+├── docs/               # Project guides and operational docs
+├── render.yaml         # Render deployment blueprint
 └── README.md
 ```
 
@@ -80,8 +76,10 @@ Deployment files now included in the repo:
 
 - [frontend/vercel.json](/home/jay/Desktop/KaziX/frontend/vercel.json)
 - [frontend/package.json](/home/jay/Desktop/KaziX/frontend/package.json)
+- [frontend/scripts/generate-env.js](/home/jay/Desktop/KaziX/frontend/scripts/generate-env.js)
 - [render.yaml](/home/jay/Desktop/KaziX/render.yaml)
-- [DEPLOYMENT.md](/home/jay/Desktop/KaziX/DEPLOYMENT.md)
+- [docs/DEPLOYMENT.md](/home/jay/Desktop/KaziX/docs/DEPLOYMENT.md)
+- [docs/ERROR_HANDLING_GUIDE.md](/home/jay/Desktop/KaziX/docs/ERROR_HANDLING_GUIDE.md)
 
 ## OAuth Setup
 

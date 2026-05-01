@@ -2,7 +2,7 @@
   "name": "kazix-frontend",
   "private": true,
   "scripts": {
-    "build": "node generate-env.js"
+    "build": "node scripts/generate-env.js"
   },
   "engines": {
     "node": ">=18"
