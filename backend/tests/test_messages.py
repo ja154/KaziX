@@ -84,7 +84,7 @@ class _FakeTableQuery:
 
         if self._operation == "select":
             if self._single:
-                return _FakeResult(dict(matches[0]) if matches else None)
+                return _FakeResult(dict(matches[0])) if matches else None
             return _FakeResult([dict(row) for row in matches])
 
         if self._operation == "update":
@@ -205,3 +205,4 @@ async def test_get_message_thread_marks_incoming_messages_as_read(monkeypatch) -
     assert result["thread"]["participant_id"] == "client-1"
     assert result["messages"][0]["read_at"] is not None
     assert fake_admin.tables["messages"][0]["read_at"] is not None
+    assert result["thread"]["participant_trade"] is None

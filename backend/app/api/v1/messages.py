@@ -52,14 +52,14 @@ def _now_iso() -> str:
 
 
 def _fetch_row(admin, table_name: str, select: str, field: str, value: str):
-    return (
+    result = (
         admin.table(table_name)
         .select(select)
         .eq(field, value)
         .maybe_single()
         .execute()
-        .data
     )
+    return result.data if result is not None else None
 
 
 def _fetch_rows(
@@ -190,27 +190,27 @@ def _get_booking(admin, booking_id: str, cache: dict[str, dict | None]) -> dict 
 
 
 def _find_application_for_job_and_fundi(admin, job_id: str, fundi_id: str) -> dict | None:
-    return (
+    result = (
         admin.table("applications")
         .select("id, job_id, fundi_id, status, bid_amount, created_at")
         .eq("job_id", job_id)
         .eq("fundi_id", fundi_id)
         .maybe_single()
         .execute()
-        .data
     )
+    return result.data if result is not None else None
 
 
 def _find_booking_for_job_and_fundi(admin, job_id: str, fundi_id: str) -> dict | None:
-    return (
+    result = (
         admin.table("bookings")
         .select("id, job_id, application_id, client_id, fundi_id, status, agreed_amount, start_date, created_at")
         .eq("job_id", job_id)
         .eq("fundi_id", fundi_id)
         .maybe_single()
         .execute()
-        .data
     )
+    return result.data if result is not None else None
 
 
 def _resolve_thread_context(
