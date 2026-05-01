@@ -241,18 +241,25 @@ def _resolve_thread_context(
 
     booking = _get_booking(admin, booking_id, booking_cache) if booking_id else None
     if booking_id and not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+        if not any((application_id, job_id)):
+            raise HTTPException(status_code=404, detail="Booking not found")
+        booking_id = None
 
-    if booking and booking.get("application_id") and not application_id:
-        application_id = booking["application_id"]
+    if booking:
+        if booking.get("application_id"):
+            application_id = booking["application_id"]
+        if booking.get("job_id"):
+            job_id = booking["job_id"]
 
     application = _get_application(admin, application_id, application_cache) if application_id else None
     if application_id and not application:
-        raise HTTPException(status_code=404, detail="Application not found")
+        # Stale message links can still be recovered safely from the job + participant pair.
+        if job_id:
+            application_id = None
+        else:
+            raise HTTPException(status_code=404, detail="Application not found")
 
-    if booking and not job_id:
-        job_id = booking.get("job_id")
-    if application and not job_id:
+    if application and application.get("job_id"):
         job_id = application.get("job_id")
 
     job = _get_job(admin, job_id, job_cache) if job_id else None

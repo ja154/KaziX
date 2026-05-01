@@ -228,6 +228,92 @@ async def test_get_message_thread_marks_incoming_messages_as_read(monkeypatch) -
     assert result["thread"]["participant_trade"] is None
 
 
+@pytest.mark.asyncio
+async def test_get_message_thread_falls_back_to_job_context_when_application_hint_is_stale(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "open", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [
+                {"id": "app-1", "job_id": "job-1", "fundi_id": "fundi-1", "status": "pending", "bid_amount": 800, "created_at": "2026-05-01T09:10:00Z"},
+            ],
+            "messages": [
+                {
+                    "id": "msg-1",
+                    "sender_id": "client-1",
+                    "recipient_id": "fundi-1",
+                    "job_id": "job-1",
+                    "application_id": "app-1",
+                    "booking_id": None,
+                    "body": "Can you come this afternoon?",
+                    "created_at": "2026-05-01T09:30:00Z",
+                    "read_at": None,
+                }
+            ],
+        }
+    )
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+
+    result = await messages_module.get_message_thread(
+        _override_user("fundi", "fundi-1"),
+        participant_id="client-1",
+        job_id="job-1",
+        application_id="missing-app",
+    )
+
+    assert result["thread"]["job_id"] == "job-1"
+    assert result["thread"]["application_id"] == "app-1"
+    assert result["messages"][0]["application_id"] == "app-1"
+
+
+@pytest.mark.asyncio
+async def test_send_message_falls_back_to_job_context_when_application_hint_is_stale(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "open", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [
+                {"id": "app-1", "job_id": "job-1", "fundi_id": "fundi-1", "status": "pending", "bid_amount": 800, "created_at": "2026-05-01T09:10:00Z"},
+            ],
+            "messages": [],
+        }
+    )
+    notifications: list[dict] = []
+
+    async def _fake_notification(**payload):
+        notifications.append(payload)
+        return payload
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+    monkeypatch.setattr(messages_module, "create_notification", _fake_notification)
+
+    result = await messages_module.send_message(
+        messages_module.SendMessageRequest(
+            participant_id="client-1",
+            job_id="job-1",
+            application_id="missing-app",
+            body="Still available to start today.",
+        ),
+        _override_user("fundi", "fundi-1"),
+    )
+
+    assert result["job_id"] == "job-1"
+    assert result["application_id"] == "app-1"
+    assert fake_admin.tables["messages"][0]["application_id"] == "app-1"
+    assert notifications[0]["metadata"]["application_id"] == "app-1"
+
+
 def test_fetch_rows_returns_empty_list_when_supabase_returns_none() -> None:
     result = messages_module._fetch_rows(
         _NullResultAdminClient(),
