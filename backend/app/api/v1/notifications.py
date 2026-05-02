@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel
 
 from app.api.deps import CurrentUser
@@ -98,6 +98,45 @@ async def update_notification(
             error=str(exc),
         )
         raise HTTPException(status_code=500, detail="Failed to update notification.")
+
+
+@router.delete("/{notification_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_notification(
+    notification_id: str,
+    user: CurrentUser,
+):
+    admin = get_admin_client()
+    try:
+        existing = (
+            admin.table("notifications")
+            .select("id, user_id, read")
+            .eq("id", notification_id)
+            .maybe_single()
+            .execute()
+        )
+
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="Notification not found")
+        if existing.data["user_id"] != user.user_id:
+            raise HTTPException(status_code=403, detail="Not your notification")
+        if not existing.data["read"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Mark this notification as read before deleting it.",
+            )
+
+        admin.table("notifications").delete().eq("id", notification_id).execute()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(
+            "Failed to delete notification",
+            notification_id=notification_id,
+            user_id=user.user_id,
+            error=str(exc),
+        )
+        raise HTTPException(status_code=500, detail="Failed to delete notification.")
 
 
 @router.post("/read-all")

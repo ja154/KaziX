@@ -60,6 +60,10 @@ class _FakeTableQuery:
         self._payload = dict(payload)
         return self
 
+    def delete(self):
+        self._operation = "delete"
+        return self
+
     def execute(self):
         table = self.tables.setdefault(self.table_name, [])
         matches = [
@@ -85,6 +89,14 @@ class _FakeTableQuery:
                 row.update(self._payload or {})
                 updated.append(dict(row))
             return _FakeResult(updated)
+
+        if self._operation == "delete":
+            deleted = [dict(row) for row in matches]
+            self.tables[self.table_name] = [
+                row for row in table
+                if not all(row.get(field) == value for field, value in self._filters)
+            ]
+            return _FakeResult(deleted)
 
         raise AssertionError(f"Unsupported operation: {self._operation}")
 
@@ -189,3 +201,84 @@ async def test_user_cannot_update_someone_elses_notification(monkeypatch) -> Non
         )
 
     assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_delete_notification_removes_read_notification(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "notifications": [
+                {"id": "n-1", "user_id": "client-1", "title": "Read", "read": True, "created_at": "2026-05-01T10:00:00Z"},
+                {"id": "n-2", "user_id": "client-1", "title": "Keep", "read": False, "created_at": "2026-05-01T09:00:00Z"},
+            ]
+        }
+    )
+
+    monkeypatch.setattr(notifications_module, "get_admin_client", lambda: fake_admin)
+
+    response = await notifications_module.delete_notification(
+        "n-1",
+        _override_user("client", "client-1"),
+    )
+
+    assert response.status_code == 204
+    assert [item["id"] for item in fake_admin.tables["notifications"]] == ["n-2"]
+
+
+@pytest.mark.asyncio
+async def test_delete_notification_rejects_unread_notification(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "notifications": [
+                {"id": "n-1", "user_id": "client-1", "title": "Unread", "read": False, "created_at": "2026-05-01T10:00:00Z"},
+            ]
+        }
+    )
+
+    monkeypatch.setattr(notifications_module, "get_admin_client", lambda: fake_admin)
+
+    with pytest.raises(HTTPException) as exc:
+        await notifications_module.delete_notification(
+            "n-1",
+            _override_user("client", "client-1"),
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "Mark this notification as read before deleting it."
+    assert [item["id"] for item in fake_admin.tables["notifications"]] == ["n-1"]
+
+
+@pytest.mark.asyncio
+async def test_user_cannot_delete_someone_elses_notification(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "notifications": [
+                {"id": "n-1", "user_id": "other-user", "title": "Nope", "read": True, "created_at": "2026-05-01T10:00:00Z"},
+            ]
+        }
+    )
+
+    monkeypatch.setattr(notifications_module, "get_admin_client", lambda: fake_admin)
+
+    with pytest.raises(HTTPException) as exc:
+        await notifications_module.delete_notification(
+            "n-1",
+            _override_user("client", "client-1"),
+        )
+
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_delete_notification_returns_404_when_missing(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient({"notifications": []})
+
+    monkeypatch.setattr(notifications_module, "get_admin_client", lambda: fake_admin)
+
+    with pytest.raises(HTTPException) as exc:
+        await notifications_module.delete_notification(
+            "missing",
+            _override_user("client", "client-1"),
+        )
+
+    assert exc.value.status_code == 404

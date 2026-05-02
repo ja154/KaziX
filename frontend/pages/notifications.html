@@ -375,7 +375,7 @@ function renderNotifications() {
               </div>
             </div>
             ${notification.read ? '' : '<div class="unread-indicator"></div>'}
-            <button class="dismiss-btn" type="button" data-action="dismiss" data-id="${escapeHtml(notification.id)}" aria-label="Dismiss notification">✕</button>
+            <button class="dismiss-btn" type="button" data-action="delete" data-id="${escapeHtml(notification.id)}" aria-label="Delete notification">✕</button>
           </article>
         `;
       }).join('')}
@@ -404,6 +404,17 @@ async function updateNotificationRead(notificationId, readValue) {
       ? { ...notification, ...updated, read: readValue }
       : notification
   ));
+  window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
+  renderNotifications();
+}
+
+async function deleteNotification(notificationId) {
+  await window.KazixProfile.requestJson(`/v1/notifications/${encodeURIComponent(notificationId)}`, {
+    auth: true,
+    method: 'DELETE',
+    showError: false,
+  });
+  notificationsState = notificationsState.filter((notification) => notification.id !== notificationId);
   window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
   renderNotifications();
 }
@@ -467,16 +478,14 @@ function bindEvents() {
       return;
     }
 
-    if (action === 'dismiss') {
+    if (action === 'delete') {
       event.preventDefault();
       try {
-        await updateNotificationRead(notificationId, true);
-        notificationsState = notificationsState.filter((item) => item.id !== notificationId);
-        window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
-        renderNotifications();
+        await deleteNotification(notificationId);
+        setPageStatus('Notification deleted.', 'info');
       } catch (error) {
-        console.error('Failed to dismiss notification', error);
-        setPageStatus(error.message || 'Could not dismiss that notification right now.', 'error');
+        console.error('Failed to delete notification', error);
+        setPageStatus(error.message || 'Could not delete that notification right now.', 'error');
       }
     }
   });
