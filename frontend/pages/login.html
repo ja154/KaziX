@@ -500,9 +500,25 @@ function clearAuthTabWaiting() {
 
 function persistSession(payload) {
   if (!payload?.access_token) return;
+  const expiresIn = Number(payload.expires_in);
+  const expiresAt = Number.isFinite(Number(payload.expires_at)) && Number(payload.expires_at) > 0
+    ? Math.floor(Number(payload.expires_at))
+    : (Number.isFinite(expiresIn) && expiresIn > 0
+        ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn)
+        : null);
+
   localStorage.setItem('kazix_access_token', payload.access_token);
   if (payload.refresh_token) localStorage.setItem('kazix_refresh_token', payload.refresh_token);
-  if (payload.expires_in) localStorage.setItem('kazix_expires_in', String(payload.expires_in));
+  if (Number.isFinite(expiresIn) && expiresIn > 0) {
+    localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+  } else {
+    localStorage.removeItem('kazix_expires_in');
+  }
+  if (expiresAt !== null) {
+    localStorage.setItem('kazix_expires_at', String(expiresAt));
+  } else {
+    localStorage.removeItem('kazix_expires_at');
+  }
   if (payload.token_type) localStorage.setItem('kazix_token_type', payload.token_type);
 }
 
@@ -794,6 +810,7 @@ window.addEventListener('storage', (e) => {
       refresh_token: localStorage.getItem('kazix_refresh_token'),
       token_type: localStorage.getItem('kazix_token_type') || 'bearer',
       expires_in: Number(localStorage.getItem('kazix_expires_in')) || 3600,
+      expires_at: Number(localStorage.getItem('kazix_expires_at')) || null,
       is_new_user: false,
       redirect_to: localStorage.getItem('kazix_auth_next_page')?.includes('register') ? 'complete-registration' : 'dashboard',
     });

@@ -254,11 +254,23 @@ function persistSession(session) {
     : (typeof session.expires_at === 'number'
         ? Math.max(0, session.expires_at - Math.floor(Date.now() / 1000))
         : null);
+  const expiresAt = Number.isFinite(session.expires_at)
+    ? Math.floor(session.expires_at)
+    : (expiresIn !== null
+        ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn)
+        : null);
 
   localStorage.setItem('kazix_access_token', session.access_token);
   localStorage.setItem('kazix_refresh_token', session.refresh_token);
   if (expiresIn !== null) {
     localStorage.setItem('kazix_expires_in', String(expiresIn));
+  } else {
+    localStorage.removeItem('kazix_expires_in');
+  }
+  if (expiresAt !== null) {
+    localStorage.setItem('kazix_expires_at', String(expiresAt));
+  } else {
+    localStorage.removeItem('kazix_expires_at');
   }
   localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
 }
@@ -341,12 +353,20 @@ function handOffViaWindowOpener(session, bootstrap, flow) {
 
   try {
     const nextPage = mapRedirectToPage(bootstrap.redirect_to, flow);
+    const expiresAt = Number.isFinite(session.expires_at)
+      ? Math.floor(session.expires_at)
+      : (Number.isFinite(session.expires_in)
+          ? Math.floor(Date.now() / 1000) + Math.floor(session.expires_in)
+          : null);
     
     // Inject session and auth state into the opening window
     window.opener.localStorage.setItem('kazix_access_token', session.access_token);
     window.opener.localStorage.setItem('kazix_refresh_token', session.refresh_token);
     if (session.expires_in !== null) {
       window.opener.localStorage.setItem('kazix_expires_in', String(session.expires_in));
+    }
+    if (expiresAt !== null) {
+      window.opener.localStorage.setItem('kazix_expires_at', String(expiresAt));
     }
     window.opener.localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
     

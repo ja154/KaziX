@@ -491,6 +491,8 @@ const REGISTER_AUTH_STORAGE_KEYS = [
   'kazix_auth_flow',
   'kazix_reg_pending_profile',
 ];
+const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
+let refreshSessionPromise = null;
 
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
@@ -644,6 +646,8 @@ function clearAuthTabWaiting() {
 }
 
 function clearStoredAuthSession() {
+  refreshSessionPromise = null;
+  regAuthPayload = null;
   REGISTER_AUTH_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
 
   for (let index = localStorage.length - 1; index >= 0; index -= 1) {
@@ -665,10 +669,154 @@ function clearStoredAuthSession() {
 
 function persistSession(payload) {
   if (!payload?.access_token) return;
+  const expiresIn = Number(payload.expires_in);
+  const expiresAt = Number.isFinite(Number(payload.expires_at)) && Number(payload.expires_at) > 0
+    ? Math.floor(Number(payload.expires_at))
+    : (Number.isFinite(expiresIn) && expiresIn > 0
+        ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn)
+        : null);
+
   localStorage.setItem('kazix_access_token', payload.access_token);
   if (payload.refresh_token) localStorage.setItem('kazix_refresh_token', payload.refresh_token);
-  if (payload.expires_in) localStorage.setItem('kazix_expires_in', String(payload.expires_in));
+  if (Number.isFinite(expiresIn) && expiresIn > 0) {
+    localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+  } else {
+    localStorage.removeItem('kazix_expires_in');
+  }
+  if (expiresAt !== null) {
+    localStorage.setItem('kazix_expires_at', String(expiresAt));
+  } else {
+    localStorage.removeItem('kazix_expires_at');
+  }
   localStorage.setItem('kazix_token_type', payload.token_type || 'bearer');
+}
+
+function getStoredExpiresAtSeconds() {
+  const value = Number(localStorage.getItem('kazix_expires_at'));
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return Math.floor(value > 1e12 ? value / 1000 : value);
+}
+
+function getStoredExpiresAtMs() {
+  const expiresAtSeconds = getStoredExpiresAtSeconds();
+  return expiresAtSeconds ? expiresAtSeconds * 1000 : null;
+}
+
+function shouldRefreshStoredSession() {
+  const accessToken = localStorage.getItem('kazix_access_token');
+  const refreshToken = localStorage.getItem('kazix_refresh_token');
+  const expiresAtMs = getStoredExpiresAtMs();
+
+  return Boolean(
+    accessToken
+    && refreshToken
+    && expiresAtMs
+    && expiresAtMs <= (Date.now() + AUTH_REFRESH_BUFFER_MS)
+  );
+}
+
+async function refreshStoredSession(options = {}) {
+  const { force = false } = options;
+  const currentToken = localStorage.getItem('kazix_access_token');
+  const refreshToken = localStorage.getItem('kazix_refresh_token');
+
+  if (!refreshToken) {
+    return force ? null : currentToken;
+  }
+
+  if (!force && !shouldRefreshStoredSession()) {
+    return currentToken;
+  }
+
+  if (refreshSessionPromise) {
+    return refreshSessionPromise;
+  }
+
+  refreshSessionPromise = (async () => {
+    const resp = await fetch(`${API_BASE}/v1/auth/oauth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    const data = await readApiResponse(resp);
+
+    if (!resp.ok || !data?.access_token) {
+      const error = new Error(data?.detail || 'Could not refresh your session.');
+      error.status = resp.status;
+      if (resp.status === 400 || resp.status === 401) {
+        clearStoredAuthSession();
+      }
+      throw error;
+    }
+
+    persistSession(data);
+    regAuthPayload = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token || localStorage.getItem('kazix_refresh_token'),
+      token_type: data.token_type || localStorage.getItem('kazix_token_type') || 'bearer',
+    };
+    return data.access_token;
+  })().finally(() => {
+    refreshSessionPromise = null;
+  });
+
+  return refreshSessionPromise;
+}
+
+async function getValidStoredAccessToken(options = {}) {
+  const { forceRefresh = false } = options;
+  const currentToken = localStorage.getItem('kazix_access_token');
+  if (!currentToken) return null;
+
+  const shouldRefresh = forceRefresh || shouldRefreshStoredSession();
+  if (!shouldRefresh) {
+    return currentToken;
+  }
+
+  try {
+    return await refreshStoredSession({ force: true });
+  } catch (error) {
+    if (forceRefresh || error?.status === 400 || error?.status === 401) {
+      return null;
+    }
+    return localStorage.getItem('kazix_access_token') || currentToken;
+  }
+}
+
+async function fetchWithStoredAuth(path, options = {}) {
+  const { method = 'GET', body } = options;
+  let accessToken = await getValidStoredAccessToken();
+  if (!accessToken) {
+    throw new Error('Your session expired. Please sign in again to continue.');
+  }
+
+  const headers = {};
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const send = (token) => fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      ...headers,
+      Authorization: `Bearer ${token}`,
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+
+  let resp = await send(accessToken);
+  if (resp.status === 401) {
+    accessToken = await getValidStoredAccessToken({ forceRefresh: true });
+    if (!accessToken) {
+      return resp;
+    }
+    resp = await send(accessToken);
+  }
+
+  return resp;
 }
 
 function wait(ms) {
@@ -912,9 +1060,9 @@ function getMagicLinkCallbackUrl() {
 
 // Poll localStorage for magic link completion signal set by auth-callback.html
 async function submitReg() {
-  const accessToken = regAuthPayload?.access_token || localStorage.getItem('kazix_access_token');
+  const accessToken = await getValidStoredAccessToken();
   if (!accessToken) {
-    alert('Please create your account first.');
+    alert('Your session expired. Please sign in again to continue registration.');
     goRStep(3);
     return;
   }
@@ -954,13 +1102,14 @@ async function submitReg() {
   submitBtn.textContent = 'Creating…';
 
   try {
-    const resp = await fetch(`${API_BASE}/v1/auth/profile`, {
+    regAuthPayload = {
+      access_token: accessToken,
+      refresh_token: localStorage.getItem('kazix_refresh_token'),
+      token_type: localStorage.getItem('kazix_token_type') || 'bearer',
+    };
+    const resp = await fetchWithStoredAuth('/v1/auth/profile', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload),
+      body: payload,
     });
     const data = await readApiResponse(resp);
     if (!resp.ok) throw new Error(data?.detail || 'Failed to create profile');
@@ -990,7 +1139,7 @@ async function submitReg() {
 }
 
 async function resumePendingRegistration() {
-  const accessToken = localStorage.getItem('kazix_access_token');
+  const accessToken = await getValidStoredAccessToken();
   if (!accessToken) return false;
 
   regAuthPayload = {
@@ -1005,11 +1154,7 @@ async function resumePendingRegistration() {
   }
 
   try {
-    const resp = await fetch(`${API_BASE}/v1/auth/bootstrap`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    const resp = await fetchWithStoredAuth('/v1/auth/bootstrap');
     const data = await readApiResponse(resp);
     if (resp.ok && data?.redirect_to === 'complete-registration') {
       goRStep(4);

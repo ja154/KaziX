@@ -23,6 +23,8 @@
     PROFILE_CACHE_KEY,
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
+  const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
+  let refreshSessionPromise = null;
 
   function normalizeApiBase(candidate) {
     if (candidate === undefined || candidate === null) {
@@ -143,6 +145,150 @@
     return findTokenInStorage(window.localStorage) || findTokenInStorage(window.sessionStorage);
   }
 
+  function getRefreshToken() {
+    return window.localStorage.getItem('kazix_refresh_token');
+  }
+
+  function getStoredExpiresAtSeconds() {
+    const value = Number(window.localStorage.getItem('kazix_expires_at'));
+    if (!Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+
+    return Math.floor(value > 1e12 ? value / 1000 : value);
+  }
+
+  function getStoredExpiresAtMs() {
+    const expiresAtSeconds = getStoredExpiresAtSeconds();
+    return expiresAtSeconds ? expiresAtSeconds * 1000 : null;
+  }
+
+  function computeExpiresAtSeconds(payload) {
+    const rawExpiresAt = Number(payload?.expires_at);
+    if (Number.isFinite(rawExpiresAt) && rawExpiresAt > 0) {
+      return Math.floor(rawExpiresAt > 1e12 ? rawExpiresAt / 1000 : rawExpiresAt);
+    }
+
+    const expiresIn = Number(payload?.expires_in);
+    if (Number.isFinite(expiresIn) && expiresIn > 0) {
+      return Math.floor(Date.now() / 1000) + Math.floor(expiresIn);
+    }
+
+    return null;
+  }
+
+  function persistSession(payload) {
+    if (!payload?.access_token) return null;
+
+    const expiresIn = Number(payload.expires_in);
+    const expiresAt = computeExpiresAtSeconds(payload);
+
+    window.localStorage.setItem('kazix_access_token', payload.access_token);
+    if (payload.refresh_token) {
+      window.localStorage.setItem('kazix_refresh_token', payload.refresh_token);
+    }
+    if (Number.isFinite(expiresIn) && expiresIn > 0) {
+      window.localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+    } else {
+      window.localStorage.removeItem('kazix_expires_in');
+    }
+    if (expiresAt !== null) {
+      window.localStorage.setItem('kazix_expires_at', String(expiresAt));
+    } else {
+      window.localStorage.removeItem('kazix_expires_at');
+    }
+    window.localStorage.setItem(
+      'kazix_token_type',
+      payload.token_type || window.localStorage.getItem('kazix_token_type') || 'bearer'
+    );
+
+    return payload.access_token;
+  }
+
+  function shouldRefreshAccessToken() {
+    const expiresAtMs = getStoredExpiresAtMs();
+    return Boolean(
+      getToken()
+      && getRefreshToken()
+      && expiresAtMs
+      && expiresAtMs <= (Date.now() + AUTH_REFRESH_BUFFER_MS)
+    );
+  }
+
+  async function refreshAccessToken(options = {}) {
+    if (window.KazixProfile && typeof window.KazixProfile.refreshAccessToken === 'function') {
+      return window.KazixProfile.refreshAccessToken(options);
+    }
+
+    const { force = false } = options;
+    const currentToken = getToken();
+    const refreshToken = getRefreshToken();
+
+    if (!refreshToken) {
+      return force ? null : currentToken;
+    }
+
+    if (!force && !shouldRefreshAccessToken()) {
+      return currentToken;
+    }
+
+    if (refreshSessionPromise) {
+      return refreshSessionPromise;
+    }
+
+    refreshSessionPromise = (async () => {
+      const res = await fetch(`${API_BASE}/v1/auth/oauth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      const text = await res.text();
+      const data = text ? safeJson(text) : {};
+
+      if (!res.ok || !data?.access_token) {
+        const error = new Error(
+          data?.detail || text || `Could not refresh session (${res.status})`
+        );
+        error.status = res.status;
+        if (res.status === 400 || res.status === 401) {
+          clearAuth();
+        }
+        throw error;
+      }
+
+      return persistSession(data);
+    })().finally(() => {
+      refreshSessionPromise = null;
+    });
+
+    return refreshSessionPromise;
+  }
+
+  async function getValidAccessToken(options = {}) {
+    if (window.KazixProfile && typeof window.KazixProfile.getValidAccessToken === 'function') {
+      return window.KazixProfile.getValidAccessToken(options);
+    }
+
+    const { forceRefresh = false } = options;
+    const currentToken = getToken();
+    if (!currentToken) return null;
+
+    const shouldRefresh = forceRefresh || shouldRefreshAccessToken();
+    if (!shouldRefresh) {
+      return currentToken;
+    }
+
+    try {
+      return await refreshAccessToken({ force: true });
+    } catch (error) {
+      if (forceRefresh || error?.status === 400 || error?.status === 401) {
+        return null;
+      }
+      return getToken() || currentToken;
+    }
+  }
+
   function normalizeProfile(data) {
     const profile = data?.profile || data || null;
     if (!profile || typeof profile !== 'object') return null;
@@ -176,18 +322,27 @@
   }
 
   function clearAuth() {
+    refreshSessionPromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
     delete window.KaziXUser;
   }
 
-  async function fetchProfile(token) {
+  async function fetchProfile(token, options = {}) {
+    const { retried = false } = options;
+
     try {
       const res = await fetch(`${API_BASE}/v1/profiles/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.status === 401) {
+        if (!retried) {
+          const refreshedToken = await getValidAccessToken({ forceRefresh: true });
+          if (refreshedToken) {
+            return fetchProfile(refreshedToken, { retried: true });
+          }
+        }
         clearAuth();
         return null;
       }
@@ -318,7 +473,7 @@
   async function init() {
     renderGuest();
 
-    const token = getToken();
+    const token = await getValidAccessToken();
     if (!token) return;
 
     const cachedProfile = getCachedProfile();
@@ -329,7 +484,7 @@
 
     const profile = await fetchProfile(token);
     if (!profile) {
-      if (!cachedProfile) {
+      if (!getToken() || !cachedProfile) {
         renderGuest();
       }
       return;

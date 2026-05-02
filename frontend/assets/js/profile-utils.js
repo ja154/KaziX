@@ -65,6 +65,7 @@
     'kazix_access_token',
     'kazix_refresh_token',
     'kazix_expires_in',
+    'kazix_expires_at',
     'kazix_token_type',
     'kazix_user_id',
     'kazix_role',
@@ -81,11 +82,149 @@
     DASHBOARD_STATE_STORAGE_KEY,
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
+  const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
   let myProfilePromise = null;
   let dashboardStatePromise = null;
+  let refreshSessionPromise = null;
 
   function getAccessToken() {
     return localStorage.getItem('kazix_access_token');
+  }
+
+  function getRefreshToken() {
+    return localStorage.getItem('kazix_refresh_token');
+  }
+
+  function getStoredExpiresAtSeconds() {
+    const value = Number(localStorage.getItem('kazix_expires_at'));
+    if (!Number.isFinite(value) || value <= 0) {
+      return null;
+    }
+
+    return Math.floor(value > 1e12 ? value / 1000 : value);
+  }
+
+  function getStoredExpiresAtMs() {
+    const expiresAtSeconds = getStoredExpiresAtSeconds();
+    return expiresAtSeconds ? expiresAtSeconds * 1000 : null;
+  }
+
+  function computeExpiresAtSeconds(payload) {
+    const rawExpiresAt = Number(payload?.expires_at);
+    if (Number.isFinite(rawExpiresAt) && rawExpiresAt > 0) {
+      return Math.floor(rawExpiresAt > 1e12 ? rawExpiresAt / 1000 : rawExpiresAt);
+    }
+
+    const expiresIn = Number(payload?.expires_in);
+    if (Number.isFinite(expiresIn) && expiresIn > 0) {
+      return Math.floor(Date.now() / 1000) + Math.floor(expiresIn);
+    }
+
+    return null;
+  }
+
+  function persistSessionTokens(payload) {
+    if (!payload?.access_token) return null;
+
+    const expiresIn = Number(payload.expires_in);
+    const expiresAt = computeExpiresAtSeconds(payload);
+
+    localStorage.setItem('kazix_access_token', payload.access_token);
+    if (payload.refresh_token) {
+      localStorage.setItem('kazix_refresh_token', payload.refresh_token);
+    }
+    if (Number.isFinite(expiresIn) && expiresIn > 0) {
+      localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+    } else {
+      localStorage.removeItem('kazix_expires_in');
+    }
+    if (expiresAt !== null) {
+      localStorage.setItem('kazix_expires_at', String(expiresAt));
+    } else {
+      localStorage.removeItem('kazix_expires_at');
+    }
+    localStorage.setItem(
+      'kazix_token_type',
+      payload.token_type || localStorage.getItem('kazix_token_type') || 'bearer'
+    );
+
+    return payload.access_token;
+  }
+
+  function shouldRefreshAccessToken() {
+    const expiresAtMs = getStoredExpiresAtMs();
+    return Boolean(
+      getAccessToken()
+      && getRefreshToken()
+      && expiresAtMs
+      && expiresAtMs <= (Date.now() + AUTH_REFRESH_BUFFER_MS)
+    );
+  }
+
+  async function refreshAccessToken(options = {}) {
+    const { force = false } = options;
+    const currentToken = getAccessToken();
+    const refreshToken = getRefreshToken();
+
+    if (!refreshToken) {
+      return force ? null : currentToken;
+    }
+
+    if (!force && !shouldRefreshAccessToken()) {
+      return currentToken;
+    }
+
+    if (refreshSessionPromise) {
+      return refreshSessionPromise;
+    }
+
+    refreshSessionPromise = (async () => {
+      const resp = await fetch(`${API_BASE}/v1/auth/oauth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      const text = await resp.text();
+      const data = text ? safeJson(text) : {};
+
+      if (!resp.ok || !data?.access_token) {
+        const error = new Error(
+          data?.detail || text || `Could not refresh session (${resp.status})`
+        );
+        error.status = resp.status;
+        if (resp.status === 400 || resp.status === 401) {
+          clearAuthStorage();
+        }
+        throw error;
+      }
+
+      return persistSessionTokens(data);
+    })().finally(() => {
+      refreshSessionPromise = null;
+    });
+
+    return refreshSessionPromise;
+  }
+
+  async function getValidAccessToken(options = {}) {
+    const { forceRefresh = false } = options;
+    const currentToken = getAccessToken();
+    if (!currentToken) return null;
+
+    const shouldRefresh = forceRefresh || shouldRefreshAccessToken();
+    if (!shouldRefresh) {
+      return currentToken;
+    }
+
+    try {
+      return await refreshAccessToken({ force: true });
+    } catch (error) {
+      if (forceRefresh || error?.status === 400 || error?.status === 401) {
+        return null;
+      }
+      return getAccessToken() || currentToken;
+    }
   }
 
   function getProfileIdFromQuery() {
@@ -95,13 +234,20 @@
   }
 
   async function requestJson(path, options = {}) {
-    const { auth = false, method = 'GET', body, showSuccess = false, showError = true } = options;
+    const {
+      auth = false,
+      method = 'GET',
+      body,
+      showSuccess = false,
+      showError = true,
+      _retryAuth = false,
+    } = options;
     const headers = {};
     if (body !== undefined) {
       headers['Content-Type'] = 'application/json';
     }
     if (auth) {
-      const token = getAccessToken();
+      const token = await getValidAccessToken();
       if (!token) {
         if (window.KazixErrorHandler) {
           window.KazixErrorHandler.showError('Please sign in to access your profile.');
@@ -120,8 +266,23 @@
 
       const text = await resp.text();
       const data = text ? safeJson(text) : {};
-      
+
+      if (auth && resp.status === 401 && !_retryAuth) {
+        const refreshedToken = await getValidAccessToken({ forceRefresh: true });
+        if (refreshedToken) {
+          return requestJson(path, {
+            ...options,
+            _retryAuth: true,
+          });
+        }
+        clearAuthStorage();
+      }
+
       if (!resp.ok) {
+        if (auth && resp.status === 401) {
+          clearAuthStorage();
+        }
+
         // Prepare error info for display
         const errorInfo = {
           status: resp.status,
@@ -425,6 +586,7 @@
   function clearAuthStorage() {
     myProfilePromise = null;
     dashboardStatePromise = null;
+    refreshSessionPromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
   }
@@ -628,6 +790,7 @@
     formatPhone,
     formatTrade,
     getAccessToken,
+    getValidAccessToken,
     getDashboardState,
     getMyProfile,
     getProfileIdFromQuery,
@@ -636,6 +799,7 @@
     initials,
     logout,
     profilePath,
+    refreshAccessToken,
     requestJson,
     roleHomePath,
     roleLabel,
