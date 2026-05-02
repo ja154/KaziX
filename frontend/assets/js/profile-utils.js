@@ -61,6 +61,8 @@
   };
   const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
   const DASHBOARD_STATE_MAX_AGE_MS = 60 * 1000;
+  const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
+  const NOTIFICATION_SUMMARY_MAX_AGE_MS = 60 * 1000;
   const AUTH_STORAGE_KEYS = new Set([
     'kazix_access_token',
     'kazix_refresh_token',
@@ -80,11 +82,13 @@
     'kazix_auth_waiting_started_at',
     'kazix_reg_pending_profile',
     DASHBOARD_STATE_STORAGE_KEY,
+    NOTIFICATION_SUMMARY_STORAGE_KEY,
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
   let myProfilePromise = null;
   let dashboardStatePromise = null;
+  let notificationSummaryPromise = null;
   let refreshSessionPromise = null;
 
   function getAccessToken() {
@@ -394,6 +398,26 @@
     }
   }
 
+  function summarizeNotifications(notifications) {
+    const rows = Array.isArray(notifications) ? notifications : [];
+    let unread = 0;
+    let unreadMessages = 0;
+
+    rows.forEach((notification) => {
+      if (notification?.read) return;
+      unread += 1;
+      if (String(notification?.type || '').toLowerCase().includes('message')) {
+        unreadMessages += 1;
+      }
+    });
+
+    return {
+      total: rows.length,
+      unread,
+      unread_messages: unreadMessages,
+    };
+  }
+
   function profilePath(role, userId) {
     if (!userId) return '#';
     if (role === 'client') {
@@ -586,6 +610,7 @@
   function clearAuthStorage() {
     myProfilePromise = null;
     dashboardStatePromise = null;
+    notificationSummaryPromise = null;
     refreshSessionPromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
@@ -631,6 +656,46 @@
     }
   }
 
+  function readCachedNotificationSummary(maxAgeMs) {
+    try {
+      const raw = window.sessionStorage.getItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
+      if (!raw) return null;
+
+      const parsed = safeJson(raw);
+      if (!parsed || !parsed.data || !parsed.saved_at) {
+        return null;
+      }
+
+      if ((Date.now() - Number(parsed.saved_at)) > (maxAgeMs || NOTIFICATION_SUMMARY_MAX_AGE_MS)) {
+        return null;
+      }
+
+      return parsed.data;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeCachedNotificationSummary(data) {
+    try {
+      window.sessionStorage.setItem(NOTIFICATION_SUMMARY_STORAGE_KEY, JSON.stringify({
+        saved_at: Date.now(),
+        data,
+      }));
+    } catch (_error) {
+      // Ignore storage errors; the state can still live in memory for this page.
+    }
+  }
+
+  function clearNotificationSummaryCache() {
+    notificationSummaryPromise = null;
+    try {
+      window.sessionStorage.removeItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
+    } catch (_error) {
+      // Ignore storage cleanup failures.
+    }
+  }
+
   function findNavLinks(href) {
     return Array.from(document.querySelectorAll(`.nav-item[href="${href}"]`));
   }
@@ -661,6 +726,89 @@
         badge.remove();
       }
     });
+  }
+
+  function applyNotificationSummary(summary) {
+    const unread = Math.max(0, Number(summary?.unread) || 0);
+    const unreadLabel = unread > 99 ? '99+' : String(unread);
+
+    document.querySelectorAll('.notif-dot').forEach(function (dot) {
+      dot.classList.toggle('active', unread > 0);
+    });
+
+    document.querySelectorAll('.notif-btn').forEach(function (button) {
+      button.setAttribute(
+        'aria-label',
+        unread > 0
+          ? `View notifications (${unreadLabel} unread)`
+          : 'View notifications'
+      );
+      button.title = unread > 0
+        ? `${unreadLabel} unread notification${unread === 1 ? '' : 's'}`
+        : 'Notifications';
+    });
+
+    if (unread > 0) {
+      setNavBadge('notifications.html', unreadLabel);
+    } else {
+      clearNavBadge('notifications.html');
+    }
+
+    return {
+      total: Math.max(0, Number(summary?.total) || 0),
+      unread,
+      unread_messages: Math.max(0, Number(summary?.unread_messages) || 0),
+    };
+  }
+
+  async function getNotificationSummary(options = {}) {
+    const { force = false, silent = true, maxAgeMs = NOTIFICATION_SUMMARY_MAX_AGE_MS } = options;
+
+    if (!getAccessToken()) {
+      return Promise.reject(new Error('Please sign in to access your notifications.'));
+    }
+
+    if (!force) {
+      const cached = readCachedNotificationSummary(maxAgeMs);
+      if (cached) {
+        applyNotificationSummary(cached);
+        return cached;
+      }
+    }
+
+    if (!force && notificationSummaryPromise) {
+      return notificationSummaryPromise;
+    }
+
+    notificationSummaryPromise = requestJson('/v1/notifications/summary', {
+      auth: true,
+      showError: !silent,
+    }).then((data) => {
+      writeCachedNotificationSummary(data);
+      applyNotificationSummary(data);
+      return data;
+    }).catch((error) => {
+      notificationSummaryPromise = null;
+      throw error;
+    });
+
+    return notificationSummaryPromise;
+  }
+
+  async function hydrateNotificationSummary(options = {}) {
+    const { silent = true } = options;
+    try {
+      return await getNotificationSummary(options);
+    } catch (error) {
+      if (!silent) throw error;
+      return null;
+    }
+  }
+
+  function syncNotificationSummaryFromNotifications(notifications) {
+    const summary = summarizeNotifications(notifications);
+    writeCachedNotificationSummary(summary);
+    return applyNotificationSummary(summary);
   }
 
   function applyDashboardNavState(state) {
@@ -753,6 +901,7 @@
       setDestination('.sidebar-bottom .sidebar-profile', accountHref);
       wireNotificationButtons();
       hydrateDashboardState({ silent: true });
+      hydrateNotificationSummary({ silent: true });
 
       return shellData;
     } catch (error) {
@@ -793,8 +942,10 @@
     getValidAccessToken,
     getDashboardState,
     getMyProfile,
+    getNotificationSummary,
     getProfileIdFromQuery,
     hydrateDashboardState,
+    hydrateNotificationSummary,
     hydrateShell,
     initials,
     logout,
@@ -803,12 +954,16 @@
     requestJson,
     roleHomePath,
     roleLabel,
+    applyNotificationSummary,
     clearDashboardStateCache,
+    clearNotificationSummaryCache,
     buildMessagesPath,
     buildPagePath,
     setHtml,
     setText,
     show,
+    summarizeNotifications,
+    syncNotificationSummaryFromNotifications,
   };
 
   if (document.readyState === 'loading') {

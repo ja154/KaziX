@@ -268,6 +268,27 @@ function actionLabel(notification, category) {
   return 'Open';
 }
 
+function resolveNotificationHref(actionUrl) {
+  const value = String(actionUrl || '').trim();
+  if (!value) return null;
+  if (/^(https?:|mailto:|tel:|#)/i.test(value)) {
+    return value;
+  }
+
+  try {
+    const url = new URL(value, window.location.href);
+    if (url.origin === window.location.origin && /\.html$/i.test(url.pathname) && !url.pathname.startsWith('/pages/')) {
+      url.pathname = `/pages${url.pathname}`;
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch (_error) {
+    if (value.startsWith('/')) {
+      return value.startsWith('/pages/') ? value : `/pages${value}`;
+    }
+    return value;
+  }
+}
+
 function formatRelativeTime(value) {
   if (!value) return '';
   const date = new Date(value);
@@ -337,7 +358,7 @@ function renderNotifications() {
       ${group.items.map((notification) => {
         const category = notificationCategory(notification);
         const meta = CATEGORY_META[category] || CATEGORY_META.system;
-        const actionUrl = notification.action_url || null;
+        const actionUrl = resolveNotificationHref(notification.action_url);
         return `
           <article class="notif-item${notification.read ? '' : ' unread'}" data-id="${escapeHtml(notification.id)}">
             <div class="ni-bubble ${meta.bubbleClass}">${meta.icon}</div>
@@ -368,6 +389,7 @@ async function fetchNotifications() {
     showError: false,
   });
   notificationsState = Array.isArray(payload?.data) ? payload.data : [];
+  window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
 }
 
 async function updateNotificationRead(notificationId, readValue) {
@@ -382,6 +404,7 @@ async function updateNotificationRead(notificationId, readValue) {
       ? { ...notification, ...updated, read: readValue }
       : notification
   ));
+  window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
   renderNotifications();
 }
 
@@ -393,6 +416,7 @@ async function markAllRead() {
       showError: false,
     });
     notificationsState = notificationsState.map((notification) => ({ ...notification, read: true }));
+    window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
     renderNotifications();
     setPageStatus('All notifications marked as read.', 'info');
   } catch (error) {
@@ -448,6 +472,7 @@ function bindEvents() {
       try {
         await updateNotificationRead(notificationId, true);
         notificationsState = notificationsState.filter((item) => item.id !== notificationId);
+        window.KazixProfile.syncNotificationSummaryFromNotifications(notificationsState);
         renderNotifications();
       } catch (error) {
         console.error('Failed to dismiss notification', error);

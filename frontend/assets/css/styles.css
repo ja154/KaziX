@@ -90,6 +90,7 @@ footer:not(.footer) .logo {
 .notif-btn:hover{background:rgba(245,240,232,0.15)}
 
 .notif-dot{
+  display:none;
   position:absolute;
   top:7px;
   right:7px;
@@ -99,6 +100,8 @@ footer:not(.footer) .logo {
   background:var(--saffron);
   border:2px solid var(--ink);
 }
+
+.notif-dot.active{display:block}
 
 .user-chip{
   display:flex;

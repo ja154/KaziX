@@ -13,6 +13,19 @@ class NotificationUpdateRequest(BaseModel):
     read: bool = True
 
 
+def _build_notification_summary(rows: list[dict]) -> dict:
+    unread_rows = [row for row in rows if not row.get("read")]
+    unread_messages = [
+        row for row in unread_rows
+        if "message" in str(row.get("type") or "").lower()
+    ]
+    return {
+        "total": len(rows),
+        "unread": len(unread_rows),
+        "unread_messages": len(unread_messages),
+    }
+
+
 @router.get("/")
 async def list_notifications(user: CurrentUser):
     admin = get_admin_client()
@@ -28,6 +41,23 @@ async def list_notifications(user: CurrentUser):
     except Exception as exc:
         logger.error("Failed to fetch notifications", user_id=user.user_id, error=str(exc))
         raise HTTPException(status_code=500, detail="Failed to fetch notifications.")
+
+
+@router.get("/summary")
+async def notification_summary(user: CurrentUser):
+    admin = get_admin_client()
+    try:
+        result = (
+            admin.table("notifications")
+            .select("id, type, read")
+            .eq("user_id", user.user_id)
+            .execute()
+        )
+        rows = result.data or []
+        return _build_notification_summary(rows)
+    except Exception as exc:
+        logger.error("Failed to fetch notification summary", user_id=user.user_id, error=str(exc))
+        raise HTTPException(status_code=500, detail="Failed to fetch notification summary.")
 
 
 @router.patch("/{notification_id}")

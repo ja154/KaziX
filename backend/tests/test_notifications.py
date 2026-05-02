@@ -125,6 +125,30 @@ async def test_list_notifications_returns_only_current_user_rows(monkeypatch) ->
 
 
 @pytest.mark.asyncio
+async def test_notification_summary_counts_unread_and_message_notifications(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "notifications": [
+                {"id": "n-1", "user_id": "client-1", "type": "message", "read": False, "created_at": "2026-05-01T10:00:00Z"},
+                {"id": "n-2", "user_id": "client-1", "type": "application", "read": False, "created_at": "2026-05-01T09:00:00Z"},
+                {"id": "n-3", "user_id": "client-1", "type": "message", "read": True, "created_at": "2026-05-01T08:00:00Z"},
+                {"id": "n-4", "user_id": "other-user", "type": "message", "read": False, "created_at": "2026-05-01T07:00:00Z"},
+            ]
+        }
+    )
+
+    monkeypatch.setattr(notifications_module, "get_admin_client", lambda: fake_admin)
+
+    result = await notifications_module.notification_summary(_override_user("client", "client-1"))
+
+    assert result == {
+        "total": 3,
+        "unread": 2,
+        "unread_messages": 1,
+    }
+
+
+@pytest.mark.asyncio
 async def test_mark_all_notifications_read_updates_unread_rows(monkeypatch) -> None:
     fake_admin = _FakeAdminClient(
         {
