@@ -701,18 +701,21 @@ async def test_bootstrap_allows_authenticated_new_user_without_existing_profile(
 @pytest.mark.asyncio
 async def test_bootstrap_accepts_asymmetric_supabase_tokens(monkeypatch) -> None:
     fake_admin = _FakeAdminClient()
-    fake_lookup_client = _FakeAuthLookupClient(user_id="user-rs256")
 
     monkeypatch.setattr(
         deps_module,
         "settings",
         SimpleNamespace(supabase_jwt_secret="test-jwt-secret"),
     )
-    monkeypatch.setattr(deps_module, "get_anon_client", lambda: fake_lookup_client)
+    monkeypatch.setattr(
+        deps_module,
+        "_decode_asymmetric_user_id",
+        lambda _token: "user-rs256",
+    )
     monkeypatch.setattr(
         deps_module.jwt,
         "get_unverified_header",
-        lambda _token: {"alg": "RS256"},
+        lambda _token: {"alg": "ES256"},
     )
     monkeypatch.setattr(auth_module, "get_admin_client", lambda: fake_admin)
 

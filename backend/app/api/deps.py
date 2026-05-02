@@ -5,16 +5,20 @@ FastAPI dependency functions.
 Import these with Depends() in route handlers.
 """
 
+from functools import lru_cache
 from typing import Annotated
 
+import jwt as pyjwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from gotrue.errors import AuthApiError, AuthRetryableError
 from jose import JWTError, jwt
+from jwt import PyJWKClient
+from jwt.exceptions import InvalidTokenError, PyJWKClientError
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.supabase import get_admin_client, get_anon_client
+from app.core.supabase import get_admin_client
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -37,6 +41,31 @@ class AuthenticatedSession:
     def __init__(self, user_id: str, access_token: str):
         self.user_id = user_id
         self.access_token = access_token
+
+
+@lru_cache(maxsize=4)
+def _get_supabase_jwk_client(supabase_url: str) -> PyJWKClient:
+    jwks_url = f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+    return PyJWKClient(
+        jwks_url,
+        cache_jwk_set=True,
+        lifespan=300,
+        timeout=5,
+    )
+
+
+def _decode_asymmetric_user_id(token: str) -> str:
+    signing_key = _get_supabase_jwk_client(settings.supabase_url).get_signing_key_from_jwt(token)
+    payload = pyjwt.decode(
+        token,
+        signing_key.key,
+        algorithms=["ES256", "RS256"],
+        audience="authenticated",
+    )
+    user_id = payload.get("sub")
+    if not user_id:
+        raise JWTError("Missing user id in authenticated session")
+    return str(user_id)
 
 
 def _decode_user_id(credentials: HTTPAuthorizationCredentials) -> str:
@@ -69,15 +98,13 @@ def _decode_user_id(credentials: HTTPAuthorizationCredentials) -> str:
             )
             user_id: str = payload.get("sub")
         else:
-            response = get_anon_client().auth.get_user(jwt=token)
-            user = getattr(response, "user", None) if response else None
-            user_id = getattr(user, "id", None)
+            user_id = _decode_asymmetric_user_id(token)
 
         if not user_id:
             raise JWTError("Missing user id in authenticated session")
 
         return user_id
-    except (AuthApiError, AuthRetryableError, JWTError) as exc:
+    except (AuthApiError, AuthRetryableError, InvalidTokenError, PyJWKClientError, JWTError) as exc:
         logger.warning("JWT validation failed", alg=alg or None, error=str(exc))
         raise credentials_exception
 
