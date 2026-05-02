@@ -191,6 +191,7 @@ const {
   formatMemberSince,
   formatTrade,
   getAccessToken,
+  getMyProfile,
   getProfileIdFromQuery,
   initials,
   profilePath,
@@ -202,12 +203,14 @@ const {
 async function loadWorkerProfile() {
   const requestedId = getProfileIdFromQuery();
   const token = getAccessToken();
+  const signedIn = Boolean(token);
+  const loadedOwnProfile = !requestedId && signedIn;
 
   try {
     let data;
     if (requestedId) {
       data = await requestJson(`/v1/profiles/${encodeURIComponent(requestedId)}`);
-    } else if (token) {
+    } else if (signedIn) {
       data = await requestJson('/v1/profiles/me', { auth: true });
     } else {
       document.getElementById('pageNotice').textContent = 'Open a worker profile link from the platform, or sign in to preview your own public worker profile.';
@@ -222,13 +225,33 @@ async function loadWorkerProfile() {
       return;
     }
 
-    renderProfile(profile, fundiProfile);
+    const viewerProfile = await resolveViewerProfile({
+      signedIn,
+      loadedOwnProfile,
+      loadedProfile: profile,
+    });
+
+    renderProfile(profile, fundiProfile, {
+      isOwnProfile: isOwnWorkerProfile({
+        profileId: profile.id,
+        requestedId,
+        loadedOwnProfile,
+        viewerProfile,
+      }),
+      signedIn,
+      viewerRole: normalizeRole(viewerProfile?.role) || normalizeRole(localStorage.getItem('kazix_role')),
+    });
   } catch (err) {
     document.getElementById('pageNotice').textContent = err.message || 'Failed to load worker profile.';
   }
 }
 
-function renderProfile(profile, fundiProfile) {
+function renderProfile(profile, fundiProfile, options = {}) {
+  const {
+    isOwnProfile = false,
+    signedIn = false,
+    viewerRole = '',
+  } = options;
   const name = profile.full_name || 'Unnamed worker';
   const trade = formatTrade(fundiProfile.trade);
   const rateMin = fundiProfile.rate_min;
@@ -291,28 +314,67 @@ function renderProfile(profile, fundiProfile) {
 
   const noticeParts = [
     `${name} has an active KaziX worker profile.`,
-    requestedOwnProfile(profile.id)
+    isOwnProfile
       ? 'This is your public preview.'
       : 'You are viewing the public version of this profile.',
   ];
   document.getElementById('pageNotice').textContent = noticeParts.join(' ');
 
-  const signedIn = Boolean(getAccessToken());
-  const viewerRole = localStorage.getItem('kazix_role');
   if (signedIn) {
     document.getElementById('navCta').textContent = 'My Profile';
     document.getElementById('navCta').href = viewerRole === 'client' ? 'client-profile.html' : 'worker-profile-edit.html';
-    document.getElementById('primaryHeroAction').textContent = requestedOwnProfile(profile.id) ? 'Edit My Profile' : 'Send Message';
-    document.getElementById('primaryHeroAction').href = requestedOwnProfile(profile.id) ? 'worker-profile-edit.html' : 'messages.html';
-    document.getElementById('sidebarPrimaryAction').textContent = requestedOwnProfile(profile.id) ? 'Edit My Profile' : 'Send Message';
-    document.getElementById('sidebarPrimaryAction').href = requestedOwnProfile(profile.id) ? 'worker-profile-edit.html' : 'messages.html';
+    document.getElementById('primaryHeroAction').textContent = isOwnProfile ? 'Edit My Profile' : 'Send Message';
+    document.getElementById('primaryHeroAction').href = isOwnProfile ? 'worker-profile-edit.html' : 'messages.html';
+    document.getElementById('sidebarPrimaryAction').textContent = isOwnProfile ? 'Edit My Profile' : 'Send Message';
+    document.getElementById('sidebarPrimaryAction').href = isOwnProfile ? 'worker-profile-edit.html' : 'messages.html';
   }
 }
 
-function requestedOwnProfile(profileId) {
-  const requestedId = getProfileIdFromQuery();
-  if (!requestedId) return true;
+async function resolveViewerProfile({ signedIn, loadedOwnProfile, loadedProfile }) {
+  const cachedViewer = window.KaziXUser;
+  if (cachedViewer && typeof cachedViewer === 'object' && cachedViewer.id) {
+    return cachedViewer;
+  }
+
+  if (loadedOwnProfile && loadedProfile && loadedProfile.id) {
+    return loadedProfile;
+  }
+
+  if (!signedIn || typeof getMyProfile !== 'function') {
+    return null;
+  }
+
+  try {
+    const data = await getMyProfile();
+    return data?.profile || data || null;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function isOwnWorkerProfile({ profileId, requestedId, loadedOwnProfile, viewerProfile }) {
+  if (!profileId || !viewerProfile || viewerProfile.id !== profileId) {
+    return false;
+  }
+
+  if (!isWorkerRole(viewerProfile.role)) {
+    return false;
+  }
+
+  if (!requestedId) {
+    return loadedOwnProfile;
+  }
+
   return requestedId === profileId;
+}
+
+function isWorkerRole(role) {
+  const normalizedRole = normalizeRole(role);
+  return normalizedRole === 'worker' || normalizedRole === 'fundi';
+}
+
+function normalizeRole(role) {
+  return String(role || '').trim().toLowerCase();
 }
 
 document.addEventListener('DOMContentLoaded', loadWorkerProfile);
