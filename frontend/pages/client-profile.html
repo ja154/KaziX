@@ -271,6 +271,13 @@ const {
 
 function setStatus(message, tone) {
   const el = document.getElementById('profileStatus');
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
   el.className = `notice ${tone}`;
   el.textContent = message;
 }
@@ -336,7 +343,7 @@ async function loadProfile() {
     }
     populateForm(data.profile);
     renderSummary(data.profile);
-    setStatus('Your employer profile is now connected to the backend. Save here anytime to update both your account view and public profile.', 'info');
+    setStatus('', 'info');
   } catch (err) {
     setStatus(err.message || 'Failed to load your profile.', 'error');
   }
