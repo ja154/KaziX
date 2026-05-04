@@ -49,20 +49,23 @@ create policy messages_sender_insert
     or public.is_admin()
   );
 
-create policy messages_participant_update
-  on public.messages
-  for update
-  to authenticated
-  using (
-    sender_id = auth.uid()
-    or recipient_id = auth.uid()
-    or public.is_admin()
-  )
-  with check (
-    sender_id = auth.uid()
-    or recipient_id = auth.uid()
-    or public.is_admin()
-  );
+create or replace function public.mark_message_read(p_message_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.messages
+     set read_at = now()
+   where id = p_message_id
+     and recipient_id = auth.uid()
+     and read_at is null;
+end;
+$$;
+
+revoke all on function public.mark_message_read(uuid) from public;
+grant execute on function public.mark_message_read(uuid) to authenticated, service_role;
 
 create policy messages_service_role_all
   on public.messages

@@ -74,7 +74,7 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser, session: CurrentSess
 
     try:
         # Verify job exists and is open
-        result = client.table("jobs").select("id, title, status, client_id").eq("id", body.job_id).single().execute()
+        result = client.table("jobs").select("id, title, status, client_id").eq("id", body.job_id).maybe_single().execute()
         job = result.data
         
         if not job:
@@ -122,19 +122,28 @@ async def apply_to_job(body: ApplyRequest, user: FundiUser, session: CurrentSess
             )
 
         applicant_name = (applicant_profile or {}).get("full_name") or "A worker"
-        await create_notification(
-            user_id=job["client_id"],
-            type_="application",
-            title="New application received",
-            body=f"{applicant_name} applied to {job['title']}.",
-            action_url=f"/job-applicants.html?job={body.job_id}",
-            metadata={
-                "application_id": application["id"],
-                "job_id": body.job_id,
-                "fundi_id": user.user_id,
-                "submitted_at": datetime.now(timezone.utc).isoformat(),
-            },
-        )
+        try:
+            await create_notification(
+                user_id=job["client_id"],
+                type_="application",
+                title="New application received",
+                body=f"{applicant_name} applied to {job['title']}.",
+                action_url=f"/job-applicants.html?job={body.job_id}",
+                metadata={
+                    "application_id": application["id"],
+                    "job_id": body.job_id,
+                    "fundi_id": user.user_id,
+                    "submitted_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+        except Exception:
+            logger.exception(
+                "Application notification dispatch failed",
+                application_id=application["id"],
+                job_id=body.job_id,
+                fundi_id=user.user_id,
+                client_id=job["client_id"],
+            )
         
         logger.info("Application submitted", job_id=body.job_id, fundi_id=user.user_id)
         return application
@@ -201,7 +210,7 @@ async def update_application(
             client.table("applications")
             .select("fundi_id, status")
             .eq("id", application_id)
-            .single()
+            .maybe_single()
             .execute()
         )
         app_data = app_result.data
@@ -259,7 +268,7 @@ async def update_application_for_client(
             client.table("applications")
             .select("id, job_id, fundi_id, status")
             .eq("id", application_id)
-            .single()
+            .maybe_single()
             .execute()
         )
         app_data = app_result.data
@@ -271,7 +280,7 @@ async def update_application_for_client(
             client.table("jobs")
             .select("id, client_id, status, title")
             .eq("id", app_data["job_id"])
-            .single()
+            .maybe_single()
             .execute()
         )
         job_data = job_result.data
@@ -313,19 +322,29 @@ async def update_application_for_client(
                 "shortlisted": f"Good news — you're shortlisted for {job_data['title']}.",
                 "rejected": f"The client has passed on your application for {job_data['title']}.",
             }
-            await create_notification(
-                user_id=app_data["fundi_id"],
-                type_="application_update",
-                title=titles[body.status],
-                body=bodies[body.status],
-                action_url="/my-applications.html",
-                metadata={
-                    "application_id": application_id,
-                    "job_id": job_data["id"],
-                    "status": body.status,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                },
-            )
+            try:
+                await create_notification(
+                    user_id=app_data["fundi_id"],
+                    type_="application_update",
+                    title=titles[body.status],
+                    body=bodies[body.status],
+                    action_url="/my-applications.html",
+                    metadata={
+                        "application_id": application_id,
+                        "job_id": job_data["id"],
+                        "status": body.status,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
+            except Exception:
+                logger.exception(
+                    "Application status notification dispatch failed",
+                    application_id=application_id,
+                    job_id=job_data["id"],
+                    status=body.status,
+                    client_id=user.user_id,
+                    fundi_id=app_data["fundi_id"],
+                )
 
         logger.info(
             "Client updated application status",

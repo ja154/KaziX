@@ -13,10 +13,15 @@ GET  /v1/auth/bootstrap    → returns profile completion state for OAuth/OTP se
 """
 
 import asyncio
+import base64
+import hashlib
+import json
 import secrets
-import time
+from functools import lru_cache
 from typing import Literal
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
+from cryptography.fernet import Fernet, InvalidToken as FernetInvalidToken
 from fastapi import APIRouter, HTTPException, Request, status
 from gotrue.errors import AuthApiError
 from postgrest.exceptions import APIError as PostgrestAPIError
@@ -42,9 +47,128 @@ except ImportError:
     limiter = None
 
 _OAUTH_STATE_TTL_SECONDS = 600
-_OAUTH_STATE_STORE: dict[str, dict[str, str | float]] = {}
 _EMAIL_REGISTER_SIGNIN_MAX_ATTEMPTS = 5
 _EMAIL_REGISTER_SIGNIN_RETRY_DELAY_SECONDS = 1.0
+_ALLOWED_AUTH_REDIRECT_TARGETS = frozenset(
+    {
+        "complete-registration",
+        "client-dashboard",
+        "fundi-dashboard",
+        "admin-dashboard",
+    }
+)
+_ALLOWED_FRONTEND_REDIRECT_PATHS = frozenset(
+    {
+        "/pages/auth-callback.html",
+        "/pages/reset-password.html",
+    }
+)
+
+
+def _normalize_origin(url: str) -> str | None:
+    try:
+        parsed = urlparse(url)
+    except ValueError:
+        return None
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    return f"{parsed.scheme}://{parsed.netloc}"
+
+
+@lru_cache(maxsize=1)
+def _allowed_frontend_redirect_origins() -> frozenset[str]:
+    origins = {
+        origin
+        for origin in (
+            _normalize_origin(settings.frontend_url),
+            *(_normalize_origin(origin) for origin in settings.cors_origins),
+        )
+        if origin
+    }
+    return frozenset(origins)
+
+
+def _default_auth_callback_url() -> str:
+    return f"{settings.frontend_url.rstrip('/')}/pages/auth-callback.html"
+
+
+def _default_password_reset_url() -> str:
+    return f"{settings.frontend_url.rstrip('/')}/pages/reset-password.html"
+
+
+@lru_cache(maxsize=1)
+def _oauth_state_fernet() -> Fernet:
+    digest = hashlib.sha256(settings.app_secret_key.encode("utf-8")).digest()
+    key = base64.urlsafe_b64encode(digest)
+    return Fernet(key)
+
+
+def _encode_oauth_state(*, code_verifier: str, redirect_to: str) -> str:
+    payload = json.dumps(
+        {
+            "code_verifier": code_verifier,
+            "redirect_to": redirect_to,
+            "nonce": secrets.token_urlsafe(12),
+        }
+    ).encode("utf-8")
+    return _oauth_state_fernet().encrypt(payload).decode("utf-8")
+
+
+def _decode_oauth_state(state: str) -> dict[str, str] | None:
+    try:
+        decrypted = _oauth_state_fernet().decrypt(
+            state.encode("utf-8"),
+            ttl=_OAUTH_STATE_TTL_SECONDS,
+        )
+    except FernetInvalidToken:
+        return None
+
+    try:
+        payload = json.loads(decrypted.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+
+    code_verifier = str(payload.get("code_verifier") or "")
+    redirect_to = str(payload.get("redirect_to") or "")
+    if not code_verifier or not _is_valid_redirect_target(redirect_to):
+        return None
+
+    return {
+        "code_verifier": code_verifier,
+        "redirect_to": redirect_to,
+    }
+
+
+def _replace_url_query_param(url: str, name: str, value: str) -> str:
+    parsed = urlparse(url)
+    query_params = [(key, item_value) for key, item_value in parse_qsl(parsed.query, keep_blank_values=True) if key != name]
+    query_params.append((name, value))
+    return urlunparse(parsed._replace(query=urlencode(query_params)))
+
+
+def _is_valid_redirect_target(redirect_to: str | None) -> bool:
+    if not redirect_to:
+        return False
+    return redirect_to in _ALLOWED_AUTH_REDIRECT_TARGETS
+
+
+def _is_allowed_frontend_redirect_url(redirect_to: str | None) -> bool:
+    if not redirect_to:
+        return True
+
+    try:
+        parsed = urlparse(redirect_to)
+    except ValueError:
+        return False
+
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return False
+
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    if origin not in _allowed_frontend_redirect_origins():
+        return False
+
+    return (parsed.path or "/") in _ALLOWED_FRONTEND_REDIRECT_PATHS
 
 
 # ── Schemas ──────────────────────────────────────────────────
@@ -65,6 +189,13 @@ class SendOTPRequest(BaseModel):
             raise ValueError("should_create_user is only supported for email sign-in.")
         return self
 
+    @field_validator("email_redirect_to")
+    @classmethod
+    def validate_email_redirect_to(cls, value: str | None):
+        if value and not _is_allowed_frontend_redirect_url(value):
+            raise ValueError("Invalid email redirect target.")
+        return value
+
 
 class VerifyOTPRequest(BaseModel):
     phone: str | None = Field(default=None, pattern=r"^\+254[0-9]{9}$")
@@ -82,10 +213,27 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
     redirect_to: str | None = None
 
+    @field_validator("redirect_to")
+    @classmethod
+    def validate_redirect_to(cls, value: str | None):
+        if value and not _is_allowed_frontend_redirect_url(value):
+            raise ValueError("Invalid password recovery redirect target.")
+        return value
+
 
 class ResetPasswordRequest(BaseModel):
-    access_token: str
     new_password: str = Field(min_length=8)
+    token_hash: str | None = Field(default=None, min_length=1)
+    access_token: str | None = Field(default=None, min_length=1)
+    refresh_token: str | None = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def validate_reset_payload(self):
+        if self.token_hash:
+            return self
+        if self.access_token and self.refresh_token:
+            return self
+        raise ValueError("Provide token_hash or both access_token and refresh_token.")
 
 
 class CreateProfileRequest(BaseModel):
@@ -139,6 +287,13 @@ class OAuthStartRequest(BaseModel):
     redirect_to: str = Field(..., min_length=1)
     scopes: str | None = None
 
+    @field_validator("redirect_to")
+    @classmethod
+    def validate_redirect_to(cls, value: str):
+        if not _is_valid_redirect_target(value):
+            raise ValueError("Invalid redirect target.")
+        return value
+
 
 class OAuthStartResponse(BaseModel):
     provider: str
@@ -150,6 +305,13 @@ class OAuthExchangeRequest(BaseModel):
     code: str = Field(..., min_length=1)
     state: str = Field(..., min_length=8)
     redirect_to: str | None = None
+
+    @field_validator("redirect_to")
+    @classmethod
+    def validate_redirect_to(cls, value: str | None):
+        if value and not _is_valid_redirect_target(value):
+            raise ValueError("Invalid redirect target.")
+        return value
 
 
 class BootstrapResponse(BaseModel):
@@ -443,48 +605,6 @@ async def _sign_in_after_email_registration(email: str, password: str):
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Account created, but sign-in failed. Please try signing in.",
     )
-
-
-def _cleanup_oauth_state(now_ts: float) -> None:
-    expired = [
-        state
-        for state, payload in _OAUTH_STATE_STORE.items()
-        if now_ts - float(payload.get("created_at", 0)) > _OAUTH_STATE_TTL_SECONDS
-    ]
-    for state in expired:
-        _OAUTH_STATE_STORE.pop(state, None)
-
-
-def _put_oauth_state(state: str, code_verifier: str) -> None:
-    now_ts = time.time()
-    _cleanup_oauth_state(now_ts)
-    _OAUTH_STATE_STORE[state] = {
-        "code_verifier": code_verifier,
-        "created_at": now_ts,
-    }
-
-
-def _pop_oauth_code_verifier(state: str) -> str | None:
-    now_ts = time.time()
-    _cleanup_oauth_state(now_ts)
-    payload = _OAUTH_STATE_STORE.pop(state, None)
-    if not payload:
-        return None
-    return str(payload.get("code_verifier") or "")
-
-
-def _is_valid_redirect_to(redirect_to: str | None) -> bool:
-    """Validate redirect_to to prevent open redirect attacks."""
-    if not redirect_to:
-        return True  # None is allowed (will use default)
-    # Whitelisted redirect targets from auth bootstrap
-    valid = {
-        "complete-registration",
-        "client-dashboard",
-        "fundi-dashboard",
-        "admin-dashboard",
-    }
-    return redirect_to in valid
 
 
 def _upsert_self_owned_row(
@@ -931,12 +1051,20 @@ async def start_oauth(body: OAuthStartRequest, request: Request):
     except Exception as e:
         logger.debug("Rate limiting check failed (non-blocking)", error=str(e))
     
+    callback_url = _default_auth_callback_url()
+    if not _is_allowed_frontend_redirect_url(callback_url):
+        logger.error("OAuth start callback URL is not in the frontend redirect allowlist", callback_url=callback_url)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OAuth callback is misconfigured. Please contact support.",
+        )
+
     # Build an isolated auth client per request so we can safely capture
     # this login's PKCE code verifier without cross-user collisions.
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
     state = secrets.token_urlsafe(24)
 
-    options = {"redirect_to": body.redirect_to, "query_params": {"state": state}}
+    options = {"redirect_to": callback_url, "query_params": {"state": state}}
     if body.scopes:
         options["scopes"] = body.scopes
 
@@ -952,13 +1080,17 @@ async def start_oauth(body: OAuthStartRequest, request: Request):
         if not code_verifier:
             raise RuntimeError("Missing PKCE code verifier for OAuth start")
 
-        _put_oauth_state(state, str(code_verifier))
+        signed_state = _encode_oauth_state(
+            code_verifier=str(code_verifier),
+            redirect_to=body.redirect_to,
+        )
+        redirect_url = _replace_url_query_param(response.url, "state", signed_state)
         logger.info(
             "OAuth start successful",
             provider=body.provider,
-            state=state[:8],
+            redirect_to=body.redirect_to,
         )
-        return OAuthStartResponse(provider=response.provider, url=response.url, state=state)
+        return OAuthStartResponse(provider=response.provider, url=redirect_url, state=signed_state)
     except AuthApiError as exc:
         logger.error(
             "OAuth start auth error",
@@ -986,8 +1118,8 @@ async def start_oauth(body: OAuthStartRequest, request: Request):
 @router.post("/oauth/exchange", status_code=200)
 async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
     """
-    Exchanges Supabase OAuth callback code for a session using the stored PKCE verifier.
-    Validates redirect_to to prevent open redirect attacks.
+    Exchanges Supabase OAuth callback code for a session using the
+    encrypted PKCE verifier stored inside the signed OAuth state.
     Rate limited to 5 requests per minute per IP.
     """
     # Rate limiting check
@@ -1006,8 +1138,8 @@ async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
         raise
     except Exception as e:
         logger.debug("Rate limiting check failed (non-blocking)", error=str(e))
-    code_verifier = _pop_oauth_code_verifier(body.state)
-    if not code_verifier:
+    oauth_state = _decode_oauth_state(body.state)
+    if not oauth_state:
         logger.warning(
             "OAuth exchange: invalid or expired state",
             state=body.state[:8] if body.state else "missing",
@@ -1017,25 +1149,25 @@ async def exchange_oauth_code(body: OAuthExchangeRequest, request: Request):
             detail="OAuth state is invalid or expired. Please start login again.",
         )
 
-    # Validate redirect_to to prevent open redirect
-    if not _is_valid_redirect_to(body.redirect_to):
+    state_redirect_to = oauth_state["redirect_to"]
+    if body.redirect_to and body.redirect_to != state_redirect_to:
         logger.warning(
-            "OAuth exchange: invalid redirect_to",
+            "OAuth exchange redirect target mismatch",
             state=body.state[:8],
             redirect_to=body.redirect_to,
+            state_redirect_to=state_redirect_to,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid redirect target. Must be a recognized dashboard or flow.",
+            detail="OAuth redirect target did not match the signed login request.",
         )
 
     client = create_client(settings.supabase_url, settings.supabase_anon_key)
     exchange_payload = {
         "auth_code": body.code,
-        "code_verifier": code_verifier,
+        "code_verifier": oauth_state["code_verifier"],
+        "redirect_to": _default_auth_callback_url(),
     }
-    if body.redirect_to:
-        exchange_payload["redirect_to"] = body.redirect_to
 
     try:
         response = client.auth.exchange_code_for_session(exchange_payload)
@@ -1291,7 +1423,12 @@ async def logout(session: CurrentSession):
 @router.post("/email/forgot-password", status_code=200)
 async def forgot_password(payload: ForgotPasswordRequest):
     """Trigger Supabase password recovery email."""
-    redirect_to = payload.redirect_to or f"{settings.frontend_url}/pages/reset-password.html"
+    redirect_to = payload.redirect_to or _default_password_reset_url()
+    if not _is_allowed_frontend_redirect_url(redirect_to):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid password recovery redirect target.",
+        )
     try:
         anon_client = get_anon_client()
         anon_client.auth.reset_password_for_email(
@@ -1313,8 +1450,17 @@ async def reset_password(payload: ResetPasswordRequest):
     """Complete password reset using the recovery token from the email link."""
     try:
         anon_client = get_anon_client()
-        # Authenticate with the recovery access token, then update password
-        anon_client.auth.set_session(payload.access_token, payload.access_token)
+        if payload.token_hash:
+            verify_result = anon_client.auth.verify_otp(
+                {
+                    "token_hash": payload.token_hash,
+                    "type": "recovery",
+                }
+            )
+            if not verify_result or not verify_result.session:
+                raise ValueError("Recovery token verification returned no session")
+        else:
+            anon_client.auth.set_session(payload.access_token, payload.refresh_token)
         result = anon_client.auth.update_user({"password": payload.new_password})
         if not result or not result.user:
             raise ValueError("Update returned no user")

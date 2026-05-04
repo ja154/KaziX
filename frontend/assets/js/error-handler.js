@@ -249,7 +249,7 @@
 
     const containers = formEl.querySelectorAll('.field-error-container.has-error');
     containers.forEach((container) => {
-      const field = container.querySelector('[name], #');
+      const field = container.querySelector('[name], [id]');
       if (field) {
         field.classList.remove('error');
         container.classList.remove('has-error');
@@ -297,10 +297,18 @@
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
+    let isClosing = false;
+    let handleKeydown;
+
     const closeModal = () => {
+      if (isClosing) return;
+      isClosing = true;
+      document.removeEventListener('keydown', handleKeydown);
       overlay.classList.remove('show');
       setTimeout(() => {
-        document.body.removeChild(overlay);
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
         if (options.onClose) options.onClose();
       }, 300);
     };
@@ -314,10 +322,9 @@
     });
 
     // Close on Escape key
-    const handleKeydown = (e) => {
+    handleKeydown = (e) => {
       if (e.key === 'Escape') {
         closeModal();
-        document.removeEventListener('keydown', handleKeydown);
       }
     };
     document.addEventListener('keydown', handleKeydown);

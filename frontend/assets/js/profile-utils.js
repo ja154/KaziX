@@ -787,9 +787,8 @@
       writeCachedNotificationSummary(data);
       applyNotificationSummary(data);
       return data;
-    }).catch((error) => {
+    }).finally(() => {
       notificationSummaryPromise = null;
-      throw error;
     });
 
     return notificationSummaryPromise;
@@ -860,9 +859,8 @@
         window.dispatchEvent(new CustomEvent('kazix:dashboard-state', { detail: data }));
       }
       return data;
-    }).catch((error) => {
+    }).finally(() => {
       dashboardStatePromise = null;
-      throw error;
     });
 
     return dashboardStatePromise;

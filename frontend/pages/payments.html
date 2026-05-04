@@ -303,7 +303,7 @@ function renderPaymentsPage(data) {
         <td style="color:var(--muted);font-size:0.78rem">${paymentsEscape(paymentsDateLabel(transaction.created_at))}</td>
         <td><div class="tx-amount ${meta.amountClass}">${meta.amountPrefix}${paymentsCurrency(transaction.amount)}</div></td>
         <td><span class="tx-status ${meta.statusClass}">${paymentsEscape(meta.statusLabel)}</span></td>
-        <td><button class="tx-receipt" onclick="showReceipt('${paymentsEscape(transaction.mpesa_ref || 'Pending')}', ${Number(transaction.amount || 0)})">📄 Receipt</button></td>
+        <td><button class="tx-receipt" data-ref="${paymentsEscape(transaction.mpesa_ref || 'Pending')}" data-amount="${Number(transaction.amount || 0)}" onclick="showReceipt(this.dataset.ref, Number(this.dataset.amount || 0))">📄 Receipt</button></td>
       </tr>
     `;
   }).join('');

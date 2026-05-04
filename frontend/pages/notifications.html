@@ -458,10 +458,15 @@ function bindEvents() {
 
     const action = target.dataset.action;
     if (action === 'open' && !notification.read) {
+      event.preventDefault();
+      const href = target.getAttribute('href');
       try {
         await updateNotificationRead(notificationId, true);
       } catch (_error) {
         // Let navigation continue even if the read sync fails.
+      }
+      if (href) {
+        window.location.assign(href);
       }
       return;
     }
