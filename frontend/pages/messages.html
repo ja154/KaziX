@@ -590,6 +590,20 @@ async function openThread(context, options = {}) {
 
   activeThread = payload?.thread || null;
   threadMessages = Array.isArray(payload?.messages) ? payload.messages : [];
+  if (activeThread) {
+    const activeKey = threadKey(activeThread);
+    let foundThread = false;
+    threads = threads.map((thread) => {
+      if (threadKey(thread) !== activeKey) {
+        return thread;
+      }
+      foundThread = true;
+      return { ...thread, ...activeThread, unread_count: 0 };
+    });
+    if (!foundThread) {
+      threads.unshift({ ...activeThread, unread_count: 0 });
+    }
+  }
   if (activeThread && options.syncUrl !== false) {
     syncThreadQuery(activeThread);
   }
@@ -597,6 +611,10 @@ async function openThread(context, options = {}) {
   renderChatHeader();
   renderMessages();
   setComposerStatus('');
+  if (window.KazixProfile) {
+    window.KazixProfile.clearNotificationSummaryCache();
+    window.KazixProfile.hydrateNotificationSummary({ silent: true, force: true });
+  }
 }
 
 async function sendMessage() {

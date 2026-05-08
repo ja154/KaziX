@@ -13,17 +13,36 @@ class NotificationUpdateRequest(BaseModel):
     read: bool = True
 
 
-def _build_notification_summary(rows: list[dict]) -> dict:
+def _build_notification_summary(rows: list[dict], unread_messages: int | None = None) -> dict:
     unread_rows = [row for row in rows if not row.get("read")]
-    unread_messages = [
+    fallback_unread_messages = [
         row for row in unread_rows
         if "message" in str(row.get("type") or "").lower()
     ]
     return {
         "total": len(rows),
         "unread": len(unread_rows),
-        "unread_messages": len(unread_messages),
+        "unread_messages": len(fallback_unread_messages) if unread_messages is None else unread_messages,
     }
+
+
+def _count_unread_messages(admin, user_id: str) -> int | None:
+    try:
+        result = (
+            admin.table("messages")
+            .select("id, read_at")
+            .eq("recipient_id", user_id)
+            .execute()
+        )
+        rows = result.data or []
+        return len([row for row in rows if not row.get("read_at")])
+    except Exception as exc:
+        logger.warning(
+            "Falling back to message notifications for unread inbox count",
+            user_id=user_id,
+            error=str(exc),
+        )
+        return None
 
 
 @router.get("/")
@@ -54,7 +73,8 @@ async def notification_summary(user: CurrentUser):
             .execute()
         )
         rows = result.data or []
-        return _build_notification_summary(rows)
+        unread_messages = _count_unread_messages(admin, user.user_id)
+        return _build_notification_summary(rows, unread_messages=unread_messages)
     except Exception as exc:
         logger.error("Failed to fetch notification summary", user_id=user.user_id, error=str(exc))
         raise HTTPException(status_code=500, detail="Failed to fetch notification summary.")

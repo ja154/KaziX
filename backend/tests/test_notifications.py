@@ -145,7 +145,12 @@ async def test_notification_summary_counts_unread_and_message_notifications(monk
                 {"id": "n-2", "user_id": "client-1", "type": "application", "read": False, "created_at": "2026-05-01T09:00:00Z"},
                 {"id": "n-3", "user_id": "client-1", "type": "message", "read": True, "created_at": "2026-05-01T08:00:00Z"},
                 {"id": "n-4", "user_id": "other-user", "type": "message", "read": False, "created_at": "2026-05-01T07:00:00Z"},
-            ]
+            ],
+            "messages": [
+                {"id": "m-1", "recipient_id": "client-1", "read_at": None, "created_at": "2026-05-01T10:01:00Z"},
+                {"id": "m-2", "recipient_id": "client-1", "read_at": "2026-05-01T10:02:00Z", "created_at": "2026-05-01T10:00:00Z"},
+                {"id": "m-3", "recipient_id": "other-user", "read_at": None, "created_at": "2026-05-01T09:59:00Z"},
+            ],
         }
     )
 

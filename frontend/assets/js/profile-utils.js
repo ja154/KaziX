@@ -719,6 +719,15 @@
     });
   }
 
+  function setNavCount(href, count) {
+    var normalized = Number(count);
+    if (!Number.isFinite(normalized) || normalized <= 0) {
+      clearNavBadge(href);
+      return;
+    }
+    setNavBadge(href, String(normalized));
+  }
+
   function clearNavBadge(href) {
     findNavLinks(href).forEach(function (link) {
       var badge = link.querySelector('.ni-badge');
@@ -753,6 +762,8 @@
     } else {
       clearNavBadge('notifications.html');
     }
+
+    setNavCount('messages.html', summary?.unread_messages);
 
     return {
       total: Math.max(0, Number(summary?.total) || 0),
@@ -806,6 +817,10 @@
 
   function syncNotificationSummaryFromNotifications(notifications) {
     const summary = summarizeNotifications(notifications);
+    const cached = readCachedNotificationSummary(NOTIFICATION_SUMMARY_MAX_AGE_MS);
+    if (cached && cached.unread_messages !== undefined) {
+      summary.unread_messages = Math.max(0, Number(cached.unread_messages) || 0);
+    }
     writeCachedNotificationSummary(summary);
     return applyNotificationSummary(summary);
   }
@@ -814,19 +829,25 @@
     if (!state || !state.role) return;
 
     if (state.role === 'client') {
-      setNavBadge('my-jobs.html', state.nav?.jobs ?? 0);
-      setNavBadge('job-applicants.html', state.nav?.applications ?? 0);
-      setNavBadge('my-hires.html', state.nav?.hires ?? 0);
-      clearNavBadge('saved-workers.html');
-      clearNavBadge('messages.html');
+      setNavCount('my-jobs.html', state.nav?.jobs ?? 0);
+      setNavCount('job-applicants.html', state.nav?.applications ?? 0);
+      setNavCount('my-hires.html', state.nav?.hires ?? 0);
+      if (state.nav?.saved_workers !== null && state.nav?.saved_workers !== undefined) {
+        setNavCount('saved-workers.html', state.nav.saved_workers);
+      }
+      if (state.nav?.messages !== null && state.nav?.messages !== undefined) {
+        setNavCount('messages.html', state.nav.messages);
+      }
       return;
     }
 
     if (state.role === 'fundi') {
-      setNavBadge('worker-jobs.html', state.nav?.find_jobs ?? 0);
-      setNavBadge('my-applications.html', state.nav?.applications ?? 0);
-      setNavBadge('worker-hires.html', state.nav?.contracts ?? 0);
-      clearNavBadge('messages.html');
+      setNavCount('worker-jobs.html', state.nav?.find_jobs ?? 0);
+      setNavCount('my-applications.html', state.nav?.applications ?? 0);
+      setNavCount('worker-hires.html', state.nav?.contracts ?? 0);
+      if (state.nav?.messages !== null && state.nav?.messages !== undefined) {
+        setNavCount('messages.html', state.nav.messages);
+      }
     }
   }
 
@@ -957,6 +978,7 @@
     clearNotificationSummaryCache,
     buildMessagesPath,
     buildPagePath,
+    setNavCount,
     setHtml,
     setText,
     show,

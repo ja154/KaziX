@@ -432,9 +432,9 @@ function countActiveApplicants() {
 
 function updateLocalBadges() {
   const count = countActiveApplicants();
-  document.querySelectorAll('a[href="job-applicants.html"] .ni-badge').forEach((badge) => {
-    badge.textContent = count;
-  });
+  if (window.KazixProfile && typeof window.KazixProfile.setNavCount === 'function') {
+    window.KazixProfile.setNavCount('job-applicants.html', count);
+  }
 }
 
 function setPageMessage(message, tone) {

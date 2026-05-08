@@ -259,9 +259,10 @@ function getVisibleApplications() {
 }
 
 function updateLocalBadge() {
-  document.querySelectorAll('a[href="my-applications.html"] .ni-badge').forEach((badge) => {
-    badge.textContent = String(allApplications.filter((application) => application.status !== 'withdrawn').length);
-  });
+  const count = allApplications.filter((application) => application.status !== 'withdrawn').length;
+  if (window.KazixProfile && typeof window.KazixProfile.setNavCount === 'function') {
+    window.KazixProfile.setNavCount('my-applications.html', count);
+  }
 }
 
 function renderTabs() {

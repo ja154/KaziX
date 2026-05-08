@@ -119,6 +119,9 @@
       if (typeof helpers.hydrateDashboardState === "function") {
         helpers.hydrateDashboardState({ silent: true });
       }
+      if (typeof helpers.hydrateNotificationSummary === "function") {
+        helpers.hydrateNotificationSummary({ silent: true });
+      }
 
       if (options.updateDocumentTitle !== false) {
         document.title = role === "fundi"
