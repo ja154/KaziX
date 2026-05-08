@@ -99,6 +99,20 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 
 @media(max-width:600px){.detail-grid{grid-template-columns:1fr}.nav-links{display:none}}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem("kazix_access_token")) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace("login.html?next=" + next);
+    return;
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    var s = document.getElementById("auth-gate-style");
+    if (s) s.remove();
+  });
+})();
+</script>
 </head>
 <body>
 

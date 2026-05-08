@@ -93,118 +93,9 @@
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>KX-TX-2059</td>
-              <td>Homeowner account</td>
-              <td>James Kamau</td>
-              <td>CCTV installation - Kilimani office</td>
-              <td>32,000</td>
-              <td><span class="payment-type">Escrow</span></td>
-              <td><span class="status-chip held">Held</span></td>
-              <td>Mar 18, 11:22</td>
-              <td><div class="row-actions"><button class="row-action-btn release">Release</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2058</td>
-              <td>Mercy Wairimu</td>
-              <td>Peter Otieno</td>
-              <td>Roof leak repair - stage 2</td>
-              <td>18,500</td>
-              <td><span class="payment-type">Release</span></td>
-              <td><span class="status-chip completed">Completed</span></td>
-              <td>Mar 18, 10:49</td>
-              <td><div class="row-actions"><button class="row-action-btn refund">Refund</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2054</td>
-              <td>Lydia Njeri</td>
-              <td>Samuel Mwangi</td>
-              <td>Apartment repaint - living room</td>
-              <td>21,000</td>
-              <td><span class="payment-type">Escrow</span></td>
-              <td><span class="status-chip held">Held</span></td>
-              <td>Mar 18, 09:18</td>
-              <td><div class="row-actions"><button class="row-action-btn release">Release</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2050</td>
-              <td>Brian Muli</td>
-              <td>Rose Akinyi</td>
-              <td>Kitchen sink and piping replacement</td>
-              <td>9,800</td>
-              <td><span class="payment-type">Escrow</span></td>
-              <td><span class="status-chip pending">Pending</span></td>
-              <td>Mar 17, 17:44</td>
-              <td><div class="row-actions"><button class="row-action-btn muted">Review</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2047</td>
-              <td>Caroline Kiptoo</td>
-              <td>Faith Njeri</td>
-              <td>CCTV cabling and DVR setup</td>
-              <td>27,000</td>
-              <td><span class="payment-type">Release</span></td>
-              <td><span class="status-chip completed">Completed</span></td>
-              <td>Mar 17, 16:10</td>
-              <td><div class="row-actions"><button class="row-action-btn refund">Refund</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2042</td>
-              <td>Tom Maina</td>
-              <td>David Mutua</td>
-              <td>Warehouse electrical rewiring</td>
-              <td>44,000</td>
-              <td><span class="payment-type">Refund</span></td>
-              <td><span class="status-chip refunded">Refunded</span></td>
-              <td>Mar 16, 14:28</td>
-              <td><div class="row-actions"><button class="row-action-btn muted">View</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2038</td>
-              <td>Kelvin Otieno</td>
-              <td>Mary Wanjiku</td>
-              <td>Custom shelving installation</td>
-              <td>15,600</td>
-              <td><span class="payment-type">Escrow</span></td>
-              <td><span class="status-chip held">Held</span></td>
-              <td>Mar 16, 11:03</td>
-              <td><div class="row-actions"><button class="row-action-btn release">Release</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2033</td>
-              <td>Naomi Kariuki</td>
-              <td>Kevin Mutua</td>
-              <td>Solar backup configuration</td>
-              <td>38,500</td>
-              <td><span class="payment-type">Release</span></td>
-              <td><span class="status-chip completed">Completed</span></td>
-              <td>Mar 15, 15:42</td>
-              <td><div class="row-actions"><button class="row-action-btn refund">Refund</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2029</td>
-              <td>Rachel Atieno</td>
-              <td>Winnie Njeri</td>
-              <td>Office partition paint works</td>
-              <td>24,700</td>
-              <td><span class="payment-type">Escrow</span></td>
-              <td><span class="status-chip pending">Pending</span></td>
-              <td>Mar 15, 09:05</td>
-              <td><div class="row-actions"><button class="row-action-btn muted">Review</button></div></td>
-            </tr>
-            <tr>
-              <td>KX-TX-2026</td>
-              <td>Grace Wambui</td>
-              <td>Patricia Nyongesa</td>
-              <td>Exterior painting - townhouse</td>
-              <td>29,000</td>
-              <td><span class="payment-type">Refund</span></td>
-              <td><span class="status-chip refunded">Refunded</span></td>
-              <td>Mar 14, 18:21</td>
-              <td><div class="row-actions"><button class="row-action-btn muted">View</button></div></td>
-            </tr>
-          </tbody>
+          <tbody id="paymentsTableBody">
+  <tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">Loading transactions…</td></tr>
+</tbody>
         </table>
       </div>
 
@@ -225,5 +116,35 @@
 
 <script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/admin-shell.js" defer></script>
+<script>
+(async function loadAdminPayments() {
+  var helpers = window.KazixProfile;
+  var tbody = document.getElementById('paymentsTableBody');
+  if (!helpers || !tbody) return;
+  try {
+    var data = await helpers.requestJson('/v1/admin/payments', { auth: true });
+    var rows = Array.isArray(data) ? data : (data.payments || data.results || []);
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#888">No transactions yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(function(p) {
+      var e = helpers.escapeHtml;
+      return '<tr>'
+        + '<td>' + e(p.id ? String(p.id).slice(0,8).toUpperCase() : '—') + '</td>'
+        + '<td>' + e(p.payer_name || p.client_name || '—') + '</td>'
+        + '<td>' + e(p.payee_name || p.worker_name || '—') + '</td>'
+        + '<td>' + e(p.job_title || '—') + '</td>'
+        + '<td>' + e(helpers.formatCurrency ? helpers.formatCurrency(p.amount) : ('KES ' + (p.amount || 0))) + '</td>'
+        + '<td>' + e(helpers.formatCurrency ? helpers.formatCurrency(p.platform_fee) : '') + '</td>'
+        + '<td><span style="background:#E8F5E920;color:#1B5E20;padding:.15rem .5rem;border-radius:4px;font-size:.8rem">' + e(p.status || 'completed') + '</span></td>'
+        + '<td>' + e(p.created_at ? new Date(p.created_at).toLocaleDateString() : '—') + '</td>'
+        + '</tr>';
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:#B71C1C">Could not load payments. Refresh to retry.</td></tr>';
+  }
+})();
+</script>
 </body>
 </html>

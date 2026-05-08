@@ -136,137 +136,9 @@
     <div class="contracts">
 
       <!-- Contract 1: In Progress -->
-      <div class="contract-card" style="animation-delay:0.05s">
-        <div class="cc-header">
-          <div class="cc-avatar">🎨</div>
-          <div class="cc-worker-info">
-            <div class="cc-worker-name">Mary Akinyi</div>
-            <div class="cc-trade">Painter</div>
-            <div class="cc-loc">📍 Embakasi · Started yesterday</div>
-          </div>
-          <div class="cc-status-block">
-            <span class="cc-status cs-active">● In Progress</span>
-            <div class="cc-ref">Booking #KX-2024-0192</div>
-          </div>
-        </div>
-        <div class="cc-body">
-          <div class="cc-job-title">Paint bedroom + living room (3-bed house) — Kilimani</div>
-
-          <!-- TIMELINE -->
-          <div class="timeline" style="margin-bottom:1rem">
-            <div class="tl-step done"><div class="tl-dot done">✓</div><div class="tl-label">Booked</div></div>
-            <div class="tl-step done"><div class="tl-dot done">✓</div><div class="tl-label">Paid</div></div>
-            <div class="tl-step active"><div class="tl-dot active">●</div><div class="tl-label">Working</div></div>
-            <div class="tl-step pending"><div class="tl-dot pending"></div><div class="tl-label">Complete</div></div>
-            <div class="tl-step pending"><div class="tl-dot pending"></div><div class="tl-label">Reviewed</div></div>
-          </div>
-
-          <div class="cc-details">
-            <div class="ccd"><div class="ccd-val">KES 3,200</div><div class="ccd-label">Agreed rate</div></div>
-            <div class="ccd"><div class="ccd-val">2–3 days</div><div class="ccd-label">Estimated duration</div></div>
-            <div class="ccd"><div class="ccd-val">4.7 ★</div><div class="ccd-label">Worker rating</div></div>
-            <div class="ccd"><div class="ccd-val">Day 1</div><div class="ccd-label">Progress</div></div>
-          </div>
-
-          <div class="escrow-bar">
-            <div class="escrow-header">
-              <div class="escrow-label">🔒 M-Pesa Escrow</div>
-              <div class="escrow-amount">KES 3,200 held securely</div>
-            </div>
-            <div class="escrow-track"><div class="escrow-fill" style="width:100%"></div></div>
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div class="escrow-note">Payment is locked until you confirm the job is done</div>
-              <div class="escrow-release-timer">⏰ Auto-releases in 48h after completion</div>
-            </div>
-          </div>
-
-          <div class="cc-actions">
-            <button class="cc-btn ccb-complete" onclick="confirmComplete()">✅ Mark Job Complete & Release Payment</button>
-            <a href="messages.html" class="cc-btn ccb-msg">💬 Message Mary</a>
-            <a href="dispute.html" class="cc-btn ccb-dispute">⚠ Raise Dispute</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contract 2: Awaiting confirmation -->
-      <div class="contract-card" style="animation-delay:0.1s">
-        <div class="cc-header">
-          <div class="cc-avatar">⚡</div>
-          <div class="cc-worker-info">
-            <div class="cc-worker-name">Faith Njeri</div>
-            <div class="cc-trade">Electrician · KPLC Licensed</div>
-            <div class="cc-loc">📍 Kasarani · Hired today · Starts Thursday</div>
-          </div>
-          <div class="cc-status-block">
-            <span class="cc-status cs-pending">Confirmed · Awaiting Start</span>
-            <div class="cc-ref">Booking #KX-2024-0198</div>
-          </div>
-        </div>
-        <div class="cc-body">
-          <div class="cc-job-title">Install CCTV cameras (4 units) — Kilimani compound</div>
-
-          <div class="timeline" style="margin-bottom:1rem">
-            <div class="tl-step done"><div class="tl-dot done">✓</div><div class="tl-label">Booked</div></div>
-            <div class="tl-step done"><div class="tl-dot done">✓</div><div class="tl-label">Paid</div></div>
-            <div class="tl-step active"><div class="tl-dot active">📅</div><div class="tl-label">Thu 9AM</div></div>
-            <div class="tl-step pending"><div class="tl-dot pending"></div><div class="tl-label">Complete</div></div>
-            <div class="tl-step pending"><div class="tl-dot pending"></div><div class="tl-label">Reviewed</div></div>
-          </div>
-
-          <div class="cc-details">
-            <div class="ccd"><div class="ccd-val">KES 4,500</div><div class="ccd-label">Agreed rate</div></div>
-            <div class="ccd"><div class="ccd-val">1 day</div><div class="ccd-label">Estimated</div></div>
-            <div class="ccd"><div class="ccd-val">4.8 ★</div><div class="ccd-label">Worker rating</div></div>
-            <div class="ccd"><div class="ccd-val">Thu 9AM</div><div class="ccd-label">Starts</div></div>
-          </div>
-
-          <div class="escrow-bar">
-            <div class="escrow-header">
-              <div class="escrow-label">🔒 M-Pesa Escrow</div>
-              <div class="escrow-amount">KES 4,500 held securely</div>
-            </div>
-            <div class="escrow-track"><div class="escrow-fill" style="width:100%"></div></div>
-            <div class="escrow-note">M-Pesa receipt: QST7GHJK2P · Paid today 14:32</div>
-          </div>
-
-          <div class="cc-actions">
-            <a href="messages.html" class="cc-btn ccb-msg">💬 Message Faith</a>
-            <button class="cc-btn ccb-dispute" style="color:var(--muted);border-color:var(--border)">📅 Reschedule</button>
-            <button class="cc-btn ccb-dispute">✕ Cancel Booking</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contract 3: Completed — needs review -->
-      <div class="contract-card" style="animation-delay:0.15s">
-        <div class="cc-header">
-          <div class="cc-avatar">🪚</div>
-          <div class="cc-worker-info">
-            <div class="cc-worker-name">Peter Odhiambo</div>
-            <div class="cc-trade">Carpenter</div>
-            <div class="cc-loc">📍 Kibera · Completed 3 days ago</div>
-          </div>
-          <div class="cc-status-block">
-            <span class="cc-status cs-done">Completed</span>
-            <div class="cc-ref">Booking #KX-2024-0181</div>
-          </div>
-        </div>
-        <div class="cc-body">
-          <div class="cc-job-title">Repair wooden fence — backyard</div>
-          <div class="cc-details">
-            <div class="ccd"><div class="ccd-val">KES 3,500</div><div class="ccd-label">Paid out</div></div>
-            <div class="ccd"><div class="ccd-val">1 day</div><div class="ccd-label">Duration</div></div>
-            <div class="ccd"><div class="ccd-val">4.8 ★</div><div class="ccd-label">Worker rating</div></div>
-            <div class="ccd"><div class="ccd-val">3 days ago</div><div class="ccd-label">Completed</div></div>
-          </div>
-          <div style="background:rgba(27,107,58,0.08);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:0.75rem 1rem;font-size:0.78rem;color:var(--green);margin-bottom:1rem;display:flex;gap:0.5rem;align-items:center">
-            ✅ <div>KES 3,500 paid to Peter's M-Pesa · Receipt: QHJ4MKPL8R · 3 days ago</div>
-          </div>
-          <div class="cc-actions">
-            <button class="cc-btn ccb-review" onclick="alert('Review modal would open here')">⭐ Leave a Review for Peter</button>
-            <button class="cc-btn ccb-rehire">🔁 Hire Peter Again</button>
-            <a href="payments.html" class="cc-btn ccb-rehire">📄 View Receipt</a>
-          </div>
+      <div id="hiresContainer" style="display:grid;gap:1rem;padding-top:.5rem">
+        <div style="padding:2rem;text-align:center;color:#888;font-family:'DM Sans',sans-serif">
+          Loading your hires…
         </div>
       </div>
 
@@ -304,5 +176,42 @@ function confirmComplete() {
 
 <script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
+
+<script>
+(async function loadHires() {
+  var helpers = window.KazixProfile;
+  var container = document.getElementById('hiresContainer');
+  if (!helpers || !container) return;
+
+  try {
+    var data = await helpers.requestJson('/v1/bookings?role=client&status=active', { auth: true });
+    var bookings = Array.isArray(data) ? data : (data.bookings || data.results || []);
+
+    if (!bookings.length) {
+      container.innerHTML = '<p style="padding:2rem;text-align:center;color:#888;font-family:'DM Sans',sans-serif">You haven't hired anyone yet. <a href="find-workers.html" style="color:#F5A623;font-weight:700">Find a fundi →</a></p>';
+      return;
+    }
+
+    container.innerHTML = bookings.map(function(b) {
+      var name = helpers.escapeHtml(b.worker_name || b.fundi_name || 'Fundi');
+      var job  = helpers.escapeHtml(b.job_title || 'Job');
+      var status = helpers.escapeHtml(b.status || 'active');
+      var amount = b.agreed_rate ? helpers.formatCurrency(b.agreed_rate) : '';
+      var statusColor = status === 'completed' ? '#1B6B3A' : status === 'disputed' ? '#B71C1C' : '#F5A623';
+      return '<div class="contract-card" style="padding:1.25rem">'
+        + '<div class="cc-worker-name">' + name + '</div>'
+        + '<div style="font-size:.9rem;color:#555;margin:.25rem 0">' + job + '</div>'
+        + (amount ? '<div style="font-size:.9rem;color:#555">' + amount + '</div>' : '')
+        + '<div style="margin-top:.5rem"><span style="background:' + statusColor + '20;color:' + statusColor + ';padding:.2rem .6rem;border-radius:999px;font-size:.8rem;font-weight:600">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span></div>'
+        + '<div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">'
+        + (b.worker_id ? '<a href="messages.html" class="cc-btn" style="font-size:.85rem;padding:.4rem .75rem">💬 Message</a>' : '')
+        + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="background:#FDECEA;color:#B71C1C;padding:1rem;border-radius:8px;font-family:'DM Sans',sans-serif">Could not load your hires. Please refresh or sign in again.</div>';
+  }
+})();
+</script>
 </body>
 </html>

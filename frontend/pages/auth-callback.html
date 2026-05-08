@@ -164,7 +164,6 @@ async function getCurrentSession() {
 }
 
 async function waitForSession(timeoutMs = 5000) {
-  console.log('[waitForSession] Waiting for session with timeout:', timeoutMs);
   return new Promise((resolve, reject) => {
     let settled = false;
     let subscription;
@@ -178,11 +177,9 @@ async function waitForSession(timeoutMs = 5000) {
     };
 
     const timer = setTimeout(async () => {
-      console.log('[waitForSession] Timeout reached');
       try {
         const session = await getCurrentSession();
         if (session) {
-          console.log('[waitForSession] Found session on timeout');
           finish(resolve, session);
           return;
         }
@@ -195,7 +192,6 @@ async function waitForSession(timeoutMs = 5000) {
     }, timeoutMs);
 
     const { data } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-      console.log('[waitForSession] onAuthStateChange event:', _event, session?.user?.email);
       if (session) {
         finish(resolve, session);
       }
@@ -205,11 +201,9 @@ async function waitForSession(timeoutMs = 5000) {
 }
 
 async function resolveSessionFromCallback() {
-  console.log('[resolveSessionFromCallback] Starting...');
   const accessToken = getCallbackParam('access_token');
   const refreshToken = getCallbackParam('refresh_token');
   if (accessToken && refreshToken) {
-    console.log('[resolveSessionFromCallback] Path 1: Using access/refresh tokens');
     const { data, error } = await supabaseClient.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -221,7 +215,6 @@ async function resolveSessionFromCallback() {
 
   const code = initialSearchParams.get('code');
   if (code) {
-    console.log('[resolveSessionFromCallback] Path 2: Using OAuth code');
     const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
     if (error) throw error;
     if (!data?.session) throw new Error('No session returned from the sign-in code.');
@@ -231,7 +224,6 @@ async function resolveSessionFromCallback() {
   const tokenHash = getCallbackParam('token_hash');
   const type = getCallbackParam('type');
   if (tokenHash && type) {
-    console.log('[resolveSessionFromCallback] Path 3: Magic link (token_hash + type)');
     const { data, error } = await supabaseClient.auth.verifyOtp({
       token_hash: tokenHash,
       type,
@@ -241,10 +233,8 @@ async function resolveSessionFromCallback() {
     return data.session;
   }
 
-  console.log('[resolveSessionFromCallback] Checking storage...');
   const sessionFromStorage = await getCurrentSession();
   if (sessionFromStorage) return sessionFromStorage;
-  console.log('[resolveSessionFromCallback] No session found, waiting...');
   return waitForSession();
 }
 
@@ -276,16 +266,13 @@ function persistSession(session) {
 }
 
 async function bootstrapSession(session) {
-  console.log('[bootstrapSession] Fetching from:', `${API_BASE}/v1/auth/bootstrap`);
   const resp = await fetch(`${API_BASE}/v1/auth/bootstrap`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
   });
-  console.log('[bootstrapSession] Response status:', resp.status, resp.statusText);
   const data = await readApiResponse(resp);
-  console.log('[bootstrapSession] Response data:', data);
   if (!resp.ok) throw new Error(data?.detail || 'Could not finish sign-in.');
   return data;
 }
@@ -429,15 +416,11 @@ async function handleCallback() {
 
   // ── 2. No error — recover the session using the current v2 APIs ──────────
   try {
-    console.log('[Auth Callback] Starting session resolution...');
     const session = await resolveSessionFromCallback();
     if (!session) throw new Error('No session returned. The link may be invalid or already used.');
-    console.log('[Auth Callback] Session resolved:', session.user?.email);
     persistSession(session);
     
-    console.log('[Auth Callback] Calling bootstrap endpoint...');
     const bootstrap = await bootstrapSession(session);
-    console.log('[Auth Callback] Bootstrap response:', bootstrap);
     const nextPage = mapRedirectToPage(bootstrap.redirect_to, authFlow);
 
     localStorage.setItem('kazix_magic_link_complete', '1');
@@ -451,27 +434,21 @@ async function handleCallback() {
 
     // ── TRY METHOD 1: Direct window.opener handoff (email links open new tabs) ──
     // This is the preferred method for magic links because Supabase redirects open new tabs
-    console.log('[Auth Callback] Method 1: Attempting window.opener handoff...');
     if (handOffViaWindowOpener(session, bootstrap, authFlow)) {
-      console.log('[Auth Callback] ✓ Handoff via window.opener successful');
       return;
     }
 
     // ── FALLBACK METHOD 2: localStorage heartbeat (for same-tab flows or if opener unavailable) ──
-    console.log('[Auth Callback] Method 1 failed, trying Method 2: localStorage heartbeat...');
     if (shouldHandOffToOriginalTab(authFlow)) {
-      console.log('[Auth Callback] ✓ Handing off to original tab');
       handOffToOriginalTab(nextPage, authFlow);
       return;
     }
 
     // ── FALLBACK METHOD 3: Direct redirect (no original tab, so redirect here) ──
-    console.log('[Auth Callback] Method 2 failed, using Method 3: Direct redirect to', nextPage);
     setTimeout(() => { window.location.href = nextPage; }, 800);
 
   } catch (err) {
     console.error('[Auth Callback] ✗ Error during callback:', err.message, err);
-    console.log('[Auth Callback] Stack:', err.stack);
     showError(toDisplayError(err, 'Unable to confirm your email. Please try again.'));
   }
 }

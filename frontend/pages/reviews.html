@@ -356,7 +356,11 @@ function submitReview() {
   closeReviewModal();
   document.getElementById('tab-pending').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.875rem">✅ All reviews submitted — none pending</div>';
   document.querySelector('.rtab:last-child .tc').textContent = '0';
-  alert('✅ Review submitted! Thank you — your feedback helps the KaziX community.');
+  
+  var successMsg = document.getElementById('reviewSuccess') || (function(){ var d = document.createElement('div'); d.id='reviewSuccess'; d.style.cssText='background:#E8F5E9;color:#1B5E20;padding:1rem;border-radius:8px;margin-top:1rem;font-weight:600'; document.querySelector('form').after(d); return d; })();
+  successMsg.textContent = '✅ Review submitted! Thank you — your feedback helps the KaziX community.';
+  successMsg.style.display = 'block';
+  document.querySelector('form').reset();
 }
 </script>
 

@@ -155,7 +155,7 @@
         <div class="table-title">Payout History</div>
         <div class="table-controls">
           <select class="sel"><option>All payouts</option><option>This month</option><option>Last 3 months</option></select>
-          <button class="export-btn" onclick="alert('PDF statement downloaded')">⬇ Export PDF</button>
+          <button class="export-btn" disabled title="Coming soon" style="opacity:.5;cursor:not-allowed">⬇ Export PDF</button>
         </div>
       </div>
       <table class="tx-table">
@@ -215,7 +215,7 @@
 </div>
 <script>
 function setPeriod(el){document.querySelectorAll('.period-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
-document.querySelectorAll('.receipt-btn').forEach(b=>b.addEventListener('click',()=>alert('Receipt downloaded')))
+document.querySelectorAll('.receipt-btn').forEach(b=>{b.disabled=true;b.title='Coming soon';b.style.opacity='.5';b.style.cursor='not-allowed';})
 document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventListener('click',function(){if(this.textContent==='←'||this.textContent==='→')return;document.querySelectorAll('.pg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')})})
 </script>
 
@@ -239,5 +239,16 @@ document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventL
 
 <script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
+<script>
+window.addEventListener('unhandledrejection', function(e) {
+  if (document.getElementById('kazix-load-error')) return;
+  var b = document.createElement('div');
+  b.id = 'kazix-load-error';
+  b.style.cssText = 'background:#FDECEA;color:#B71C1C;padding:1rem 1.25rem;border-radius:8px;margin:1rem;font-family:inherit';
+  b.textContent = 'Could not load your data. Please refresh the page or sign in again.';
+  var main = document.querySelector('main') || document.body;
+  main.prepend(b);
+});
+</script>
 </body>
 </html>

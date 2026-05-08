@@ -494,6 +494,21 @@ const REGISTER_AUTH_STORAGE_KEYS = [
 const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
 let refreshSessionPromise = null;
 
+
+function showRegError(message) {
+  var el = document.getElementById('regInlineError');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'regInlineError';
+    el.style.cssText = 'background:#FDECEA;color:#B71C1C;padding:.85rem 1rem;border-radius:8px;margin-bottom:1rem;font-family:inherit;display:none';
+    var form = document.querySelector('form') || document.body;
+    form.prepend(el);
+  }
+  el.textContent = message;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
   if (message === 'Failed to fetch') {
@@ -833,7 +848,6 @@ async function retryRegistrationSignin(email, password) {
   for (let attempt = 1; attempt <= 5; attempt += 1) {
     if (attempt > 1) {
       const delay = Math.min(1000 * Math.pow(1.5, attempt - 2), 5000);
-      console.log(`[retryRegistrationSignin] Attempt ${attempt} after ${delay}ms...`);
       await wait(delay);
     }
 
@@ -965,7 +979,7 @@ function restoreRegFormData() {
 function continueRegSetup() {
   const error = validateStep2();
   if (error) {
-    alert(error);
+    showRegError(typeof error === "string" ? error : (error && error.message) || "An error occurred");
     return;
   }
   saveRegFormData();
@@ -976,13 +990,13 @@ function continueRegSetup() {
 async function createRegAccount() {
   const detailError = validateStep2();
   if (detailError) {
-    alert(detailError);
+    showRegError(detailError);
     goRStep(2);
     return;
   }
   const passwordError = validateStep3();
   if (passwordError) {
-    alert(passwordError);
+    showRegError(passwordError);
     return;
   }
 
@@ -1024,7 +1038,7 @@ async function createRegAccount() {
     goRStep(4);
   } catch (err) {
     console.error('createRegAccount error:', err);
-    alert(toDisplayError(err, 'Could not create your account.'));
+    showRegError(toDisplayError(err, 'Could not create your account.'));
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Continue →';
@@ -1062,7 +1076,7 @@ function getMagicLinkCallbackUrl() {
 async function submitReg() {
   const accessToken = await getValidStoredAccessToken();
   if (!accessToken) {
-    alert('Your session expired. Please sign in again to continue registration.');
+    showRegError('Your session expired. Please sign in again to continue registration.');
     goRStep(3);
     return;
   }
@@ -1087,7 +1101,7 @@ async function submitReg() {
   if (payload.role === 'fundi') {
     const trade = selectedTrade();
     if (!trade) {
-      alert('Please select your trade.');
+      showRegError('Please select your trade.');
       return;
     }
     payload.trade = trade;
@@ -1117,7 +1131,7 @@ async function submitReg() {
     localStorage.setItem('kazix_role', payload.role);
     localStorage.removeItem('kazix_reg_pending_profile');
   } catch (err) {
-    alert(toDisplayError(err, 'Could not complete registration.'));
+    showRegError(toDisplayError(err, 'Could not complete registration.'));
     submitBtn.disabled = false;
     submitBtn.textContent = 'Create Account 🎉';
     return;

@@ -143,7 +143,7 @@
         <div class="table-controls">
           <select class="tc-select"><option>All transactions</option><option>Payments</option><option>Escrow</option><option>Refunds</option></select>
           <select class="tc-select"><option>All time</option><option>This month</option><option>Last 3 months</option><option>This year</option></select>
-          <button class="export-btn" onclick="alert('PDF statement downloaded')">⬇ Export PDF</button>
+          <button class="export-btn" disabled title="Coming soon" style="opacity:.5;cursor:not-allowed">⬇ Export PDF</button>
         </div>
       </div>
       <table class="tx-table">
@@ -191,7 +191,7 @@
     </div>
     <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
       <button onclick="document.getElementById('receiptModal').style.display='none'" style="flex:1;padding:0.75rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">Close</button>
-      <button onclick="alert('Receipt downloaded')" style="flex:1;padding:0.75rem;background:var(--ink);color:white;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">⬇ Download</button>
+      <button disabled title="Coming soon" style="opacity:.5;cursor:not-allowed" style="flex:1;padding:0.75rem;background:var(--ink);color:white;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">⬇ Download</button>
     </div>
   </div>
 </div>

@@ -431,7 +431,7 @@ async function signInWithEmailPassword() {
     if (!resp.ok) throw new Error(data?.detail || 'Could not sign in.');
     finishAuth(data);
   } catch (err) {
-    alert(toDisplayError(err, 'Could not sign in.'));
+    showInlineError(toDisplayError(err, 'Could not sign in.'));
     btn.textContent = 'Sign In →';
     validateEmail();
   }
@@ -461,7 +461,7 @@ async function startOAuth(provider) {
     clearAuthTabWaiting();
     if (btn) btn.disabled = false;
     console.error('OAuth start error:', err);
-    alert(toDisplayError(err, `Could not start ${provider} login. Please try again.`));
+    showInlineError(toDisplayError(err, `Could not start ${provider} login. Please try again.`));
   }
 }
 
@@ -665,7 +665,7 @@ async function sendMagicLink() {
     showEmailSentState(email);
   } catch (err) {
     clearAuthTabWaiting();
-    alert(toDisplayError(err, 'Could not send sign-in link.'));
+    showInlineError(toDisplayError(err, 'Could not send sign-in link.'));
     btn.textContent = 'Send Sign-In Link →';
     validateEmail();
   }
@@ -681,7 +681,7 @@ async function resendMagicLink() {
     await requestMagicLink(email);
     startEmailCountdown();
   } catch (err) {
-    alert(toDisplayError(err, 'Could not resend sign-in link.'));
+    showInlineError(toDisplayError(err, 'Could not resend sign-in link.'));
     resendBtn.disabled = false;
   }
 }
@@ -712,7 +712,7 @@ async function sendOTP() {
     if (!resp.ok) throw new Error(data?.detail || 'Failed to send OTP');
     showOTPPanel(phone);
   } catch (err) {
-    alert(toDisplayError(err, 'Could not send OTP.'));
+    showInlineError(toDisplayError(err, 'Could not send OTP.'));
   } finally {
     btn.textContent = 'Send OTP →';
     validatePhone();
@@ -783,7 +783,7 @@ async function verifyOTP() {
     if (!resp.ok) throw new Error(data?.detail || 'Invalid OTP');
     finishAuth(data);
   } catch (err) {
-    alert(toDisplayError(err, 'OTP verification failed.'));
+    showInlineError(toDisplayError(err, 'OTP verification failed.'));
     btn.textContent = 'Verify & Sign In';
     btn.disabled = false;
   }

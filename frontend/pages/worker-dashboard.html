@@ -90,6 +90,20 @@
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem("kazix_access_token")) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace("login.html?next=" + next);
+    return;
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    var s = document.getElementById("auth-gate-style");
+    if (s) s.remove();
+  });
+})();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
@@ -108,7 +122,7 @@
         </div>
         <div class="user-menu-body">
           <a href="#" class="user-menu-item" onclick="window.location.href = window.KazixProfile.roleHomePath(localStorage.getItem('kazix_role') || 'client'); return false;">View Profile</a>
-          <a href="#" class="user-menu-item" onclick="window.location.href = 'client-profile.html'; return false;">Settings</a>
+          <a href="worker-profile-edit.html" class="user-menu-item">Settings</a>
           <button class="user-menu-item logout" onclick="window.KazixProfile.logout()">Logout</button>
         </div>
       </div>
