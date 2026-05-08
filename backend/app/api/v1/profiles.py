@@ -42,108 +42,97 @@ async def search_fundis(
     offset:  int = Query(0, ge=0),
 ):
     """
-    Public search endpoint for finding fundis.
+    Public fundi search. Two-query approach — no PostgREST embedding used.
     No authentication required.
     """
     client = get_anon_client()
     try:
-        # Query profiles (role=fundi) with embedded fundi_profiles data.
-        # Filtering on fundi-specific fields is done in Python after the join
-        # to avoid PostgREST embedded-filter compatibility issues.
-        query = (
-            client.table("profiles")
-            .select(
-                "id, full_name, avatar_url, county, area, is_verified, "
-                "fundi_profiles(trade, skills, rate_min, rate_max, "
-                "rating_avg, jobs_completed, is_available, kyc_status)"
-            )
-            .eq("role", "fundi")
+        # ── Step 1: query fundi_profiles with fundi-specific filters ──
+        fq = client.table("fundi_profiles").select(
+            "id, trade, skills, rate_min, rate_max, "
+            "rating_avg, jobs_completed, is_available, kyc_status"
         )
+        if trade:
+            fq = fq.ilike("trade", f"%{trade.lower().replace(' ', '_')}%")
+        if min_rate is not None:
+            fq = fq.gte("rate_min", min_rate)
+        if max_rate is not None:
+            fq = fq.lte("rate_min", max_rate)
+        if min_rating is not None:
+            fq = fq.gte("rating_avg", min_rating)
+        if verified_only:
+            fq = fq.eq("kyc_status", "approved")
+        if available_only:
+            fq = fq.eq("is_available", True)
 
-        # Location filter — applied directly on profiles.county
+        fundi_result = fq.limit(500).execute()
+        fundi_rows   = fundi_result.data or []
+
+        if not fundi_rows:
+            return {"total": 0, "offset": offset, "limit": limit, "results": []}
+
+        # ── Step 2: fetch profile data for those IDs ──────────────────
+        fundi_ids = [r["id"] for r in fundi_rows]
+
+        pq = (
+            client.table("profiles")
+            .select("id, full_name, avatar_url, county, area, is_verified")
+            .in_("id", fundi_ids)
+        )
         if location:
-            query = query.ilike("county", f"%{location}%")
+            pq = pq.ilike("county", f"%{location}%")
 
-        # Fetch a generous page so we can filter in Python
-        fetch_limit = min(limit * 5, 200)
-        result = query.range(0, offset + fetch_limit - 1).execute()
-        rows = result.data or []
+        profile_result  = pq.execute()
+        profiles_by_id  = {p["id"]: p for p in (profile_result.data or [])}
 
-        # ── Python-side filters ────────────────────────────────
+        # ── Step 3: combine, filter, sort, paginate ───────────────────
         fundis = []
-        for row in rows:
-            fp = row.get("fundi_profiles")
-            # fundi_profiles is a list (one-to-one embedded as array in PostgREST)
-            if isinstance(fp, list):
-                fp = fp[0] if fp else None
+        for fp in fundi_rows:
+            profile = profiles_by_id.get(fp["id"])
+            if not profile:
+                continue  # excluded by location filter or RLS
 
-            if not fp:
-                continue  # no fundi profile record — skip
+            trade_key    = (fp.get("trade") or "other").lower()
+            rate_min_val = int(fp.get("rate_min") or 0)
+            rating       = round(float(fp.get("rating_avg") or 0), 1)
+            is_verified  = (
+                bool(profile.get("is_verified")) or
+                fp.get("kyc_status") == "approved"
+            )
 
-            trade_key = (fp.get("trade") or "other").lower()
-
-            # Trade filter
-            if trade and trade.lower() not in trade_key and trade_key not in (trade or "").lower():
-                continue
-
-            rate_min_val = fp.get("rate_min") or 0
-            # Rate filter
-            if min_rate is not None and rate_min_val < min_rate:
-                continue
-            if max_rate is not None and rate_min_val > max_rate:
-                continue
-
-            # Rating filter
-            rating = float(fp.get("rating_avg") or 0)
-            if min_rating is not None and rating < min_rating:
-                continue
-
-            # Verified filter
-            is_verified = bool(row.get("is_verified")) or fp.get("kyc_status") == "approved"
-            if verified_only and not is_verified:
-                continue
-
-            # Availability filter
-            is_available = bool(fp.get("is_available"))
-            if available_only and not is_available:
-                continue
-
-            # Skills: stored as array or comma string
             skills = fp.get("skills") or []
             if isinstance(skills, str):
                 skills = [s.strip() for s in skills.split(",") if s.strip()]
 
             fundis.append({
-                "id":            row["id"],
-                "full_name":     row.get("full_name") or "Fundi",
-                "avatar_url":    row.get("avatar_url"),
-                "trade":         trade_key,
-                "trade_label":   trade_key.replace("_", " ").title(),
-                "trade_emoji":   TRADE_EMOJIS.get(trade_key, "🔧"),
-                "county":        row.get("county") or "",
-                "area":          row.get("area") or "",
-                "is_verified":   is_verified,
-                "is_available":  is_available,
-                "rate_min":      rate_min_val,
-                "rate_label":    f"KES {rate_min_val:,}/hr" if rate_min_val else "Negotiable",
-                "rating":        round(rating, 1),
+                "id":             fp["id"],
+                "full_name":      profile.get("full_name") or "Fundi",
+                "avatar_url":     profile.get("avatar_url"),
+                "trade":          trade_key,
+                "trade_label":    trade_key.replace("_", " ").title(),
+                "trade_emoji":    TRADE_EMOJIS.get(trade_key, "🔧"),
+                "county":         profile.get("county") or "",
+                "area":           profile.get("area") or "",
+                "is_verified":    is_verified,
+                "is_available":   bool(fp.get("is_available")),
+                "rate_min":       rate_min_val,
+                "rate_label":     f"KES {rate_min_val:,}/hr" if rate_min_val else "Negotiable",
+                "rating":         rating,
                 "jobs_completed": int(fp.get("jobs_completed") or 0),
-                "skills":        skills[:4],
+                "skills":         skills[:4],
             })
 
-        # ── Sort ──────────────────────────────────────────────
-        if sort_by == "rating":
-            fundis.sort(key=lambda f: f["rating"], reverse=True)
-        elif sort_by == "jobs":
-            fundis.sort(key=lambda f: f["jobs_completed"], reverse=True)
-        elif sort_by == "rate_asc":
-            fundis.sort(key=lambda f: f["rate_min"])
-        elif sort_by == "rate_desc":
-            fundis.sort(key=lambda f: f["rate_min"], reverse=True)
+        # Sort
+        sort_key = {
+            "rating":   lambda f: f["rating"],
+            "jobs":     lambda f: f["jobs_completed"],
+            "rate_asc": lambda f: f["rate_min"],
+            "rate_desc":lambda f: f["rate_min"],
+        }.get(sort_by, lambda f: f["rating"])
+        fundis.sort(key=sort_key, reverse=(sort_by != "rate_asc"))
 
-        # ── Paginate ──────────────────────────────────────────
-        total   = len(fundis)
-        page    = fundis[offset: offset + limit]
+        total = len(fundis)
+        page  = fundis[offset: offset + limit]
 
         return {"total": total, "offset": offset, "limit": limit, "results": page}
 
@@ -151,7 +140,7 @@ async def search_fundis(
         raise
     except Exception as exc:
         logger.error("fundi_search_failed", error=str(exc))
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(exc)[:120]}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(exc)[:200]}")
 
 
 # ── My profile ───────────────────────────────────────────────
