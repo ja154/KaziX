@@ -30,8 +30,8 @@ TRADE_EMOJIS = {
 
 @router.get("/")
 async def search_fundis(
-    trade:          str | None = Query(None, description="Filter by trade slug, e.g. plumber"),
-    location:       str | None = Query(None, description="Filter by county/area, e.g. Nairobi"),
+    trade:          str | None = Query(None, description="Trade slug, e.g. plumber"),
+    location:       str | None = Query(None, description="County/city, e.g. Nairobi"),
     min_rate:       int | None = Query(None, ge=0),
     max_rate:       int | None = Query(None, ge=0),
     min_rating:     float | None = Query(None, ge=0, le=5),
@@ -43,95 +43,115 @@ async def search_fundis(
 ):
     """
     Public search endpoint for finding fundis.
-    Returns a paginated list of fundi profiles with their trade data.
     No authentication required.
     """
     client = get_anon_client()
     try:
-        query = client.table("fundi_profiles").select(
-            "id, trade, skills, rate_min, rate_max, "
-            "rating_avg, jobs_completed, is_available, kyc_status, "
-            "profiles!inner(full_name, avatar_url, county, area, is_verified)"
+        # Query profiles (role=fundi) with embedded fundi_profiles data.
+        # Filtering on fundi-specific fields is done in Python after the join
+        # to avoid PostgREST embedded-filter compatibility issues.
+        query = (
+            client.table("profiles")
+            .select(
+                "id, full_name, avatar_url, county, area, is_verified, "
+                "fundi_profiles(trade, skills, rate_min, rate_max, "
+                "rating_avg, jobs_completed, is_available, kyc_status)"
+            )
+            .eq("role", "fundi")
         )
 
-        # ── Fundi-table filters ──────────────────────────────
-        if trade:
-            query = query.ilike("trade", f"%{trade.lower().replace(' ', '_')}%")
-        if min_rate is not None:
-            query = query.lte("rate_min", max_rate if max_rate else 999_999)
-        if max_rate is not None:
-            query = query.gte("rate_min", 0).lte("rate_min", max_rate)
-        if min_rating is not None:
-            query = query.gte("rating_avg", min_rating)
-        if verified_only:
-            query = query.eq("kyc_status", "approved")
-        if available_only:
-            query = query.eq("is_available", True)
-
-        # ── Location filter on joined profiles table ─────────
+        # Location filter — applied directly on profiles.county
         if location:
-            query = query.filter("profiles.county", "ilike", f"%{location}%")
+            query = query.ilike("county", f"%{location}%")
 
-        # ── Sort ─────────────────────────────────────────────
-        if sort_by == "rating":
-            query = query.order("rating_avg", desc=True)
-        elif sort_by == "jobs":
-            query = query.order("jobs_completed", desc=True)
-        elif sort_by == "rate_asc":
-            query = query.order("rate_min", desc=False)
-        elif sort_by == "rate_desc":
-            query = query.order("rate_min", desc=True)
-
-        # ── Pagination ────────────────────────────────────────
-        query = query.range(offset, offset + limit - 1)
-
-        result = query.execute()
+        # Fetch a generous page so we can filter in Python
+        fetch_limit = min(limit * 5, 200)
+        result = query.range(0, offset + fetch_limit - 1).execute()
         rows = result.data or []
 
-        # ── Shape response ────────────────────────────────────
+        # ── Python-side filters ────────────────────────────────
         fundis = []
         for row in rows:
-            profile = row.get("profiles") or {}
-            trade_key = (row.get("trade") or "other").lower()
-            skills = row.get("skills") or []
+            fp = row.get("fundi_profiles")
+            # fundi_profiles is a list (one-to-one embedded as array in PostgREST)
+            if isinstance(fp, list):
+                fp = fp[0] if fp else None
+
+            if not fp:
+                continue  # no fundi profile record — skip
+
+            trade_key = (fp.get("trade") or "other").lower()
+
+            # Trade filter
+            if trade and trade.lower() not in trade_key and trade_key not in (trade or "").lower():
+                continue
+
+            rate_min_val = fp.get("rate_min") or 0
+            # Rate filter
+            if min_rate is not None and rate_min_val < min_rate:
+                continue
+            if max_rate is not None and rate_min_val > max_rate:
+                continue
+
+            # Rating filter
+            rating = float(fp.get("rating_avg") or 0)
+            if min_rating is not None and rating < min_rating:
+                continue
+
+            # Verified filter
+            is_verified = bool(row.get("is_verified")) or fp.get("kyc_status") == "approved"
+            if verified_only and not is_verified:
+                continue
+
+            # Availability filter
+            is_available = bool(fp.get("is_available"))
+            if available_only and not is_available:
+                continue
+
+            # Skills: stored as array or comma string
+            skills = fp.get("skills") or []
             if isinstance(skills, str):
                 skills = [s.strip() for s in skills.split(",") if s.strip()]
 
-            rate_min = row.get("rate_min") or 0
-            rate_label = f"KES {rate_min:,}/hr" if rate_min else "Negotiable"
-            rating = row.get("rating_avg") or 0.0
-            jobs = row.get("jobs_completed") or 0
-
             fundis.append({
-                "id": row["id"],
-                "full_name": profile.get("full_name") or "Fundi",
-                "avatar_url": profile.get("avatar_url"),
-                "trade": trade_key,
-                "trade_label": trade_key.replace("_", " ").title(),
-                "trade_emoji": TRADE_EMOJIS.get(trade_key, "🔧"),
-                "county": profile.get("county") or "",
-                "area": profile.get("area") or "",
-                "is_verified": bool(profile.get("is_verified")) or row.get("kyc_status") == "approved",
-                "is_available": bool(row.get("is_available")),
-                "rate_min": rate_min,
-                "rate_label": rate_label,
-                "rating": round(float(rating), 1),
-                "jobs_completed": jobs,
-                "skills": skills[:4],
+                "id":            row["id"],
+                "full_name":     row.get("full_name") or "Fundi",
+                "avatar_url":    row.get("avatar_url"),
+                "trade":         trade_key,
+                "trade_label":   trade_key.replace("_", " ").title(),
+                "trade_emoji":   TRADE_EMOJIS.get(trade_key, "🔧"),
+                "county":        row.get("county") or "",
+                "area":          row.get("area") or "",
+                "is_verified":   is_verified,
+                "is_available":  is_available,
+                "rate_min":      rate_min_val,
+                "rate_label":    f"KES {rate_min_val:,}/hr" if rate_min_val else "Negotiable",
+                "rating":        round(rating, 1),
+                "jobs_completed": int(fp.get("jobs_completed") or 0),
+                "skills":        skills[:4],
             })
 
-        return {
-            "total": len(fundis),
-            "offset": offset,
-            "limit": limit,
-            "results": fundis,
-        }
+        # ── Sort ──────────────────────────────────────────────
+        if sort_by == "rating":
+            fundis.sort(key=lambda f: f["rating"], reverse=True)
+        elif sort_by == "jobs":
+            fundis.sort(key=lambda f: f["jobs_completed"], reverse=True)
+        elif sort_by == "rate_asc":
+            fundis.sort(key=lambda f: f["rate_min"])
+        elif sort_by == "rate_desc":
+            fundis.sort(key=lambda f: f["rate_min"], reverse=True)
+
+        # ── Paginate ──────────────────────────────────────────
+        total   = len(fundis)
+        page    = fundis[offset: offset + limit]
+
+        return {"total": total, "offset": offset, "limit": limit, "results": page}
 
     except HTTPException:
         raise
     except Exception as exc:
         logger.error("fundi_search_failed", error=str(exc))
-        raise HTTPException(status_code=500, detail="Search failed. Please try again.")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(exc)[:120]}")
 
 
 # ── My profile ───────────────────────────────────────────────
