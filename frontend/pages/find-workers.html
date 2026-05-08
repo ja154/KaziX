@@ -196,17 +196,17 @@
 
     <div class="filter-section">
       <div class="filter-label">Trade</div>
-      <div class="filter-options">
-        <label class="filter-option"><input type="checkbox" checked> 🚿 Plumber <span class="filter-count">842</span></label>
-        <label class="filter-option"><input type="checkbox"> ⚡ Electrician <span class="filter-count">1,204</span></label>
-        <label class="filter-option"><input type="checkbox"> 🧱 Mason <span class="filter-count">634</span></label>
-        <label class="filter-option"><input type="checkbox"> 👗 Mama Fua <span class="filter-count">2,310</span></label>
-        <label class="filter-option"><input type="checkbox"> 🪚 Carpenter <span class="filter-count">487</span></label>
-        <label class="filter-option"><input type="checkbox"> 🎨 Painter <span class="filter-count">395</span></label>
-        <label class="filter-option"><input type="checkbox"> 🏠 Roofer <span class="filter-count">218</span></label>
-        <label class="filter-option"><input type="checkbox"> 🌿 Gardener <span class="filter-count">512</span></label>
-        <label class="filter-option"><input type="checkbox"> 🛻 Driver/Mover <span class="filter-count">763</span></label>
-        <label class="filter-option"><input type="checkbox"> 🔒 Security <span class="filter-count">941</span></label>
+      <div class="filter-options" id="tradeOptions">
+        <label class="filter-option"><input type="checkbox" value="plumber"> 🚿 Plumber</label>
+        <label class="filter-option"><input type="checkbox" value="electrician"> ⚡ Electrician</label>
+        <label class="filter-option"><input type="checkbox" value="mason"> 🧱 Mason</label>
+        <label class="filter-option"><input type="checkbox" value="mama_fua"> 👗 Mama Fua</label>
+        <label class="filter-option"><input type="checkbox" value="carpenter"> 🪚 Carpenter</label>
+        <label class="filter-option"><input type="checkbox" value="painter"> 🎨 Painter</label>
+        <label class="filter-option"><input type="checkbox" value="roofer"> 🏠 Roofer</label>
+        <label class="filter-option"><input type="checkbox" value="gardener"> 🌿 Gardener</label>
+        <label class="filter-option"><input type="checkbox" value="driver_mover"> 🛻 Driver/Mover</label>
+        <label class="filter-option"><input type="checkbox" value="security"> 🔒 Security</label>
       </div>
     </div>
 
@@ -235,8 +235,8 @@
     <div class="filter-section">
       <div class="filter-label">Verification</div>
       <div class="filter-options">
-        <label class="filter-option"><input type="checkbox" checked> ✓ Verified only</label>
-        <label class="filter-option"><input type="checkbox" checked> <span class="avail-dot"></span> Available now</label>
+        <label class="filter-option"><input type="checkbox" id="chkVerified"> ✓ Verified only</label>
+        <label class="filter-option"><input type="checkbox" id="chkAvailable"> <span class="avail-dot"></span> Available now</label>
       </div>
     </div>
 
@@ -256,7 +256,7 @@
   <!-- RESULTS -->
   <main>
     <div class="results-header">
-      <div class="results-count"><span>842</span> plumbers found in Nairobi</div>
+      <div class="results-count" id="resultsCount"><span>—</span> fundis found</div>
       <div class="sort-row">
         <span class="sort-label">Sort by</span>
         <select class="sort-select">
@@ -273,12 +273,7 @@
       </div>
     </div>
 
-    <div class="active-filters">
-      <span class="active-tag">Plumber <button onclick="this.parentElement.remove()">✕</button></span>
-      <span class="active-tag">Nairobi <button onclick="this.parentElement.remove()">✕</button></span>
-      <span class="active-tag">Verified <button onclick="this.parentElement.remove()">✕</button></span>
-      <span class="active-tag">Available now <button onclick="this.parentElement.remove()">✕</button></span>
-    </div>
+    <div class="active-filters" id="activeFilters"></div>
 
     <div class="workers-grid" id="workersGrid">
       <div id="workerCardsPlaceholder" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:'DM Sans',sans-serif">
@@ -287,15 +282,7 @@
     </div><!-- /workers-grid -->
 
     <!-- PAGINATION -->
-    <div class="pagination">
-      <button class="page-btn" disabled>←</button>
-      <button class="page-btn active">1</button>
-      <button class="page-btn">2</button>
-      <button class="page-btn">3</button>
-      <span style="font-size:0.82rem;color:var(--muted);padding:0 0.25rem">…</span>
-      <button class="page-btn">42</button>
-      <button class="page-btn">→</button>
-    </div>
+    <div class="pagination" id="pagination" style="display:none"></div>
   </main>
 </div>
 
@@ -339,20 +326,14 @@
 </div>
 
 <script>
-  // ── Constants ──────────────────────────────────────────────
   const API_BASE = 'https://kazix.onrender.com';
-
-  // Trade name → slug mapping for API calls
-  const TRADE_SLUG_MAP = {
-    'plumber': 'plumber', 'electrician': 'electrician', 'mason': 'mason',
-    'mama fua': 'mama_fua', 'carpenter': 'carpenter', 'painter': 'painter',
-    'roofer': 'roofer', 'gardener': 'gardener', 'driver/mover': 'driver_mover',
-    'security': 'security',
-  };
+  let currentOffset = 0;
+  const PAGE_SIZE   = 20;
+  let lastParams    = {};
 
   // ── View toggle ────────────────────────────────────────────
   function setView(mode) {
-    const grid = document.getElementById('workersGrid');
+    const grid    = document.getElementById('workersGrid');
     const gridBtn = document.getElementById('gridBtn');
     const listBtn = document.getElementById('listBtn');
     if (mode === 'list') {
@@ -366,40 +347,38 @@
     }
   }
 
-  // ── Render cards ───────────────────────────────────────────
-  function renderStars(rating) {
-    const full = Math.floor(rating);
-    const half = rating - full >= 0.5;
-    let s = '★'.repeat(full);
-    if (half) s += '½';
-    s += '☆'.repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
-    return s;
-  }
-
+  // ── Helpers ────────────────────────────────────────────────
   function esc(str) {
     return String(str || '').replace(/[&<>"']/g, c =>
       ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  function renderStars(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.5;
+    return '★'.repeat(full) + (half ? '½' : '') +
+           '☆'.repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
+  }
+
+  // ── Render cards ───────────────────────────────────────────
   function renderCards(fundis) {
     const grid = document.getElementById('workersGrid');
     if (!fundis.length) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted)">
-        <h3 style="font-family:'Syne',sans-serif;margin-bottom:.5rem">No fundis found</h3>
-        <p style="font-size:.9rem">Try different filters or a broader location.</p>
-      </div>`;
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🔍</div>
+          <h3 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:.5rem;color:var(--ink)">No fundis found</h3>
+          <p style="font-size:.9rem">Try removing some filters or searching a different location.</p>
+        </div>`;
       return;
     }
 
     grid.innerHTML = fundis.map((f, i) => {
       const location = [f.area, f.county].filter(Boolean).join(', ') || 'Kenya';
-      const skills = (f.skills || []).map(s => `<span class="skill-chip">${esc(s)}</span>`).join('');
-      const verified = f.is_verified
-        ? `<span class="verified-badge">✓ Verified</span>` : '';
-      const avail = f.is_available
-        ? `<span class="avail-dot"></span>` : '';
-
-      return `<div class="pro-card" style="animation-delay:${i * 0.05}s">
+      const skills   = (f.skills || []).map(s => `<span class="skill-chip">${esc(s)}</span>`).join('');
+      const verified = f.is_verified ? `<span class="verified-badge">✓ Verified</span>` : '';
+      const avail    = f.is_available ? `<span class="avail-dot"></span>` : '';
+      return `<div class="pro-card" style="animation-delay:${i * 0.04}s">
         <div class="pro-card-top">
           <div class="pro-avatar">${esc(f.trade_emoji)}</div>
           <div class="pro-card-mid">
@@ -424,111 +403,158 @@
     }).join('');
   }
 
+  // ── Render pagination ──────────────────────────────────────
+  function renderPagination(total, offset, limit) {
+    const pag = document.getElementById('pagination');
+    if (!pag) return;
+    const totalPages = Math.ceil(total / limit);
+    const curPage    = Math.floor(offset / limit) + 1;
+    if (totalPages <= 1) { pag.style.display = 'none'; return; }
+
+    pag.style.display = 'flex';
+    let html = `<button class="page-btn" ${curPage === 1 ? 'disabled' : ''}
+      onclick="goToPage(${curPage - 2})">←</button>`;
+
+    const pages = new Set([1, totalPages, curPage - 1, curPage, curPage + 1].filter(p => p >= 1 && p <= totalPages));
+    let prev = 0;
+    [...pages].sort((a,b) => a-b).forEach(p => {
+      if (p - prev > 1) html += `<span style="padding:0 .25rem;font-size:.82rem;color:var(--muted)">…</span>`;
+      html += `<button class="page-btn ${p === curPage ? 'active' : ''}"
+        onclick="goToPage(${p - 1})">${p}</button>`;
+      prev = p;
+    });
+
+    html += `<button class="page-btn" ${curPage === totalPages ? 'disabled' : ''}
+      onclick="goToPage(${curPage})">→</button>`;
+    pag.innerHTML = html;
+  }
+
+  function goToPage(pageIndex) {
+    currentOffset = pageIndex * PAGE_SIZE;
+    searchFundis({ ...lastParams, offset: currentOffset });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // ── API search ─────────────────────────────────────────────
   async function searchFundis(params = {}) {
-    const grid = document.getElementById('workersGrid');
-    const countEl = document.querySelector('.results-count span');
-    const activeTagsEl = document.querySelector('.active-filters');
+    lastParams = params;
+    const grid       = document.getElementById('workersGrid');
+    const countEl    = document.getElementById('resultsCount');
+    const activeEl   = document.getElementById('activeFilters');
+    const pag        = document.getElementById('pagination');
 
-    grid.innerHTML = `<div id="workerCardsPlaceholder" style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--muted);font-family:'DM Sans',sans-serif">Loading fundis…</div>`;
+    // Show loading state
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted);font-family:'DM Sans',sans-serif">
+        <div style="font-size:1.8rem;margin-bottom:.75rem;animation:pulse 1.5s infinite">⏳</div>
+        <p style="font-weight:600;margin-bottom:.3rem">Loading fundis…</p>
+        <p style="font-size:.82rem;opacity:.7">First load may take a few seconds</p>
+      </div>`;
+    if (pag) pag.style.display = 'none';
 
     // Build query string
     const qs = new URLSearchParams();
     if (params.trade)          qs.set('trade', params.trade);
     if (params.location)       qs.set('location', params.location);
-    if (params.min_rate)       qs.set('min_rate', params.min_rate);
-    if (params.max_rate)       qs.set('max_rate', params.max_rate);
+    if (params.min_rate > 0)   qs.set('min_rate', params.min_rate);
+    if (params.max_rate < 10000) qs.set('max_rate', params.max_rate);
     if (params.min_rating)     qs.set('min_rating', params.min_rating);
     if (params.verified_only)  qs.set('verified_only', 'true');
     if (params.available_only) qs.set('available_only', 'true');
     if (params.sort_by)        qs.set('sort_by', params.sort_by);
-    qs.set('limit', params.limit || 20);
+    qs.set('limit',  PAGE_SIZE);
     qs.set('offset', params.offset || 0);
 
-    // Update active filter tags
-    if (activeTagsEl) {
+    // Active filter chips
+    if (activeEl) {
       const tags = [];
-      if (params.trade)          tags.push(params.trade.replace('_', ' '));
+      if (params.trade)          tags.push(params.trade.replace(/_/g, ' '));
       if (params.location)       tags.push(params.location);
       if (params.verified_only)  tags.push('Verified');
       if (params.available_only) tags.push('Available now');
-      activeTagsEl.innerHTML = tags.map(t =>
+      activeEl.innerHTML = tags.map(t =>
         `<span class="active-tag">${esc(t)} <button onclick="this.parentElement.remove()">✕</button></span>`
       ).join('');
     }
 
     try {
-      const res = await fetch(`${API_BASE}/v1/profiles/?${qs}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const fundis = data.results || [];
-      const total  = data.total  || fundis.length;
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 60000);
+      const res = await fetch(`${API_BASE}/v1/profiles/?${qs}`, { signal: controller.signal });
+      clearTimeout(timeout);
 
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+      }
+
+      const data   = await res.json();
+      const fundis = data.results || [];
+      const total  = data.total   ?? fundis.length;
+
+      // Update results count
       if (countEl) {
-        const tradeLabel = params.trade ? params.trade.replace('_', ' ') + 's' : 'fundis';
+        const tradeLabel = params.trade
+          ? params.trade.replace(/_/g, ' ') + 's' : 'fundis';
         const locLabel   = params.location ? ` in ${params.location}` : '';
-        countEl.textContent = total;
-        const countParent = countEl.parentElement;
-        if (countParent) countParent.innerHTML =
-          `<span>${total}</span> ${tradeLabel} found${locLabel}`;
+        countEl.innerHTML = `<span>${total}</span> ${esc(tradeLabel)} found${esc(locLabel)}`;
       }
 
       renderCards(fundis);
+      renderPagination(total, params.offset || 0, PAGE_SIZE);
+
     } catch (err) {
-      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem">
-        <p style="color:var(--rust);font-family:'DM Sans',sans-serif">Could not load fundis. Check your connection and try again.</p>
-        <button onclick="runSearch()" style="margin-top:1rem;padding:.6rem 1.25rem;background:var(--ink);color:var(--cream);border:none;border-radius:2px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">Retry</button>
-      </div>`;
+      const isTimeout = err.name === 'AbortError';
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem">
+          <div style="font-size:2rem;margin-bottom:.75rem">${isTimeout ? '⏱️' : '⚠️'}</div>
+          <p style="color:var(--rust);font-family:'DM Sans',sans-serif;font-weight:600;margin-bottom:.35rem">
+            ${isTimeout ? 'Server is waking up…' : 'Could not load fundis'}
+          </p>
+          <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem">
+            ${isTimeout ? 'The server was sleeping — please retry in a moment.' : 'Check your connection and try again.'}
+          </p>
+          <button onclick="runSearch()" style="padding:.6rem 1.25rem;background:var(--ink);color:var(--cream);border:none;border-radius:2px;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700">
+            Retry
+          </button>
+        </div>`;
+      if (countEl) countEl.innerHTML = `<span>—</span> fundis found`;
     }
   }
 
   // ── Collect params from UI and run ─────────────────────────
   function runSearch() {
+    currentOffset = 0;
+
     const textInput  = document.querySelector('.header-search input');
     const locSelect  = document.querySelector('.header-search select');
     const sortSelect = document.querySelector('.sort-select');
     const rangeMin   = document.querySelector('.range-min');
     const rangeMax   = document.querySelector('.range-max');
 
-    // Trade from sidebar checkboxes (first checked) or text input
-    const filterSections = Array.from(document.querySelectorAll('.filter-section'));
-    const tradeSection = filterSections.find(s =>
-      s.querySelector('.filter-label')?.textContent.includes('Trade'));
+    // Trade: read directly from checkbox value attributes
     const checkedTrades = [];
-    if (tradeSection) {
-      tradeSection.querySelectorAll('input:checked').forEach(chk => {
-        const raw = chk.parentNode.textContent.replace(/[^\w\s\/-]/g,'').replace(/\d+$/, '').trim().toLowerCase();
-        const slug = TRADE_SLUG_MAP[raw];
-        if (slug) checkedTrades.push(slug);
-      });
-    }
+    document.querySelectorAll('#tradeOptions input:checked').forEach(chk => {
+      if (chk.value) checkedTrades.push(chk.value);
+    });
 
-    // Fall back to header search text if no sidebar trade selected
+    // Fall back to header search text
     let trade = checkedTrades[0] || '';
     if (!trade && textInput && textInput.value.trim()) {
-      const raw = textInput.value.trim().toLowerCase();
-      trade = TRADE_SLUG_MAP[raw] || raw;
+      const raw = textInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+      trade = raw;
     }
 
-    const location = locSelect ? locSelect.value : '';
+    const location     = locSelect?.value || '';
+    const verifiedOnly = document.getElementById('chkVerified')?.checked || false;
+    const availOnly    = document.getElementById('chkAvailable')?.checked || false;
 
-    // Rating filter
+    // Rating
     const ratingRadios = document.querySelectorAll('input[name="rating"]');
-    let minRating = 0;
+    let minRating = null;
     if (ratingRadios[1]?.checked) minRating = 5;
     else if (ratingRadios[2]?.checked) minRating = 4;
     else if (ratingRadios[3]?.checked) minRating = 3;
-
-    // Verification + availability
-    const verifSection = filterSections.find(s =>
-      s.querySelector('.filter-label')?.textContent.includes('Verification'));
-    let verifiedOnly  = false;
-    let availableOnly = false;
-    if (verifSection) {
-      const inputs = verifSection.querySelectorAll('input');
-      verifiedOnly  = inputs[0]?.checked || false;
-      availableOnly = inputs[1]?.checked || false;
-    }
 
     // Sort
     const sortMap = {
@@ -540,58 +566,57 @@
     searchFundis({
       trade,
       location,
-      min_rate:       rangeMin ? parseInt(rangeMin.value) || 0 : 0,
-      max_rate:       rangeMax ? parseInt(rangeMax.value) || 10000 : 10000,
-      min_rating:     minRating || null,
+      min_rate:       parseInt(rangeMin?.value || 0),
+      max_rate:       parseInt(rangeMax?.value || 10000),
+      min_rating:     minRating,
       verified_only:  verifiedOnly,
-      available_only: availableOnly,
+      available_only: availOnly,
       sort_by:        sortBy,
+      offset:         0,
     });
   }
 
   // ── Wire up buttons ────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', () => {
-    // Search button in header
-    const searchBtn = document.querySelector('.header-search button');
-    if (searchBtn) searchBtn.addEventListener('click', runSearch);
-    // Enter key in search input
+    const searchBtn  = document.querySelector('.header-search button');
     const searchInput = document.querySelector('.header-search input');
-    if (searchInput) searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
-
-    // Apply filters button
-    const applyBtn = document.querySelector('.apply-btn');
-    if (applyBtn) applyBtn.addEventListener('click', runSearch);
-
-    // Sort change
+    const applyBtn   = document.querySelector('.apply-btn');
     const sortSelect = document.querySelector('.sort-select');
+    const clearBtn   = document.querySelector('.filter-clear');
+    const rangeMin   = document.querySelector('.range-min');
+    const rangeMax   = document.querySelector('.range-max');
+    const sliderTrack = document.querySelector('.slider-track');
+    const rangeValues = document.querySelector('.range-values');
+
+    if (searchBtn)  searchBtn.addEventListener('click', runSearch);
+    if (searchInput) searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
+    if (applyBtn)   applyBtn.addEventListener('click', runSearch);
     if (sortSelect) sortSelect.addEventListener('change', runSearch);
 
-    // Clear all filters
-    const clearBtn = document.querySelector('.filter-clear');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-section input[type="checkbox"]').forEach(i => i.checked = false);
-        if (rangeMin && rangeMax) { rangeMin.value = 0; rangeMax.value = 5000; rangeMin.dispatchEvent(new Event('input')); }
-        const ratingInput = document.querySelector('input[name="rating"]');
-        if (ratingInput) ratingInput.checked = true;
+        document.querySelectorAll('#tradeOptions input').forEach(i => i.checked = false);
+        document.getElementById('chkVerified').checked  = false;
+        document.getElementById('chkAvailable').checked = false;
+        if (rangeMin) { rangeMin.value = 0; rangeMin.dispatchEvent(new Event('input')); }
+        if (rangeMax) { rangeMax.value = 5000; rangeMax.dispatchEvent(new Event('input')); }
+        const firstRating = document.querySelector('input[name="rating"]');
+        if (firstRating) firstRating.checked = true;
+        if (searchInput) searchInput.value = '';
         runSearch();
       });
     }
 
-    // Slider
-    const rangeMin = document.querySelector('.range-min');
-    const rangeMax = document.querySelector('.range-max');
-    const sliderTrack = document.querySelector('.slider-track');
-    const rangeValues = document.querySelector('.range-values');
+    // Rate slider
     if (rangeMin && rangeMax && sliderTrack && rangeValues) {
       const updateSlider = (e) => {
         let minVal = parseInt(rangeMin.value), maxVal = parseInt(rangeMax.value);
         if (maxVal - minVal < 500) {
-          if (e && e.target.classList.contains('range-min')) { rangeMin.value = maxVal - 500; minVal = parseInt(rangeMin.value); }
+          if (e?.target === rangeMin) { rangeMin.value = maxVal - 500; minVal = parseInt(rangeMin.value); }
           else { rangeMax.value = minVal + 500; maxVal = parseInt(rangeMax.value); }
         }
-        sliderTrack.style.left  = (minVal / rangeMin.max) * 100 + '%';
-        sliderTrack.style.right = 100 - (maxVal / rangeMax.max) * 100 + '%';
+        sliderTrack.style.left  = (minVal / rangeMin.max * 100) + '%';
+        sliderTrack.style.right = (100 - maxVal / rangeMax.max * 100) + '%';
         rangeValues.textContent = minVal.toLocaleString() + ' - ' + maxVal.toLocaleString();
       };
       rangeMin.addEventListener('input', updateSlider);
@@ -599,7 +624,7 @@
       updateSlider({ target: rangeMin });
     }
 
-    // Initial load — default: all fundis sorted by rating
+    // Initial load — all fundis, no filters
     runSearch();
   });
 </script>
