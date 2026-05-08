@@ -425,7 +425,7 @@ function renderJob(job) {
 }
 
 function renderClientProfile() {
-  const profile = clientProfile?.profile || null;
+  const profile = clientProfile?.profile || clientProfile || null;
   const name = profile?.full_name || currentJob?.profiles?.full_name || 'Private client';
   const initials = name.trim().slice(0, 1).toUpperCase() || 'C';
   const location = [profile?.area || currentJob?.profiles?.area, profile?.county || currentJob?.profiles?.county]

@@ -175,11 +175,12 @@ async function loadClientProfile() {
 
   try {
     const data = await requestJson(`/v1/profiles/${encodeURIComponent(profileId)}`);
-    if (data?.profile?.role === 'fundi') {
+    const profile = data?.profile || data || {};
+    if (profile.role === 'fundi') {
       window.location.href = `worker-profile.html?id=${encodeURIComponent(profileId)}`;
       return;
     }
-    renderProfile(data.profile || {});
+    renderProfile(profile);
   } catch (err) {
     document.getElementById('pageNotice').textContent = err.message || 'Failed to load employer profile.';
   }

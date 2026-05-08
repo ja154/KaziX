@@ -204,3 +204,79 @@ async def test_get_my_profile_rejects_suspended_user(monkeypatch) -> None:
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Account is suspended. Contact support."
+
+
+@pytest.mark.asyncio
+async def test_get_public_profile_returns_wrapped_worker_profile(monkeypatch) -> None:
+    fake_anon = _FakeAdminClient(
+        initial_tables={
+            "profiles": {
+                "worker-123": {
+                    "id": "worker-123",
+                    "role": "fundi",
+                    "full_name": "Jane Fundi",
+                    "county": "Nairobi",
+                    "area": "Kilimani",
+                    "preferred_language": "sw",
+                    "is_verified": True,
+                    "created_at": "2026-04-22T10:00:00Z",
+                }
+            },
+            "fundi_profiles": {
+                "worker-123": {
+                    "trade": "plumber",
+                    "bio": "Trusted local fundi",
+                    "is_available": True,
+                }
+            },
+        }
+    )
+
+    monkeypatch.setattr(profiles_module, "get_anon_client", lambda: fake_anon)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/v1/profiles/worker-123")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["profile"]["id"] == "worker-123"
+    assert payload["profile"]["full_name"] == "Jane Fundi"
+    assert payload["profile"]["preferred_language"] == "sw"
+    assert payload["profile"]["created_at"] == "2026-04-22T10:00:00Z"
+    assert payload["fundi_profile"]["trade"] == "plumber"
+    assert payload["fundi_profile"]["bio"] == "Trusted local fundi"
+
+
+@pytest.mark.asyncio
+async def test_get_public_profile_returns_wrapped_client_profile(monkeypatch) -> None:
+    fake_anon = _FakeAdminClient(
+        initial_tables={
+            "profiles": {
+                "client-123": {
+                    "id": "client-123",
+                    "role": "client",
+                    "full_name": "Joseph Client",
+                    "county": "Nairobi",
+                    "area": "Westlands",
+                    "preferred_language": "en",
+                    "is_verified": False,
+                    "created_at": "2026-04-24T10:00:00Z",
+                }
+            }
+        }
+    )
+
+    monkeypatch.setattr(profiles_module, "get_anon_client", lambda: fake_anon)
+
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.get("/v1/profiles/client-123")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["profile"]["id"] == "client-123"
+    assert payload["profile"]["full_name"] == "Joseph Client"
+    assert payload["profile"]["preferred_language"] == "en"
+    assert payload["profile"]["created_at"] == "2026-04-24T10:00:00Z"
+    assert payload["fundi_profile"] is None

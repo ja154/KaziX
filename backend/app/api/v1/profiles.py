@@ -182,7 +182,10 @@ async def get_public_profile(user_id: str):
     try:
         result = (
             client.table("profiles")
-            .select("id, full_name, avatar_url, county, area, role, is_verified")
+            .select(
+                "id, full_name, avatar_url, county, area, role, is_verified, "
+                "preferred_language, created_at"
+            )
             .eq("id", user_id)
             .single()
             .execute()
@@ -191,14 +194,15 @@ async def get_public_profile(user_id: str):
             raise HTTPException(status_code=404, detail="Profile not found")
 
         p = result.data
+        fundi_profile = None
         if p["role"] == "fundi":
             fp = client.table("fundi_profiles").select(
                 "trade, bio, rate_min, rate_max, experience_years, "
                 "skills, service_radius_km, rating_avg, jobs_completed, is_available, kyc_status"
             ).eq("id", user_id).maybe_single().execute()
-            p["fundi_profile"] = fp.data
+            fundi_profile = fp.data
 
-        return p
+        return {"profile": p, "fundi_profile": fundi_profile}
     except HTTPException:
         raise
     except Exception as exc:

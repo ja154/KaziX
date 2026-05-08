@@ -217,8 +217,8 @@ async function loadWorkerProfile() {
       return;
     }
 
-    const profile = data.profile || {};
-    const fundiProfile = data.fundi_profile || {};
+    const profile = data?.profile || data || {};
+    const fundiProfile = data?.fundi_profile || data?.profile?.fundi_profile || {};
 
     if (profile.role === 'client') {
       window.location.href = `client-public-profile.html?id=${encodeURIComponent(profile.id)}`;
