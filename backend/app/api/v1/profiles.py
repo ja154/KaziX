@@ -54,10 +54,9 @@ async def search_fundis(
         )
         if trade:
             fq = fq.ilike("trade", f"%{trade.lower().replace(' ', '_')}%")
-        if min_rate is not None:
-            fq = fq.gte("rate_min", min_rate)
-        if max_rate is not None:
-            fq = fq.lte("rate_min", max_rate)
+        # NOTE: rate_min can be NULL in the DB (means "Negotiable").
+        # PostgreSQL NULL comparisons always return NULL/false, so we must
+        # NOT apply rate filters at the DB level — do them in Python instead.
         if min_rating is not None:
             fq = fq.gte("rating_avg", min_rating)
         if verified_only:
@@ -93,12 +92,20 @@ async def search_fundis(
                 continue  # excluded by location filter or RLS
 
             trade_key    = (fp.get("trade") or "other").lower()
+            # NULL rate_min means "Negotiable" — treat as 0 for comparisons.
+            # This avoids PostgreSQL NULL-comparison false negatives.
             rate_min_val = int(fp.get("rate_min") or 0)
             rating       = round(float(fp.get("rating_avg") or 0), 1)
             is_verified  = (
                 bool(profile.get("is_verified")) or
                 fp.get("kyc_status") == "approved"
             )
+
+            # NULL-safe rate filters (applied in Python, not at DB level)
+            if min_rate is not None and min_rate > 0 and rate_min_val < min_rate:
+                continue
+            if max_rate is not None and rate_min_val > 0 and rate_min_val > max_rate:
+                continue
 
             skills = fp.get("skills") or []
             if isinstance(skills, str):
