@@ -236,7 +236,14 @@ function confirmReject(button) {
   var select = form.querySelector('select');
   var reason = select ? select.value : '';
   if (!reason) {
-    alert('Select a rejection reason before confirming.');
+    var errEl = form.querySelector('.reject-error');
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.className = 'reject-error';
+      errEl.style.cssText = 'color:#B71C1C;font-size:.85rem;margin-bottom:.5rem;font-family:inherit';
+      form.prepend(errEl);
+    }
+    errEl.textContent = 'Select a rejection reason before confirming.';
     return;
   }
 

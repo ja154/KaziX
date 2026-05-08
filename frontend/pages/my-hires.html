@@ -147,9 +147,19 @@
 </div>
 
 <script>
-function confirmComplete() {
-  if (confirm('Confirm that the painting job is done and release KES 3,200 to Mary Akinyi via M-Pesa?')) {
-    alert('✅ Payment released! KES 2,880 sent to Mary\'s M-Pesa (KES 320 KaziX fee). You can now leave a review.');
+function confirmComplete(bookingId) {
+  var btn = document.querySelector('[data-booking-id="' + bookingId + '"] .complete-btn, .complete-btn');
+  var container = btn ? btn.closest('.hire-card, .booking-card, [data-booking-id]') : null;
+  var notice = document.getElementById('complete-notice-' + bookingId) || document.getElementById('complete-notice');
+  if (notice) {
+    notice.textContent = 'Payment release is handled automatically via M-Pesa escrow once the job is marked complete on your booking.';
+    notice.style.display = 'block';
+  } else {
+    var el = document.createElement('div');
+    el.style.cssText = 'background:#E8F5E9;color:#1B5E20;padding:.85rem 1rem;border-radius:8px;margin-top:.75rem;font-family:inherit;font-size:.9rem';
+    el.textContent = 'Payment release is handled automatically via M-Pesa escrow. Contact support if you need assistance.';
+    if (container) container.appendChild(el);
+    else document.querySelector('main').prepend(el);
   }
 }
 </script>
