@@ -133,11 +133,11 @@
   <aside class="sidebar">
     <div class="sidebar-section">Work</div>
     <a class="nav-item active" href="worker-dashboard.html"><span class="ni-icon">📊</span>Dashboard</a>
-    <a class="nav-item" href="worker-jobs.html"><span class="ni-icon">🔍</span>Find Jobs<span class="ni-badge">8</span></a>
-    <a class="nav-item" href="my-applications.html"><span class="ni-icon">📋</span>My Applications<span class="ni-badge">3</span></a>
-    <a class="nav-item" href="worker-hires.html"><span class="ni-icon">🤝</span>Active Contracts<span class="ni-badge">2</span></a>
+    <a class="nav-item" href="worker-jobs.html"><span class="ni-icon">🔍</span>Find Jobs<span class="ni-badge" id="sidebarAlertsBadge" style="display:none">0</span></a>
+    <a class="nav-item" href="my-applications.html"><span class="ni-icon">📋</span>My Applications<span class="ni-badge" id="sidebarWorkerAppsBadge" style="display:none">0</span></a>
+    <a class="nav-item" href="worker-hires.html"><span class="ni-icon">🤝</span>Active Contracts<span class="ni-badge" id="sidebarContractsBadge" style="display:none">0</span></a>
     <div class="sidebar-section">Account</div>
-    <a class="nav-item" href="messages.html"><span class="ni-icon">💬</span>Messages<span class="ni-badge">1</span></a>
+    <a class="nav-item" href="messages.html"><span class="ni-icon">💬</span>Messages</a>
     <a class="nav-item" href="worker-earnings.html"><span class="ni-icon">💳</span>Earnings</a>
     <a class="nav-item" href="worker-reviews.html"><span class="ni-icon">⭐</span>My Reviews</a>
     <a class="nav-item" href="worker-profile-edit.html"><span class="ni-icon">👤</span>My Profile</a>
@@ -371,6 +371,17 @@ function renderWorkerDashboard(data) {
     toggle.checked = Boolean(data.availability.is_available);
     toggleAvail(toggle.checked);
   }
+
+  // Sidebar badges — populated from real data, hidden when zero
+  function updateSidebarBadge(id, count) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = count;
+    el.style.display = count > 0 ? '' : 'none';
+  }
+  updateSidebarBadge('sidebarAlertsBadge',     data.alerts.total      || 0);
+  updateSidebarBadge('sidebarWorkerAppsBadge', data.applications.total || 0);
+  updateSidebarBadge('sidebarContractsBadge',  data.contracts.active  || 0);
 
   document.getElementById('workerDashboardSub').textContent = data.alerts.total
     ? `You have ${data.alerts.total} matching job alert${data.alerts.total === 1 ? '' : 's'} right now`

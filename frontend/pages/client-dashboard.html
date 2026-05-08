@@ -147,15 +147,15 @@
   <aside class="sidebar">
     <div class="sidebar-section">Main</div>
     <a class="nav-item active" href="client-dashboard.html"><span class="ni-icon">📊</span>Dashboard</a>
-    <a class="nav-item" href="my-jobs.html"><span class="ni-icon">📋</span>My Jobs<span class="ni-badge">3</span></a>
-    <a class="nav-item" href="job-applicants.html"><span class="ni-icon">👥</span>Applications<span class="ni-badge">7</span></a>
-    <a class="nav-item" href="my-hires.html"><span class="ni-icon">🤝</span>My Hires</a>
+    <a class="nav-item" href="my-jobs.html"><span class="ni-icon">📋</span>My Jobs<span class="ni-badge" id="sidebarJobsBadge" style="display:none">0</span></a>
+    <a class="nav-item" href="job-applicants.html"><span class="ni-icon">👥</span>Applications<span class="ni-badge" id="sidebarApplicationsBadge" style="display:none">0</span></a>
+    <a class="nav-item" href="my-hires.html"><span class="ni-icon">🤝</span>My Hires<span class="ni-badge" id="sidebarHiresBadge" style="display:none">0</span></a>
     <div class="sidebar-section">Discover</div>
     <a class="nav-item" href="find-workers.html"><span class="ni-icon">🔍</span>Find Fundis</a>
-    <a class="nav-item" href="saved-workers.html"><span class="ni-icon">❤️</span>Saved Fundis<span class="ni-badge">5</span></a>
+    <a class="nav-item" href="saved-workers.html"><span class="ni-icon">❤️</span>Saved Fundis</a>
     <a class="nav-item" href="post-job.html"><span class="ni-icon">➕</span>Post a Job</a>
     <div class="sidebar-section">Account</div>
-    <a class="nav-item" href="messages.html"><span class="ni-icon">💬</span>Messages<span class="ni-badge">2</span></a>
+    <a class="nav-item" href="messages.html"><span class="ni-icon">💬</span>Messages</a>
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
@@ -474,7 +474,18 @@ function renderClientSpendBars(data) {
   }
 }
 
+function updateSidebarBadge(id, count) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = count;
+  el.style.display = count > 0 ? '' : 'none';
+}
+
 function renderClientDashboard(data) {
+  updateSidebarBadge('sidebarJobsBadge',         data.jobs.total        || 0);
+  updateSidebarBadge('sidebarApplicationsBadge', data.applications.pending || 0);
+  updateSidebarBadge('sidebarHiresBadge',        data.hires.active      || 0);
+
   document.getElementById('clientQuickApplicationsBadge').textContent = `${data.applications.pending} pending`;
   document.getElementById('clientActiveJobsValue').textContent = String(data.jobs.live);
   document.getElementById('clientActiveJobsDelta').textContent = `${data.jobs.open} open · ${data.jobs.reviewing} reviewing · ${data.jobs.active} in progress`;
