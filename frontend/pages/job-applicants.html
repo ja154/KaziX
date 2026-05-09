@@ -4,101 +4,71 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Applications — KaziX</title>
+<title>Applicants — Install CCTV · KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
-.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:1.25rem;animation:slideUp 0.4s ease both}
-.page-head-copy{max-width:680px}
-.page-head-copy .page-sub{margin-top:0.35rem}
-.job-picker-wrap{display:flex;flex-direction:column;gap:0.35rem;min-width:260px}
-.job-picker-wrap .modal-label{margin:0}
-.job-picker{min-width:260px}
-
+/* JOB SUMMARY BANNER */
 .job-banner{background:var(--ink);color:#F5F0E8;border-radius:6px;padding:1.5rem 2rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden}
 .job-banner::after{content:'⚡';position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.06}
 .jb-icon{width:50px;height:50px;border-radius:6px;background:rgba(245,166,35,0.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
-.jb-info{flex:1;min-width:0}
+.jb-info{flex:1}
 .jb-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:0.3rem}
-.jb-sub{font-size:0.78rem;color:rgba(245,240,232,0.65);display:flex;gap:1rem;flex-wrap:wrap}
+.jb-sub{font-size:0.78rem;color:rgba(245,240,232,0.55);display:flex;gap:1rem;flex-wrap:wrap}
 .jb-stats{display:flex;gap:2rem}
 .jbs{text-align:center}
 .jbs-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--saffron);display:block}
 .jbs-label{font-size:0.65rem;color:rgba(245,240,232,0.45);text-transform:uppercase;letter-spacing:0.06em}
 
-.page-message{display:none;padding:0.9rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.82rem;line-height:1.6}
-.page-message.open{display:block}
-.page-message.info{background:rgba(13,13,13,0.04);color:var(--ink);border:1px solid rgba(13,13,13,0.08)}
-.page-message.success{background:rgba(27,107,58,0.08);color:var(--green);border:1px solid rgba(27,107,58,0.18)}
-.page-message.error{background:rgba(192,57,43,0.08);color:var(--rust);border:1px solid rgba(192,57,43,0.18)}
-
+/* FILTER ROW */
 .filter-row{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
 .filter-select{padding:0.5rem 0.85rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;cursor:pointer}
-.filter-select:disabled{opacity:0.6;cursor:not-allowed}
 .filter-search{padding:0.5rem 0.85rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;flex:1;min-width:180px}
 .filter-search:focus{border-color:var(--ink)}
 .app-count{font-size:0.82rem;color:var(--muted);margin-left:auto}
 .app-count strong{color:var(--ink);font-family:'Syne',sans-serif}
 
+/* APPLICANT CARDS */
 .applicants-list{display:flex;flex-direction:column;gap:1rem}
-.state-card{background:white;border:1px solid var(--border);border-radius:6px;padding:2rem 1.5rem;text-align:center}
-.state-icon{font-size:2.4rem;margin-bottom:0.9rem;opacity:0.65}
-.state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:0.5rem}
-.state-sub{font-size:0.84rem;color:var(--muted);line-height:1.65;margin-bottom:1.25rem}
-.state-link{display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.2rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;text-decoration:none}
-
 .applicant-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;transition:all 0.2s;animation:slideUp 0.4s ease both;position:relative}
 .applicant-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.08)}
 .applicant-card.shortlisted{border-color:var(--saffron);background:rgba(245,166,35,0.02)}
 .applicant-card.shortlisted::before{content:'Shortlisted';position:absolute;top:0;right:1.5rem;background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:0 0 4px 4px;text-transform:uppercase;letter-spacing:0.05em}
-.applicant-card.hired{border-color:rgba(27,107,58,0.3);background:rgba(27,107,58,0.03)}
-.applicant-card.rejected,.applicant-card.withdrawn{opacity:0.82}
 .ac-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
-.ac-avatar{width:54px;height:54px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;flex-shrink:0;border:2px solid var(--border);position:relative;overflow:hidden}
-.ac-avatar img{width:100%;height:100%;object-fit:cover}
+.ac-avatar{width:54px;height:54px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:2px solid var(--border);position:relative}
 .ac-verified{position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--green);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:white}
-.ac-info{flex:1;min-width:0}
-.ac-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.15rem;display:flex;align-items:center;flex-wrap:wrap;gap:0.45rem}
+.ac-info{flex:1}
+.ac-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.15rem}
 .ac-trade{font-size:0.75rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem}
 .ac-loc{font-size:0.78rem;color:var(--muted)}
-.ac-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0}
+.ac-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem}
 .ac-bid{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--ink)}
 .ac-bid-label{font-size:0.68rem;color:var(--muted);text-align:right}
-.ac-status-pill{font-size:0.64rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em}
-.ac-status-pill.pending{background:rgba(245,166,35,0.15);color:#854F0B}
-.ac-status-pill.shortlisted{background:rgba(13,13,13,0.08);color:var(--ink)}
-.ac-status-pill.hired{background:rgba(27,107,58,0.1);color:var(--green)}
-.ac-status-pill.rejected{background:rgba(192,57,43,0.08);color:var(--rust)}
-.ac-status-pill.withdrawn{background:var(--cream);color:var(--muted)}
-.ac-rating{display:flex;align-items:center;gap:0.35rem;font-size:0.78rem;margin-top:0.4rem}
+.ac-rating{display:flex;align-items:center;gap:0.35rem;font-size:0.78rem}
 .ac-stars{color:var(--saffron)}
 .ac-score{font-weight:700}
 .ac-jobs{color:var(--muted)}
-.ac-stats{display:flex;gap:1rem;margin-bottom:1rem;padding:0.85rem;background:var(--cream);border-radius:4px;flex-wrap:wrap}
-.acs{text-align:center;min-width:90px}
+.ac-stats{display:flex;gap:1.5rem;margin-bottom:1rem;padding:0.85rem;background:var(--cream);border-radius:4px}
+.acs{text-align:center}
 .acs-val{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;color:var(--ink)}
 .acs-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem}
 .ac-cover{font-size:0.875rem;line-height:1.65;color:var(--steel);margin-bottom:1rem;padding-left:0.85rem;border-left:3px solid var(--border)}
-.ac-note{font-size:0.78rem;line-height:1.6;padding:0.75rem 0.9rem;border-radius:4px;margin-bottom:1rem}
-.ac-note.success{background:rgba(27,107,58,0.07);color:var(--green);border:1px solid rgba(27,107,58,0.16)}
-.ac-note.warn{background:rgba(245,166,35,0.09);color:#854F0B;border:1px solid rgba(245,166,35,0.22)}
-.ac-note.muted{background:var(--cream);color:var(--muted);border:1px solid rgba(13,13,13,0.06)}
 .ac-skills{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem}
 .skill-chip{background:var(--cream);font-size:0.72rem;font-weight:500;padding:0.2rem 0.6rem;border-radius:2px;color:var(--steel)}
 .ac-actions{display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap}
 .ac-btn{padding:0.5rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem}
-.ac-btn[disabled]{opacity:0.6;cursor:not-allowed}
 .ac-btn-hire{background:var(--green);color:white;border:none}
-.ac-btn-hire:hover:not([disabled]){background:#0F4F2A}
+.ac-btn-hire:hover{background:#0F4F2A}
 .ac-btn-msg{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 .ac-btn-msg:hover{background:var(--ink);color:white}
 .ac-btn-view{background:transparent;color:var(--muted);border:1px solid var(--border)}
 .ac-btn-view:hover{border-color:var(--ink);color:var(--ink)}
 .ac-btn-short{background:transparent;color:var(--saffron);border:1px solid rgba(245,166,35,0.4)}
-.ac-btn-short:hover:not([disabled]){background:rgba(245,166,35,0.1)}
-.ac-btn-reject{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.ac-btn-reject:hover:not([disabled]){color:var(--rust);border-color:rgba(192,57,43,0.3)}
-.new-badge{background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:2px;text-transform:uppercase}
+.ac-btn-short:hover{background:rgba(245,166,35,0.1)}
+.ac-btn-reject{background:transparent;color:var(--muted);border:none;font-size:0.75rem;margin-left:auto}
+.ac-btn-reject:hover{color:var(--rust)}
+.new-badge{background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:2px;text-transform:uppercase;margin-left:0.5rem}
 
+/* HIRE MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,13,13,0.6);z-index:1000;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:white;border-radius:6px;padding:2rem;max-width:480px;width:90%;animation:slideUp 0.3s ease both}
@@ -108,45 +78,21 @@
 .modal-label{font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;display:block}
 .modal-input{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none}
 .modal-input:focus{border-color:var(--ink)}
-.mpesa-info{background:rgba(27,107,58,0.08);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:0.85rem 1rem;font-size:0.78rem;color:var(--green);margin-bottom:1rem;display:flex;gap:0.5rem;line-height:1.5}
-.modal-status{display:none;font-size:0.78rem;line-height:1.5;margin-bottom:1rem}
-.modal-status.open{display:block}
-.modal-status.error{color:var(--rust)}
+.mpesa-info{background:rgba(27,107,58,0.08);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:0.85rem 1rem;font-size:0.78rem;color:var(--green);margin-bottom:1.25rem;display:flex;gap:0.5rem;line-height:1.5}
 .modal-btns{display:flex;gap:0.75rem}
 .modal-confirm{flex:2;padding:0.85rem;background:var(--green);color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer}
-.modal-confirm[disabled]{opacity:0.7;cursor:not-allowed}
 .modal-cancel{flex:1;padding:0.85rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.875rem;border:1.5px solid var(--border);border-radius:2px;cursor:pointer}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:900px){
-  .sidebar{display:none}
-  .page-head{flex-direction:column}
-  .job-picker-wrap,.job-picker{width:100%;min-width:0}
-  .job-banner{flex-direction:column;align-items:flex-start}
-  .jb-stats{justify-content:space-between;flex-wrap:wrap;width:100%;gap:1rem}
-}
+@media(max-width:900px){.sidebar{display:none}.job-banner{flex-direction:column}.jb-stats{justify-content:center}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
+    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -165,813 +111,189 @@
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">My account</div><div class="sp-role">Client account</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
     </div>
   </aside>
 
   <main class="main">
+    <!-- BREADCRUMB -->
     <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem">
       <a href="my-jobs.html" style="color:var(--muted);text-decoration:none">My Jobs</a>
       <span>›</span>
-      <span id="jobBreadcrumbTitle" style="color:var(--ink);font-weight:500">Applications</span>
+      <span style="color:var(--ink);font-weight:500">Install CCTV cameras — Kilimani</span>
     </div>
 
-    <div class="page-head">
-      <div class="page-head-copy">
-        <div class="page-title">Applicant Management</div>
-        <div class="page-sub" id="pageSubtitle">Review bids, shortlist strong matches, and lock in a hire from your live jobs.</div>
-      </div>
-      <div class="job-picker-wrap">
-        <label class="modal-label" for="jobPicker">Select a job</label>
-        <select class="filter-select job-picker" id="jobPicker"></select>
-      </div>
-    </div>
-
-    <div class="page-message info" id="pageMessage"></div>
-
+    <!-- JOB BANNER -->
     <div class="job-banner" style="animation:slideUp 0.4s ease both">
-      <div class="jb-icon" id="jobTradeIcon">🛠️</div>
+      <div class="jb-icon">⚡</div>
       <div class="jb-info">
-        <div class="jb-title" id="jobTitle">Loading job…</div>
-        <div class="jb-sub" id="jobMetaRow">
-          <span id="jobTradeLabel">Trade</span>
-          <span id="jobLocationLabel">Location</span>
-          <span id="jobBudgetLabel">Budget</span>
-          <span id="jobDeadlineLabel">Deadline</span>
+        <div class="jb-title">Install CCTV cameras — Kilimani</div>
+        <div class="jb-sub">
+          <span>⚡ Electrician</span>
+          <span>📍 Kilimani, Nairobi</span>
+          <span>💰 KES 3,000 – 7,000</span>
+          <span>⏰ Closes in 1 day</span>
         </div>
       </div>
       <div class="jb-stats">
-        <div class="jbs"><span class="jbs-val" id="jobAppliedCount">0</span><span class="jbs-label">Applied</span></div>
-        <div class="jbs"><span class="jbs-val" id="jobNewCount">0</span><span class="jbs-label">New</span></div>
-        <div class="jbs"><span class="jbs-val" id="jobAvgRating">0.0★</span><span class="jbs-label">Avg Rating</span></div>
-        <div class="jbs"><span class="jbs-val" id="jobAvgBid">KES 0</span><span class="jbs-label">Avg Bid</span></div>
+        <div class="jbs"><span class="jbs-val">5</span><span class="jbs-label">Applied</span></div>
+        <div class="jbs"><span class="jbs-val">2</span><span class="jbs-label">New</span></div>
+        <div class="jbs"><span class="jbs-val">4.7★</span><span class="jbs-label">Avg Rating</span></div>
+        <div class="jbs"><span class="jbs-val">4,200</span><span class="jbs-label">Avg Bid</span></div>
       </div>
     </div>
 
+    <!-- FILTER ROW -->
     <div class="filter-row" style="animation:slideUp 0.4s 0.05s ease both">
-      <select class="filter-select" id="statusFilter">
-        <option value="all">All applicants</option>
-        <option value="pending">Pending</option>
-        <option value="shortlisted">Shortlisted</option>
-        <option value="hired">Hired</option>
-        <option value="rejected">Declined</option>
-        <option value="withdrawn">Withdrawn</option>
-        <option value="verified">Verified only</option>
-        <option value="new">New only</option>
-      </select>
-      <select class="filter-select" id="sortFilter">
-        <option value="rating">Sort: Highest rated</option>
-        <option value="bid_low">Sort: Lowest bid</option>
-        <option value="jobs">Sort: Most jobs</option>
-        <option value="newest">Sort: Newest first</option>
-      </select>
-      <input class="filter-search" id="searchApplicants" type="text" placeholder="Search applicants by name, skill, or area">
-      <div class="app-count" id="appCount"><strong>0</strong> applicants</div>
+      <select class="filter-select"><option>All applicants</option><option>Shortlisted</option><option>New only</option><option>Verified only</option></select>
+      <select class="filter-select"><option>Sort: Highest rated</option><option>Sort: Lowest bid</option><option>Sort: Most jobs</option><option>Sort: Nearest</option></select>
+      <input class="filter-search" type="text" placeholder="Search applicants…">
+      <div class="app-count"><strong>5</strong> applicants · <strong>2</strong> shortlisted</div>
     </div>
 
-    <div class="applicants-list" id="applicantsList">
-      <div class="state-card">
-        <div class="state-icon">⏳</div>
-        <div class="state-title">Loading applicants…</div>
-        <div class="state-sub">Fetching your jobs and incoming applications from the backend.</div>
+    <!-- APPLICANT CARDS -->
+    <div class="applicants-list">
+
+      <!-- Card 1 — Shortlisted -->
+      <div class="applicant-card shortlisted" style="animation-delay:0.1s">
+        <div class="ac-top">
+          <div class="ac-avatar">⚡<div class="ac-verified">✓</div></div>
+          <div class="ac-info">
+            <div class="ac-name">Faith Njeri <span class="new-badge">New</span></div>
+            <div class="ac-trade">Electrician · KPLC Licensed</div>
+            <div class="ac-loc">📍 Kasarani · 3.2 km away</div>
+            <div class="ac-rating"><span class="ac-stars">★★★★★</span><span class="ac-score">4.8</span><span class="ac-jobs">(89 jobs)</span></div>
+          </div>
+          <div class="ac-right">
+            <div class="ac-bid">KES 4,500</div>
+            <div class="ac-bid-label">Proposed rate</div>
+          </div>
+        </div>
+        <div class="ac-stats">
+          <div class="acs"><div class="acs-val">89</div><div class="acs-label">Jobs done</div></div>
+          <div class="acs"><div class="acs-val">4.8★</div><div class="acs-label">Rating</div></div>
+          <div class="acs"><div class="acs-val">98%</div><div class="acs-label">Completion</div></div>
+          <div class="acs"><div class="acs-val">< 1hr</div><div class="acs-label">Response</div></div>
+          <div class="acs"><div class="acs-val">5 yrs</div><div class="acs-label">Experience</div></div>
+        </div>
+        <div class="ac-cover">"I have installed over 30 CCTV systems in Nairobi — both residential and commercial. I work with Hikvision and Dahua equipment and can source materials or work with yours. Available Thursday."</div>
+        <div class="ac-skills">
+          <span class="skill-chip">CCTV Installation</span><span class="skill-chip">NVR Setup</span><span class="skill-chip">Cable concealment</span><span class="skill-chip">Solar</span><span class="skill-chip">KPLC wiring</span>
+        </div>
+        <div class="ac-actions">
+          <button class="ac-btn ac-btn-hire" onclick="openHireModal('Faith Njeri','4,500')">✅ Hire Faith — KES 4,500</button>
+          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
+          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
+          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
+        </div>
       </div>
+
+      <!-- Card 2 -->
+      <div class="applicant-card" style="animation-delay:0.15s">
+        <div class="ac-top">
+          <div class="ac-avatar">🔌<div class="ac-verified">✓</div></div>
+          <div class="ac-info">
+            <div class="ac-name">Samuel Otieno</div>
+            <div class="ac-trade">Electrician</div>
+            <div class="ac-loc">📍 South B · 4.8 km away</div>
+            <div class="ac-rating"><span class="ac-stars">★★★★</span>☆<span class="ac-score">4.5</span><span class="ac-jobs">(42 jobs)</span></div>
+          </div>
+          <div class="ac-right">
+            <div class="ac-bid">KES 3,800</div>
+            <div class="ac-bid-label">Proposed rate</div>
+          </div>
+        </div>
+        <div class="ac-stats">
+          <div class="acs"><div class="acs-val">42</div><div class="acs-label">Jobs done</div></div>
+          <div class="acs"><div class="acs-val">4.5★</div><div class="acs-label">Rating</div></div>
+          <div class="acs"><div class="acs-val">95%</div><div class="acs-label">Completion</div></div>
+          <div class="acs"><div class="acs-val">2–3hr</div><div class="acs-label">Response</div></div>
+          <div class="acs"><div class="acs-val">3 yrs</div><div class="acs-label">Experience</div></div>
+        </div>
+        <div class="ac-cover">"Experienced with CCTV and general electrical work. I can come any day this week and will cable-manage properly."</div>
+        <div class="ac-skills"><span class="skill-chip">CCTV</span><span class="skill-chip">Wiring</span><span class="skill-chip">General electrical</span></div>
+        <div class="ac-actions">
+          <button class="ac-btn ac-btn-hire" onclick="openHireModal('Samuel Otieno','3,800')">✅ Hire Samuel — KES 3,800</button>
+          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
+          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
+          <button class="ac-btn ac-btn-short" onclick="this.textContent='★ Shortlisted'">☆ Shortlist</button>
+          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
+        </div>
+      </div>
+
+      <!-- Card 3 — New -->
+      <div class="applicant-card" style="animation-delay:0.2s">
+        <div class="ac-top">
+          <div class="ac-avatar">⚡</div>
+          <div class="ac-info">
+            <div class="ac-name">David Mutua <span class="new-badge">New</span></div>
+            <div class="ac-trade">Senior Electrician</div>
+            <div class="ac-loc">📍 Karen · 9.1 km away</div>
+            <div class="ac-rating"><span class="ac-stars">★★★★★</span><span class="ac-score">5.0</span><span class="ac-jobs">(204 jobs)</span></div>
+          </div>
+          <div class="ac-right">
+            <div class="ac-bid">KES 6,000</div>
+            <div class="ac-bid-label">Proposed rate</div>
+          </div>
+        </div>
+        <div class="ac-stats">
+          <div class="acs"><div class="acs-val">204</div><div class="acs-label">Jobs done</div></div>
+          <div class="acs"><div class="acs-val">5.0★</div><div class="acs-label">Rating</div></div>
+          <div class="acs"><div class="acs-val">100%</div><div class="acs-label">Completion</div></div>
+          <div class="acs"><div class="acs-val">< 30m</div><div class="acs-label">Response</div></div>
+          <div class="acs"><div class="acs-val">12 yrs</div><div class="acs-label">Experience</div></div>
+        </div>
+        <div class="ac-cover">"Master electrician with perfect record. I supply all materials at cost + my labour. CCTV is my specialty — I've done 60+ installations this year alone."</div>
+        <div class="ac-skills"><span class="skill-chip">CCTV</span><span class="skill-chip">IP Cameras</span><span class="skill-chip">NVR/DVR</span><span class="skill-chip">Network cabling</span><span class="skill-chip">Solar</span></div>
+        <div class="ac-actions">
+          <button class="ac-btn ac-btn-hire" onclick="openHireModal('David Mutua','6,000')">✅ Hire David — KES 6,000</button>
+          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
+          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
+          <button class="ac-btn ac-btn-short" onclick="this.textContent='★ Shortlisted'">☆ Shortlist</button>
+          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
 
+<!-- HIRE MODAL -->
 <div class="modal-overlay" id="hireModal">
   <div class="modal">
-    <div class="modal-title">Hire <span id="hiree">Applicant</span></div>
-    <div class="modal-sub">Confirm the agreed amount and start date. This creates the booking and moves the job into your hires.</div>
+    <div class="modal-title">Hire <span id="hiree">Faith Njeri</span></div>
+    <div class="modal-sub">Confirm the agreed rate and we'll send an M-Pesa STK push to your phone to lock in the booking.</div>
     <div class="modal-field">
-      <label class="modal-label" for="hireAmount">Agreed Rate (KES)</label>
-      <input class="modal-input" type="number" id="hireAmount" min="1" step="1">
+      <label class="modal-label">Agreed Rate (KES)</label>
+      <input class="modal-input" type="number" id="hireAmount" value="4500">
     </div>
     <div class="modal-field">
-      <label class="modal-label" for="hireStartDate">Agreed Start Date</label>
-      <input class="modal-input" type="date" id="hireStartDate">
+      <label class="modal-label">Agreed Start Date</label>
+      <input class="modal-input" type="date">
     </div>
-    <div class="mpesa-info">📌 <div>This step creates the hire and reserves the application. Payment confirmation can continue from the booking flow after this.</div></div>
-    <div class="modal-status" id="hireModalStatus"></div>
+    <div class="mpesa-info">📱 <div>You'll receive an M-Pesa STK push on +254 712 345 678. Funds are held in escrow until you confirm the job is done.</div></div>
     <div class="modal-btns">
-      <button class="modal-cancel" id="hireCancelButton" type="button">Cancel</button>
-      <button class="modal-confirm" id="hireConfirmButton" type="button">Confirm Hire →</button>
+      <button class="modal-cancel" onclick="closeHireModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmHire()">Confirm & Pay via M-Pesa →</button>
     </div>
   </div>
 </div>
 
 <script>
-const TRADE_ICONS = {
-  plumber: '🚿',
-  electrician: '⚡',
-  mason: '🧱',
-  mama_fua: '👗',
-  carpenter: '🪚',
-  painter: '🎨',
-  roofer: '🏠',
-  gardener: '🌿',
-  driver_mover: '🛻',
-  security: '🔒',
-  other: '🛠️',
-};
-
-const JOB_STATUS_LABELS = {
-  open: 'Open for applications',
-  reviewing: 'Reviewing applicants',
-  active: 'Hire in progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-  expired: 'Expired',
-};
-
-const APPLICATION_STATUS_LABELS = {
-  pending: 'Pending',
-  shortlisted: 'Shortlisted',
-  hired: 'Hired',
-  rejected: 'Declined',
-  withdrawn: 'Withdrawn',
-};
-
-let jobs = [];
-let currentJobId = null;
-let applications = [];
-let busyApplicationIds = new Set();
-let hireApplicationId = null;
-let isHiring = false;
-
-function escapeHtml(value) {
-  if (window.KazixProfile && typeof window.KazixProfile.escapeHtml === 'function') {
-    return window.KazixProfile.escapeHtml(value);
-  }
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function getTradeIcon(trade) {
-  return TRADE_ICONS[trade] || '🛠️';
-}
-
-function getTradeLabel(trade) {
-  if (window.KazixProfile && typeof window.KazixProfile.formatTrade === 'function') {
-    return window.KazixProfile.formatTrade(trade);
-  }
-  return 'Skilled Worker';
-}
-
-function getQueryJobId() {
-  const params = new URLSearchParams(window.location.search);
-  const value = (params.get('job') || params.get('id') || '').trim();
-  return value || null;
-}
-
-function syncJobInUrl(jobId) {
-  const url = new URL(window.location.href);
-  if (jobId) {
-    url.searchParams.set('job', jobId);
-  } else {
-    url.searchParams.delete('job');
-  }
-  window.history.replaceState({}, '', url);
-}
-
-function getCurrentJob() {
-  return jobs.find((job) => job.id === currentJobId) || null;
-}
-
-function formatCurrency(value) {
-  if (!Number.isFinite(value)) {
-    return 'Not shared';
-  }
-  return `KES ${value.toLocaleString()}`;
-}
-
-function formatBudget(job) {
-  const min = Number.isFinite(job?.budget_min) ? job.budget_min : null;
-  const max = Number.isFinite(job?.budget_max) ? job.budget_max : null;
-  if (min !== null && max !== null) {
-    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
-  }
-  if (min !== null) {
-    return `From KES ${min.toLocaleString()}`;
-  }
-  if (max !== null) {
-    return `Up to KES ${max.toLocaleString()}`;
-  }
-  return 'Budget on request';
-}
-
-function formatRelativeTime(value) {
-  if (!value) return 'Applied recently';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Applied recently';
-  const diffMs = Date.now() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Applied just now';
-  if (diffHours < 24) return `Applied ${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Applied yesterday';
-  return `Applied ${diffDays} days ago`;
-}
-
-function formatDeadline(value) {
-  if (!value) return 'No deadline set';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Deadline pending';
-  const diffMs = date.getTime() - Date.now();
-  if (diffMs <= 0) return 'Applications closed';
-  const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-  if (diffHours < 24) return `Closes in ${diffHours}h`;
-  const diffDays = Math.ceil(diffHours / 24);
-  if (diffDays === 1) return 'Closes in 1 day';
-  return `Closes in ${diffDays} days`;
-}
-
-function initials(name) {
-  if (window.KazixProfile && typeof window.KazixProfile.initials === 'function') {
-    return window.KazixProfile.initials(name);
-  }
-  return 'KX';
-}
-
-function buildAvatar(profile, fallbackName) {
-  const name = profile?.full_name || fallbackName || 'Applicant';
-  if (profile?.avatar_url) {
-    return `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(name)}">`;
-  }
-  return escapeHtml(initials(name));
-}
-
-function buildStars(rating) {
-  const score = Number.isFinite(rating) ? Math.max(0, Math.min(5, rating)) : 0;
-  const rounded = Math.round(score);
-  return `${'★'.repeat(rounded)}${'☆'.repeat(5 - rounded)}`;
-}
-
-function isVerifiedApplicant(application) {
-  return Boolean(application?.profiles?.is_verified || application?.fundi_profiles?.kyc_status === 'approved');
-}
-
-function isNewApplicant(application) {
-  if (!application?.created_at) return false;
-  const createdAt = new Date(application.created_at);
-  if (Number.isNaN(createdAt.getTime())) return false;
-  return (Date.now() - createdAt.getTime()) <= (1000 * 60 * 60 * 24);
-}
-
-function countShortlisted() {
-  return applications.filter((application) => application.status === 'shortlisted').length;
-}
-
-function countActiveApplicants() {
-  return applications.filter((application) => application.status !== 'withdrawn').length;
-}
-
-function updateLocalBadges() {
-  const count = countActiveApplicants();
-  if (window.KazixProfile && typeof window.KazixProfile.setNavCount === 'function') {
-    window.KazixProfile.setNavCount('job-applicants.html', count);
-  }
-}
-
-function setPageMessage(message, tone) {
-  const box = document.getElementById('pageMessage');
-  if (!message) {
-    box.className = 'page-message info';
-    box.textContent = '';
-    return;
-  }
-  box.className = `page-message ${tone || 'info'} open`;
-  box.textContent = message;
-}
-
-function clearPageMessage() {
-  const box = document.getElementById('pageMessage');
-  box.className = 'page-message info';
-  box.textContent = '';
-}
-
-function setHireModalStatus(message, tone) {
-  const box = document.getElementById('hireModalStatus');
-  if (!message) {
-    box.className = 'modal-status';
-    box.textContent = '';
-    return;
-  }
-  box.className = `modal-status ${tone || 'error'} open`;
-  box.textContent = message;
-}
-
-function renderJobPicker() {
-  const select = document.getElementById('jobPicker');
-  if (!jobs.length) {
-    select.innerHTML = '<option value="">No jobs available</option>';
-    select.disabled = true;
-    return;
-  }
-
-  select.disabled = false;
-  select.innerHTML = jobs.map((job) => {
-    const label = `${job.title} • ${JOB_STATUS_LABELS[job.status] || job.status || 'Draft'}`;
-    return `<option value="${escapeHtml(job.id)}">${escapeHtml(label)}</option>`;
-  }).join('');
-  select.value = currentJobId || jobs[0].id;
-}
-
-function renderBanner() {
-  const job = getCurrentJob();
-  if (!job) {
-    document.getElementById('jobTradeIcon').textContent = '🛠️';
-    document.getElementById('jobTitle').textContent = 'No job selected';
-    document.getElementById('jobTradeLabel').textContent = 'Trade pending';
-    document.getElementById('jobLocationLabel').textContent = 'Location pending';
-    document.getElementById('jobBudgetLabel').textContent = 'Budget pending';
-    document.getElementById('jobDeadlineLabel').textContent = 'Deadline pending';
-    document.getElementById('jobAppliedCount').textContent = '0';
-    document.getElementById('jobNewCount').textContent = '0';
-    document.getElementById('jobAvgRating').textContent = '0.0★';
-    document.getElementById('jobAvgBid').textContent = 'KES 0';
-    document.getElementById('jobBreadcrumbTitle').textContent = 'Applications';
-    document.getElementById('pageSubtitle').textContent = 'Review bids, shortlist strong matches, and lock in a hire from your live jobs.';
-    document.title = 'Applications — KaziX';
-    return;
-  }
-
-  const ratingValues = applications
-    .map((application) => Number(application?.fundi_profiles?.rating_avg))
-    .filter((value) => Number.isFinite(value) && value > 0);
-  const bidValues = applications
-    .map((application) => Number(application?.bid_amount))
-    .filter((value) => Number.isFinite(value) && value > 0);
-  const avgRating = ratingValues.length
-    ? (ratingValues.reduce((sum, value) => sum + value, 0) / ratingValues.length).toFixed(1)
-    : '0.0';
-  const avgBid = bidValues.length
-    ? Math.round(bidValues.reduce((sum, value) => sum + value, 0) / bidValues.length)
-    : 0;
-
-  document.getElementById('jobTradeIcon').textContent = getTradeIcon(job.trade);
-  document.getElementById('jobTitle').textContent = job.title || 'Untitled job';
-  document.getElementById('jobTradeLabel').textContent = `${getTradeIcon(job.trade)} ${getTradeLabel(job.trade)}`;
-  document.getElementById('jobLocationLabel').textContent = `📍 ${[job.area, job.county].filter(Boolean).join(', ') || 'Location pending'}`;
-  document.getElementById('jobBudgetLabel').textContent = `💰 ${formatBudget(job)}`;
-  document.getElementById('jobDeadlineLabel').textContent = `⏰ ${formatDeadline(job.expires_at)}`;
-  document.getElementById('jobAppliedCount').textContent = String(countActiveApplicants());
-  document.getElementById('jobNewCount').textContent = String(applications.filter(isNewApplicant).length);
-  document.getElementById('jobAvgRating').textContent = `${avgRating}★`;
-  document.getElementById('jobAvgBid').textContent = formatCurrency(avgBid);
-  document.getElementById('jobBreadcrumbTitle').textContent = job.title || 'Applications';
-  document.getElementById('pageSubtitle').textContent = `Review ${countActiveApplicants()} applications on ${job.title || 'this job'} and move strong matches into hires.`;
-  document.title = `Applications — ${job.title || 'Job'} · KaziX`;
-}
-
-function getVisibleApplications() {
-  const filterValue = document.getElementById('statusFilter').value;
-  const sortValue = document.getElementById('sortFilter').value;
-  const query = document.getElementById('searchApplicants').value.trim().toLowerCase();
-
-  let visible = applications.slice();
-
-  if (filterValue === 'verified') {
-    visible = visible.filter(isVerifiedApplicant);
-  } else if (filterValue === 'new') {
-    visible = visible.filter(isNewApplicant);
-  } else if (filterValue !== 'all') {
-    visible = visible.filter((application) => application.status === filterValue);
-  }
-
-  if (query) {
-    visible = visible.filter((application) => {
-      const profile = application.profiles || {};
-      const fundi = application.fundi_profiles || {};
-      const haystack = [
-        profile.full_name,
-        profile.area,
-        profile.county,
-        fundi.trade,
-        Array.isArray(fundi.skills) ? fundi.skills.join(' ') : '',
-        application.cover_note,
-      ].join(' ').toLowerCase();
-      return haystack.includes(query);
-    });
-  }
-
-  visible.sort((left, right) => {
-    if (sortValue === 'rating') {
-      return (Number(right?.fundi_profiles?.rating_avg) || 0) - (Number(left?.fundi_profiles?.rating_avg) || 0);
-    }
-    if (sortValue === 'bid_low') {
-      const leftBid = Number(left?.bid_amount);
-      const rightBid = Number(right?.bid_amount);
-      const safeLeft = Number.isFinite(leftBid) ? leftBid : Number.MAX_SAFE_INTEGER;
-      const safeRight = Number.isFinite(rightBid) ? rightBid : Number.MAX_SAFE_INTEGER;
-      return safeLeft - safeRight;
-    }
-    if (sortValue === 'jobs') {
-      return (Number(right?.fundi_profiles?.jobs_completed) || 0) - (Number(left?.fundi_profiles?.jobs_completed) || 0);
-    }
-    return new Date(right?.created_at || 0).getTime() - new Date(left?.created_at || 0).getTime();
-  });
-
-  return visible;
-}
-
-function renderStateCard(icon, title, body, linkHref, linkLabel) {
-  document.getElementById('appCount').innerHTML = '<strong>0</strong> applicants';
-  document.getElementById('applicantsList').innerHTML = `
-    <div class="state-card">
-      <div class="state-icon">${icon}</div>
-      <div class="state-title">${escapeHtml(title)}</div>
-      <div class="state-sub">${escapeHtml(body)}</div>
-      ${linkHref ? `<a class="state-link" href="${escapeHtml(linkHref)}">${escapeHtml(linkLabel || 'Open')}</a>` : ''}
-    </div>
-  `;
-}
-
-function buildApplicationNote(application, job) {
-  if (application.status === 'hired') {
-    return { tone: 'success', text: 'This worker has been hired. The job is now in your hires flow.' };
-  }
-  if (application.status === 'withdrawn') {
-    return { tone: 'muted', text: 'This applicant withdrew before you made a hiring decision.' };
-  }
-  if (application.status === 'rejected') {
-    return { tone: 'muted', text: 'You marked this application as declined. You can reopen it if plans change.' };
-  }
-  if (job && !['open', 'reviewing'].includes(job.status)) {
-    return { tone: 'warn', text: `This job is ${JOB_STATUS_LABELS[job.status] || job.status}. Applicant actions are now locked.` };
-  }
-  return null;
-}
-
-function renderApplicants() {
-  const job = getCurrentJob();
-
-  if (!jobs.length) {
-    renderStateCard('🧰', 'No jobs to review yet', 'Post your first job and incoming applications will appear here.', 'post-job.html', '➕ Post a Job');
-    return;
-  }
-
-  if (!job) {
-    renderStateCard('📋', 'Pick a job to begin', 'Select one of your jobs above to load its applicants.');
-    return;
-  }
-
-  if (!applications.length) {
-    renderStateCard('📭', 'No applicants yet', 'This job is live, but no one has applied yet. Check back soon or share the listing with more workers.', 'my-jobs.html', '📋 View My Jobs');
-    return;
-  }
-
-  const visible = getVisibleApplications();
-  document.getElementById('appCount').innerHTML = `<strong>${visible.length}</strong> applicants · <strong>${countShortlisted()}</strong> shortlisted`;
-
-  if (!visible.length) {
-    renderStateCard('🔎', 'No matches for these filters', 'Try changing the status filter or search text to see more applicants.');
-    return;
-  }
-
-  const canManageApplicants = ['open', 'reviewing'].includes(job.status);
-  document.getElementById('applicantsList').innerHTML = visible.map((application, index) => {
-    const profile = application.profiles || {};
-    const fundi = application.fundi_profiles || {};
-    const name = profile.full_name || 'Unnamed worker';
-    const rating = Number(fundi.rating_avg) || 0;
-    const jobsDone = Number(fundi.jobs_completed) || 0;
-    const experience = Number.isFinite(Number(fundi.experience_years)) ? `${Number(fundi.experience_years)} yrs` : 'Not listed';
-    const location = [profile.area, profile.county].filter(Boolean).join(', ') || 'Location not added';
-    const bidAmount = Number(application.bid_amount);
-    const rateMin = Number(fundi.rate_min);
-    const status = application.status || 'pending';
-    const note = buildApplicationNote(application, job);
-    const skills = Array.isArray(fundi.skills) ? fundi.skills.slice(0, 6) : [];
-    const isBusy = busyApplicationIds.has(application.id);
-    const canHire = canManageApplicants && ['pending', 'shortlisted'].includes(status);
-    const canShortlist = canManageApplicants && status === 'pending';
-    const canReopen = canManageApplicants && ['shortlisted', 'rejected'].includes(status);
-    const canReject = canManageApplicants && ['pending', 'shortlisted'].includes(status);
-    const verifiedBadge = isVerifiedApplicant(application)
-      ? '<div class="ac-verified">✓</div>'
-      : '';
-    const trade = fundi.trade || job.trade;
-    const messageHref = application.fundi_id && window.KazixProfile && typeof window.KazixProfile.buildMessagesPath === 'function'
-      ? window.KazixProfile.buildMessagesPath({
-        participantId: application.fundi_id,
-        jobId: job.id,
-        applicationId: application.id,
-      })
-      : 'messages.html';
-    const profileHref = window.KazixProfile && typeof window.KazixProfile.profilePath === 'function'
-      ? window.KazixProfile.profilePath('fundi', application.fundi_id)
-      : `worker-profile.html?id=${encodeURIComponent(application.fundi_id || '')}`;
-
-    return `
-      <div class="applicant-card ${escapeHtml(status)}" style="animation-delay:${(index + 1) * 0.05}s">
-        <div class="ac-top">
-          <div class="ac-avatar">${buildAvatar(profile, name)}${verifiedBadge}</div>
-          <div class="ac-info">
-            <div class="ac-name">
-              <span>${escapeHtml(name)}</span>
-              ${isNewApplicant(application) ? '<span class="new-badge">New</span>' : ''}
-            </div>
-            <div class="ac-trade">${escapeHtml(getTradeLabel(trade))}</div>
-            <div class="ac-loc">📍 ${escapeHtml(location)} · ${escapeHtml(formatRelativeTime(application.created_at))}</div>
-            <div class="ac-rating">
-              <span class="ac-stars">${escapeHtml(buildStars(rating))}</span>
-              <span class="ac-score">${escapeHtml(rating.toFixed(1))}</span>
-              <span class="ac-jobs">(${escapeHtml(String(jobsDone))} jobs)</span>
-            </div>
-          </div>
-          <div class="ac-right">
-            <span class="ac-status-pill ${escapeHtml(status)}">${escapeHtml(APPLICATION_STATUS_LABELS[status] || status)}</span>
-            <div class="ac-bid">${escapeHtml(formatCurrency(bidAmount))}</div>
-            <div class="ac-bid-label">Proposed rate</div>
-          </div>
-        </div>
-        <div class="ac-stats">
-          <div class="acs"><div class="acs-val">${escapeHtml(String(jobsDone))}</div><div class="acs-label">Jobs done</div></div>
-          <div class="acs"><div class="acs-val">${escapeHtml(rating.toFixed(1))}★</div><div class="acs-label">Rating</div></div>
-          <div class="acs"><div class="acs-val">${escapeHtml(experience)}</div><div class="acs-label">Experience</div></div>
-          <div class="acs"><div class="acs-val">${escapeHtml(Number.isFinite(rateMin) && rateMin > 0 ? formatCurrency(rateMin) : 'Not shared')}</div><div class="acs-label">From rate</div></div>
-        </div>
-        <div class="ac-cover">${escapeHtml(application.cover_note || 'No cover note was included with this application.')}</div>
-        ${note ? `<div class="ac-note ${escapeHtml(note.tone)}">${escapeHtml(note.text)}</div>` : ''}
-        <div class="ac-skills">
-          ${(skills.length ? skills : ['No skills added yet']).map((skill) => `<span class="skill-chip">${escapeHtml(skill)}</span>`).join('')}
-        </div>
-        <div class="ac-actions">
-          ${status === 'hired'
-            ? '<a href="my-hires.html" class="ac-btn ac-btn-hire">✅ View Hire</a>'
-            : `<button class="ac-btn ac-btn-hire" type="button" data-action="hire" data-id="${escapeHtml(application.id)}" ${canHire && !isBusy ? '' : 'disabled'}>✅ Hire ${escapeHtml(name.split(' ')[0] || 'Worker')}</button>`
-          }
-          <a href="${escapeHtml(messageHref)}" class="ac-btn ac-btn-msg">💬 Message</a>
-          <a href="${escapeHtml(profileHref)}" class="ac-btn ac-btn-view">View Profile</a>
-          ${canShortlist
-            ? `<button class="ac-btn ac-btn-short" type="button" data-action="status" data-id="${escapeHtml(application.id)}" data-status="shortlisted" ${isBusy ? 'disabled' : ''}>☆ Shortlist</button>`
-            : ''
-          }
-          ${canReopen
-            ? `<button class="ac-btn ac-btn-short" type="button" data-action="status" data-id="${escapeHtml(application.id)}" data-status="pending" ${isBusy ? 'disabled' : ''}>↺ Reopen Review</button>`
-            : ''
-          }
-          ${canReject
-            ? `<button class="ac-btn ac-btn-reject" type="button" data-action="status" data-id="${escapeHtml(application.id)}" data-status="rejected" ${isBusy ? 'disabled' : ''}>Decline ✕</button>`
-            : ''
-          }
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function updateCurrentJobSelection(jobId) {
-  currentJobId = jobId;
-  syncJobInUrl(jobId);
-  renderJobPicker();
-  renderBanner();
-}
-
-async function loadApplicationsForCurrentJob() {
-  const job = getCurrentJob();
-  if (!job) {
-    applications = [];
-    renderBanner();
-    renderApplicants();
-    return;
-  }
-
-  renderBanner();
-  renderStateCard('⏳', 'Loading applicants…', 'Pulling the latest bids and worker details for this job.');
-
-  try {
-    const payload = await window.KazixProfile.requestJson(`/v1/jobs/${encodeURIComponent(job.id)}/applications`, {
-      auth: true,
-      showError: false,
-    });
-    applications = Array.isArray(payload?.data) ? payload.data.slice().reverse() : [];
-    clearPageMessage();
-    updateLocalBadges();
-    renderBanner();
-    renderApplicants();
-  } catch (error) {
-    console.error('Failed to load job applications', error);
-    applications = [];
-    updateLocalBadges();
-    renderBanner();
-    renderStateCard('⚠️', 'Could not load applicants', error.message || 'Try refreshing in a moment.');
-  }
-}
-
-function openHireModal(applicationId) {
-  const application = applications.find((entry) => entry.id === applicationId);
-  const job = getCurrentJob();
-  if (!application || !job) {
-    return;
-  }
-
-  hireApplicationId = applicationId;
-  const name = application?.profiles?.full_name || 'this worker';
-  const bidAmount = Number(application.bid_amount);
-  const fallbackRate = Number(application?.fundi_profiles?.rate_min);
-  const amount = Number.isFinite(bidAmount) && bidAmount > 0
-    ? bidAmount
-    : (Number.isFinite(fallbackRate) && fallbackRate > 0 ? fallbackRate : '');
-
+function openHireModal(name, amount) {
   document.getElementById('hiree').textContent = name;
-  document.getElementById('hireAmount').value = amount;
-  document.getElementById('hireStartDate').value = job.preferred_date || '';
-  setHireModalStatus('');
+  document.getElementById('hireAmount').value = amount.replace(',','');
   document.getElementById('hireModal').classList.add('open');
 }
-
-function closeHireModal() {
-  if (isHiring) {
-    return;
-  }
-  hireApplicationId = null;
-  document.getElementById('hireModal').classList.remove('open');
-  setHireModalStatus('');
+function closeHireModal() { document.getElementById('hireModal').classList.remove('open'); }
+function confirmHire() {
+  closeHireModal();
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);background:#1B6B3A;color:#fff;padding:.75rem 1.5rem;border-radius:4px;font-family:\'DM Sans\',sans-serif;font-size:.9rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
+  banner.textContent = '✅ M-Pesa STK push sent — check your phone to complete payment.';
+  document.body.appendChild(banner);
+  setTimeout(() => { banner.remove(); location.href = 'my-hires.html'; }, 2500);
 }
-
-async function updateApplicationStatus(applicationId, nextStatus) {
-  const actionLabel = nextStatus === 'rejected' ? 'decline' : 'update';
-  if (nextStatus === 'rejected' && !window.confirm('Decline this application? You can reopen it later if needed.')) {
-    return;
-  }
-
-  try {
-    busyApplicationIds.add(applicationId);
-    renderApplicants();
-    const updated = await window.KazixProfile.requestJson(`/v1/applications/${encodeURIComponent(applicationId)}/client`, {
-      auth: true,
-      method: 'PATCH',
-      body: { status: nextStatus },
-      showError: false,
-    });
-    applications = applications.map((application) => (
-      application.id === applicationId
-        ? { ...application, ...updated }
-        : application
-    ));
-    const job = getCurrentJob();
-    if (job && job.status === 'open' && ['shortlisted', 'rejected'].includes(nextStatus)) {
-      job.status = 'reviewing';
-    }
-    setPageMessage(
-      nextStatus === 'pending'
-        ? 'Application moved back into review.'
-        : `Application updated successfully. The worker can now see this ${actionLabel}.`,
-      'success'
-    );
-    window.KazixProfile.clearDashboardStateCache();
-    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
-    updateLocalBadges();
-    renderBanner();
-    renderApplicants();
-  } catch (error) {
-    console.error('Failed to update application status', error);
-    setPageMessage(error.message || 'Could not update that application right now.', 'error');
-  } finally {
-    busyApplicationIds.delete(applicationId);
-    renderApplicants();
-  }
-}
-
-async function confirmHire() {
-  if (isHiring || !hireApplicationId) {
-    return;
-  }
-
-  const amount = Number.parseInt(document.getElementById('hireAmount').value, 10);
-  const startDate = document.getElementById('hireStartDate').value || null;
-  if (!Number.isFinite(amount) || amount < 1) {
-    setHireModalStatus('Enter a valid agreed amount before confirming the hire.', 'error');
-    return;
-  }
-
-  try {
-    isHiring = true;
-    document.getElementById('hireConfirmButton').disabled = true;
-    setHireModalStatus('');
-    const booking = await window.KazixProfile.requestJson('/v1/bookings/hire', {
-      auth: true,
-      method: 'POST',
-      body: {
-        application_id: hireApplicationId,
-        agreed_amount: amount,
-        start_date: startDate,
-      },
-      showError: false,
-    });
-    applications = applications.map((application) => (
-      application.id === hireApplicationId
-        ? { ...application, status: 'hired' }
-        : application
-    ));
-    const job = getCurrentJob();
-    if (job) {
-      job.status = 'active';
-    }
-    isHiring = false;
-    document.getElementById('hireConfirmButton').disabled = false;
-    closeHireModal();
-    setPageMessage('Hire created successfully. The worker has been moved into your hires flow.', 'success');
-    window.KazixProfile.clearDashboardStateCache();
-    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
-    updateLocalBadges();
-    renderBanner();
-    renderApplicants();
-    if (booking && window.confirm('The booking is ready. Open My Hires now?')) {
-      window.location.href = 'my-hires.html';
-    }
-  } catch (error) {
-    console.error('Failed to hire applicant', error);
-    setHireModalStatus(error.message || 'Could not complete the hire right now.', 'error');
-  } finally {
-    isHiring = false;
-    document.getElementById('hireConfirmButton').disabled = false;
-  }
-}
-
-async function initApplicantManagementPage() {
-  try {
-    const shellData = await window.KazixProfile.hydrateShell({ silent: false });
-    const role = shellData?.profile?.role || '';
-    if (!['client', 'admin'].includes(role)) {
-      renderStateCard('🔒', 'Client access only', 'Only client accounts can review applicants for posted jobs.', 'worker-dashboard.html', '⬅ Back to dashboard');
-      document.getElementById('jobPicker').disabled = true;
-      return;
-    }
-
-    const payload = await window.KazixProfile.requestJson('/v1/jobs/mine', {
-      auth: true,
-      showError: false,
-    });
-    jobs = Array.isArray(payload?.data) ? payload.data : [];
-    currentJobId = getQueryJobId();
-    if (!jobs.length) {
-      updateCurrentJobSelection(null);
-      applications = [];
-      updateLocalBadges();
-      renderApplicants();
-      return;
-    }
-
-    if (!jobs.some((job) => job.id === currentJobId)) {
-      currentJobId = jobs[0].id;
-    }
-
-    updateCurrentJobSelection(currentJobId);
-    await loadApplicationsForCurrentJob();
-  } catch (error) {
-    console.error('Failed to initialise applicant management page', error);
-    renderStateCard('⚠️', 'Could not load this page', error.message || 'Try refreshing in a moment.');
-    document.getElementById('jobPicker').disabled = true;
-  }
-}
-
-document.getElementById('jobPicker').addEventListener('change', async function () {
-  updateCurrentJobSelection(this.value || null);
-  await loadApplicationsForCurrentJob();
-});
-
-document.getElementById('statusFilter').addEventListener('change', renderApplicants);
-document.getElementById('sortFilter').addEventListener('change', renderApplicants);
-document.getElementById('searchApplicants').addEventListener('input', renderApplicants);
-
-document.getElementById('applicantsList').addEventListener('click', function (event) {
-  const actionTarget = event.target.closest('[data-action]');
-  if (!actionTarget) {
-    return;
-  }
-
-  const action = actionTarget.dataset.action;
-  const applicationId = actionTarget.dataset.id;
-  if (!applicationId) {
-    return;
-  }
-
-  if (action === 'hire') {
-    openHireModal(applicationId);
-    return;
-  }
-
-  if (action === 'status') {
-    updateApplicationStatus(applicationId, actionTarget.dataset.status || 'pending');
-  }
-});
-
-document.getElementById('hireCancelButton').addEventListener('click', closeHireModal);
-document.getElementById('hireConfirmButton').addEventListener('click', confirmHire);
-document.getElementById('hireModal').addEventListener('click', function (event) {
-  if (event.target === this) {
-    closeHireModal();
-  }
-});
-
-document.addEventListener('DOMContentLoaded', initApplicantManagementPage);
 </script>
 
 <nav class="mobile-nav" aria-label="Primary">
@@ -993,7 +315,7 @@ document.addEventListener('DOMContentLoaded', initApplicantManagementPage);
   </div>
 </nav>
 
-<script src="../assets/js/profile-utils.js"></script>
+
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>

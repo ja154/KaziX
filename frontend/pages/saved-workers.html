@@ -68,20 +68,6 @@
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.saved-grid{grid-template-columns:1fr}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
@@ -89,7 +75,7 @@
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
     <div class="user-chip" onclick="location.href='client-profile.html'">
-      <div class="user-avatar">KX</div><span class="user-name">My account</span>
+      <div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span>
     </div>
   </div>
 </nav>
@@ -111,7 +97,7 @@
     <div class="sidebar-bottom">
       <a class="sidebar-profile" href="client-profile.html">
         <div class="sp-avatar">🏠</div>
-        <div><div class="sp-name">My account</div><div class="sp-role">Client account</div></div>
+        <div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div>
       </a>
     </div>
   </aside>
@@ -341,7 +327,6 @@ function addCollection() {
 </nav>
 
 
-<script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>

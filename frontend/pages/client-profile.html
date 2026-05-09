@@ -6,95 +6,103 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>My Profile — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
-<link rel="stylesheet" href="../assets/css/error-components.css">
 <style>
-.main{max-width:1120px}
-.profile-layout{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+.main{max-width:1100px}
+
+/* PROFILE LAYOUT */
+.profile-layout{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
+
+/* LEFT CARD */
 .profile-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden;position:sticky;top:80px}
-.profile-cover{height:96px;background:var(--ink);position:relative;overflow:hidden}
-.profile-cover::after{content:'CLIENT';position:absolute;right:-4%;bottom:-8%;font-family:'Syne',sans-serif;font-weight:800;font-size:74px;opacity:0.06;letter-spacing:-0.06em;color:#F5F0E8}
-.profile-avatar-wrap{padding:0 1.5rem;margin-top:-34px;margin-bottom:0.9rem;position:relative}
-.p-avatar{width:68px;height:68px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-family:'Syne',sans-serif;font-weight:800;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.profile-cover{height:90px;background:var(--ink);position:relative;overflow:hidden}
+.profile-cover::after{content:'CLIENT';position:absolute;right:-5%;bottom:-10%;font-family:'Syne',sans-serif;font-weight:800;font-size:80px;opacity:0.06;letter-spacing:-0.06em}
+.profile-cover-edit{position:absolute;top:0.6rem;right:0.6rem;background:rgba(245,240,232,0.15);border:none;border-radius:2px;padding:0.3rem 0.6rem;font-size:0.68rem;color:#F5F0E8;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
+.profile-avatar-wrap{padding:0 1.5rem;margin-top:-32px;margin-bottom:0.75rem;position:relative}
+.p-avatar{width:64px;height:64px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.75rem;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.p-avatar-edit{position:absolute;bottom:2px;left:58px;width:20px;height:20px;border-radius:50%;background:var(--ink);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:0.55rem;cursor:pointer;color:white}
 .profile-info{padding:0 1.5rem 1.5rem}
-.p-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.18rem;letter-spacing:-0.03em;margin-bottom:0.15rem}
-.p-type{font-size:0.74rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.85rem}
-.p-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.1rem}
+.p-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-0.03em;margin-bottom:0.15rem}
+.p-type{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem}
+.p-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem}
 .badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.05em}
 .badge-verified{background:rgba(27,107,58,0.12);color:var(--green)}
-.badge-muted{background:var(--cream);color:var(--muted)}
+.badge-member{background:var(--cream);color:var(--muted)}
 .badge-phone{background:rgba(245,166,35,0.15);color:#854F0B}
-.p-stats{display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1.1rem}
+.p-stats{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem}
 .p-stat-row{display:flex;justify-content:space-between;align-items:center;font-size:0.82rem}
 .p-stat-label{color:var(--muted)}
 .p-stat-val{font-weight:700;font-family:'Syne',sans-serif;color:var(--ink)}
+.p-stat-val.green{color:var(--green)}
 .p-divider{height:1px;background:var(--border);margin:1rem 0}
-.p-location,.p-member{font-size:0.8rem;color:var(--muted)}
-.p-location{display:flex;align-items:center;gap:0.45rem;margin-bottom:0.45rem}
-.profile-actions{display:grid;gap:0.7rem;margin-top:1.1rem}
-.public-link{display:block;text-align:center;padding:0.72rem;border:1.5px solid var(--border);border-radius:2px;color:var(--ink);text-decoration:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;transition:all 0.2s}
-.public-link:hover{border-color:var(--ink);background:var(--cream)}
-.logout-btn{display:block;width:100%;padding:0.72rem;border:1.5px solid rgba(192,57,43,0.28);border-radius:2px;background:white;color:var(--rust);font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;transition:all 0.2s}
-.logout-btn:hover{border-color:var(--rust);background:rgba(192,57,43,0.06)}
-.logout-btn:disabled{opacity:0.6;cursor:wait}
+.p-location{display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem}
+.p-member{font-size:0.75rem;color:var(--muted)}
+.edit-profile-btn{width:100%;padding:0.7rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s;margin-top:1.25rem}
+.edit-profile-btn:hover{background:var(--green)}
+.view-public-btn{width:100%;padding:0.65rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.8rem;border:1.5px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem}
+.view-public-btn:hover{border-color:var(--ink)}
+
+/* RIGHT CONTENT */
 .profile-right{display:flex;flex-direction:column;gap:1.25rem}
 .section-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden}
-.sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:0.75rem}
-.sc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.92rem}
-.sc-sub{font-size:0.78rem;color:var(--muted)}
+.sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem}
+.sc-edit{background:none;border:1px solid var(--border);padding:0.3rem 0.8rem;border-radius:2px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.72rem;cursor:pointer;color:var(--ink);transition:all 0.2s}
+.sc-edit:hover{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
 .sc-body{padding:1.25rem 1.5rem}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-.field{display:flex;flex-direction:column;gap:0.4rem}
-.field.full{grid-column:1 / -1}
-.field-label{font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
-.field-help{font-size:0.75rem;color:var(--muted)}
-.text-input,.select-input{width:100%;padding:0.8rem 0.95rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s}
-.text-input:focus,.select-input:focus{border-color:var(--ink)}
-.readonly{opacity:0.75}
-.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent}
-.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
-.notice.success{background:rgba(27,107,58,0.08);border-color:rgba(27,107,58,0.2);color:var(--green)}
-.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
-.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-.summary-box{padding:1rem;border:1px solid var(--border);border-radius:4px;background:var(--cream)}
-.summary-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.35rem}
-.summary-copy{font-size:0.88rem;line-height:1.7;color:var(--steel)}
-.save-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.25rem;flex-wrap:wrap}
-.save-note{font-size:0.78rem;color:var(--muted)}
-.save-btn{padding:0.85rem 1.4rem;background:var(--ink);color:#F5F0E8;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.84rem;cursor:pointer;transition:background 0.2s}
-.save-btn:hover{background:var(--green)}
-.save-btn:disabled{opacity:0.6;cursor:wait}
-.mobile-logout-btn{width:100%;background:none;border:none;text-align:left;cursor:pointer;color:#F5B7AE;font-family:'DM Sans',sans-serif}
-.mobile-logout-btn:hover{background:rgba(192,57,43,0.16);color:#F5F0E8}
-.mobile-logout-btn:disabled{opacity:0.6;cursor:wait}
+.bio-text{font-size:0.9rem;line-height:1.75;color:var(--steel)}
+.bio-placeholder{font-size:0.875rem;color:var(--muted);font-style:italic}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.info-item .info-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem}
+.info-item .info-val{font-size:0.875rem;color:var(--ink);font-weight:500}
 
-@media(max-width:900px){
-  .sidebar{display:none}
-  .profile-layout{grid-template-columns:1fr}
-  .profile-card{position:static}
-  .form-grid,.summary-grid{grid-template-columns:1fr}
-}
+/* JOB HISTORY TABLE */
+.history-table{width:100%;border-collapse:collapse}
+.history-table th{font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);padding:0 0 0.75rem;text-align:left;border-bottom:1px solid var(--border)}
+.history-table td{padding:0.85rem 0;border-bottom:1px solid var(--border);font-size:0.85rem;vertical-align:middle}
+.history-table tr:last-child td{border-bottom:none}
+.ht-trade{font-size:1rem}
+.ht-title{font-weight:500;color:var(--ink)}
+.ht-worker{display:flex;align-items:center;gap:0.5rem}
+.ht-w-avatar{width:24px;height:24px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.65rem;border:1px solid var(--border)}
+.ht-stars{color:var(--saffron);font-size:0.75rem}
+.ht-amount{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem}
+.ht-date{color:var(--muted);font-size:0.78rem}
+.status-pill{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:2px;text-transform:uppercase}
+.sp-done{background:rgba(27,107,58,0.1);color:var(--green)}
+.sp-progress{background:rgba(245,166,35,0.15);color:#854F0B}
+
+/* PREFERENCES */
+.pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.pref-item{border:1.5px solid var(--border);border-radius:4px;padding:1rem;cursor:pointer;transition:all 0.2s}
+.pref-item:hover{border-color:var(--ink)}
+.pref-item.selected{border-color:var(--ink);background:rgba(13,13,13,0.03)}
+.pref-icon{font-size:1.4rem;margin-bottom:0.4rem}
+.pref-label{font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;margin-bottom:0.2rem}
+.pref-sub{font-size:0.72rem;color:var(--muted)}
+
+/* PRIVACY TOGGLES */
+.toggle-list{display:flex;flex-direction:column;gap:0.75rem}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border-radius:4px;border:1px solid var(--border)}
+.toggle-info{flex:1}
+.toggle-label{font-size:0.875rem;font-weight:500}
+.toggle-sub{font-size:0.72rem;color:var(--muted);margin-top:0.15rem}
+.toggle-switch{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:background 0.2s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;top:3px;left:3px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.toggle-switch input:checked + .toggle-slider{background:var(--green)}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(18px)}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.sidebar{display:none}.profile-layout{grid-template-columns:1fr}.profile-card{position:static}.info-grid,.pref-grid{grid-template-columns:1fr}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar" id="navUserAvatar">KX</div><span class="user-name" id="navUserName">My account</span></div>
+    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -113,123 +121,159 @@
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item active" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <a class="sidebar-profile" href="client-profile.html">
-        <div class="sp-avatar" id="sidebarAvatar">KX</div>
-        <div><div class="sp-name" id="sidebarName">My profile</div><div class="sp-role" id="sidebarRole">Client account</div></div>
-      </a>
+      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
     </div>
   </aside>
 
   <main class="main">
     <div style="margin-bottom:2rem;animation:slideUp 0.4s ease both">
-      <div class="page-title">My Profile</div>
-      <div class="page-sub">Keep your employer profile current so workers know who they are dealing with before they accept a job.</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.04em;margin-bottom:0.25rem">My Profile</div>
+      <div style="font-size:0.9rem;color:var(--muted)">Manage how you appear to fundis and update your preferences</div>
     </div>
 
-    <div class="profile-layout" style="animation:slideUp 0.4s 0.05s ease both">
-      <section class="profile-card">
-        <div class="profile-cover"></div>
+    <div class="profile-layout" style="animation:slideUp 0.4s 0.1s ease both">
+
+      <!-- LEFT CARD -->
+      <div class="profile-card">
+        <div class="profile-cover">
+          <button class="profile-cover-edit">✎ Edit cover</button>
+        </div>
         <div class="profile-avatar-wrap">
-          <div class="p-avatar" id="profileAvatar">KX</div>
+          <div class="p-avatar">🏠</div>
+          <div class="p-avatar-edit">✎</div>
         </div>
         <div class="profile-info">
-          <div class="p-name" id="profileName">Loading…</div>
-          <div class="p-type" id="profileType">Client account</div>
-          <div class="p-badges" id="profileBadges"></div>
+          <div class="p-name">Alex Kuria</div>
+          <div class="p-type">Client · Employer</div>
+          <div class="p-badges">
+            <span class="badge badge-verified">✓ Phone Verified</span>
+            <span class="badge badge-phone">📱 M-Pesa Linked</span>
+            <span class="badge badge-member">Member since 2024</span>
+          </div>
           <div class="p-stats">
-            <div class="p-stat-row"><span class="p-stat-label">Verified phone</span><span class="p-stat-val" id="verifiedPhone">Checking…</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Preferred language</span><span class="p-stat-val" id="preferredLanguageBadge">Checking…</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">M-Pesa linked</span><span class="p-stat-val" id="mpesaLinked">Checking…</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Jobs posted</span><span class="p-stat-val">15</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Jobs completed</span><span class="p-stat-val green">12</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Total spent</span><span class="p-stat-val">KES 48,200</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Avg. job value</span><span class="p-stat-val">KES 4,017</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Hire rate</span><span class="p-stat-val">80%</span></div>
           </div>
           <div class="p-divider"></div>
-          <div class="p-location" id="profileLocation">📍 Loading location…</div>
-          <div class="p-member" id="profileMember">Member since…</div>
-          <div class="profile-actions">
-            <a class="public-link" id="publicProfileLink" href="client-public-profile.html">View Public Profile</a>
-            <button class="logout-btn" type="button" onclick="window.KazixProfile.logout()">Log Out</button>
+          <div class="p-location">📍 Kilimani, Nairobi</div>
+          <div class="p-member">Member since January 2024</div>
+          <button class="edit-profile-btn" onclick="toggleEdit()">✎ Edit Profile</button>
+          <button class="view-public-btn">👁 View Public Profile</button>
+        </div>
+      </div>
+
+      <!-- RIGHT SECTIONS -->
+      <div class="profile-right">
+
+        <!-- ABOUT -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-title">About Me</div>
+            <button class="sc-edit" onclick="toggleField('aboutField')">✎ Edit</button>
+          </div>
+          <div class="sc-body">
+            <div id="aboutView"><p class="bio-text">Homeowner in Kilimani, Nairobi. I frequently need reliable fundis for maintenance and renovations. I value punctuality, quality work, and professional communication.</p></div>
+            <div id="aboutField" style="display:none">
+              <textarea style="width:100%;padding:0.85rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:vertical;min-height:100px;outline:none;background:var(--cream);color:var(--ink)" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--border)'">Homeowner in Kilimani, Nairobi. I frequently need reliable fundis for maintenance and renovations. I value punctuality, quality work, and professional communication.</textarea>
+              <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+                <button onclick="saveField('aboutField','aboutView')" style="padding:0.5rem 1.25rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border:none;border-radius:2px;cursor:pointer">Save</button>
+                <button onclick="toggleField('aboutField')" style="padding:0.5rem 1.25rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.78rem;border:1px solid var(--border);border-radius:2px;cursor:pointer">Cancel</button>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      <div class="profile-right">
-        <div class="notice info" id="profileStatus">Loading your profile…</div>
-
-        <form id="clientProfileForm">
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Account Basics</div>
-                <div class="sc-sub">Workers only see the public version of this profile, not your private contact details.</div>
-              </div>
+        <!-- CONTACT & LOCATION INFO -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-title">Contact & Location</div>
+            <button class="sc-edit">✎ Edit</button>
+          </div>
+          <div class="sc-body">
+            <div class="info-grid">
+              <div class="info-item"><div class="info-label">Phone</div><div class="info-val">+254 712 345 678</div></div>
+              <div class="info-item"><div class="info-label">Email</div><div class="info-val">alex.kuria@email.com</div></div>
+              <div class="info-item"><div class="info-label">County</div><div class="info-val">Nairobi</div></div>
+              <div class="info-item"><div class="info-label">Area</div><div class="info-val">Kilimani</div></div>
+              <div class="info-item"><div class="info-label">M-Pesa Number</div><div class="info-val">+254 712 345 678 ✓</div></div>
+              <div class="info-item"><div class="info-label">Preferred Language</div><div class="info-val">English</div></div>
             </div>
-            <div class="sc-body">
-              <div class="form-grid">
-                <label class="field">
-                  <span class="field-label">Full Name</span>
-                  <input class="text-input" id="fullName" type="text" required maxlength="120">
-                </label>
-                <label class="field">
-                  <span class="field-label">Verified Phone</span>
-                  <input class="text-input readonly" id="phone" type="text" readonly>
-                </label>
-                <label class="field">
-                  <span class="field-label">Email</span>
-                  <input class="text-input" id="email" type="email" placeholder="you@example.com">
-                </label>
-                <label class="field">
-                  <span class="field-label">M-Pesa Number</span>
-                  <input class="text-input" id="mpesaNumber" type="tel" placeholder="+254712345678">
-                </label>
-                <label class="field">
-                  <span class="field-label">County</span>
-                  <input class="text-input" id="county" type="text" placeholder="Nairobi">
-                </label>
-                <label class="field">
-                  <span class="field-label">Area</span>
-                  <input class="text-input" id="area" type="text" placeholder="Kilimani">
-                </label>
-                <label class="field">
-                  <span class="field-label">Preferred Language</span>
-                  <select class="select-input" id="preferredLanguage">
-                    <option value="en">English</option>
-                    <option value="sw">Swahili</option>
-                  </select>
-                </label>
+          </div>
+        </div>
+
+        <!-- JOB HISTORY -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-title">Job History</div>
+            <a href="my-jobs.html" style="font-size:0.78rem;color:var(--rust);text-decoration:none;font-weight:600">View all →</a>
+          </div>
+          <div class="sc-body">
+            <table class="history-table">
+              <thead><tr><th>Job</th><th>Fundi</th><th>Rating</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                <tr><td><span class="ht-trade">🪚</span></td><td class="ht-title">Fix garden fence</td><td><div class="ht-worker"><div class="ht-w-avatar">🪚</div>Peter O.</div></td><td class="ht-stars">★★★★★</td><td class="ht-amount">KES 3,500</td><td><span class="status-pill sp-done">Done</span></td></tr>
+                <tr><td><span class="ht-trade">🚿</span></td><td class="ht-title">Kitchen pipe repair</td><td><div class="ht-worker"><div class="ht-w-avatar">🔧</div>James K.</div></td><td class="ht-stars">★★★★★</td><td class="ht-amount">KES 1,800</td><td><span class="status-pill sp-done">Done</span></td></tr>
+                <tr><td><span class="ht-trade">🎨</span></td><td class="ht-title">Paint bedroom + living room</td><td><div class="ht-worker"><div class="ht-w-avatar">🎨</div>Mary A.</div></td><td>—</td><td class="ht-amount">KES 3,200</td><td><span class="status-pill sp-progress">Active</span></td></tr>
+                <tr><td><span class="ht-trade">⚡</span></td><td class="ht-title">Install CCTV cameras</td><td>—</td><td>—</td><td class="ht-amount">KES 5,000</td><td><span class="status-pill sp-progress">Reviewing</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HIRING PREFERENCES -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-title">Hiring Preferences</div>
+            <button class="sc-edit">✎ Edit</button>
+          </div>
+          <div class="sc-body">
+            <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem">I prefer fundis who are</div>
+            <div class="pref-grid">
+              <div class="pref-item selected"><div class="pref-icon">✓</div><div class="pref-label">ID Verified</div><div class="pref-sub">Only verified fundis</div></div>
+              <div class="pref-item selected"><div class="pref-icon">⭐</div><div class="pref-label">4.5+ Rated</div><div class="pref-sub">Top-rated workers only</div></div>
+              <div class="pref-item"><div class="pref-icon">📍</div><div class="pref-label">Within 5km</div><div class="pref-sub">Very close to me</div></div>
+              <div class="pref-item selected"><div class="pref-icon">💬</div><div class="pref-label">English Speaking</div><div class="pref-sub">Can communicate in English</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRIVACY & NOTIFICATIONS -->
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Privacy & Notifications</div></div>
+          <div class="sc-body">
+            <div class="toggle-list">
+              <div class="toggle-row">
+                <div class="toggle-info"><div class="toggle-label">Show profile to fundis</div><div class="toggle-sub">Fundis can see your name and job history when you contact them</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><div class="toggle-label">SMS job alerts</div><div class="toggle-sub">Receive SMS when fundis apply to your jobs</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><div class="toggle-label">Push notifications</div><div class="toggle-sub">Real-time alerts in the app</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><div class="toggle-label">Marketing emails</div><div class="toggle-sub">Tips, new features, and offers from KaziX</div></div>
+                <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Public Profile Preview</div>
-                <div class="sc-sub">This is the kind of trust-building context workers see when you share or open your public profile.</div>
-              </div>
-            </div>
-            <div class="sc-body">
-              <div class="summary-grid">
-                <div class="summary-box">
-                  <div class="summary-label">Public Summary</div>
-                  <div class="summary-copy" id="publicSummary">Loading public summary…</div>
-                </div>
-                <div class="summary-box">
-                  <div class="summary-label">What Stays Private</div>
-                  <div class="summary-copy">Your verified phone number, email address, and M-Pesa number stay on your private account page. Workers only see your public profile details and whatever you share in chats or jobs.</div>
-                </div>
-              </div>
-              <div style="margin-top:1rem" class="field-help">Need to share your public page? Use the “View Public Profile” button on the left.</div>
-            </div>
-          </div>
-
-          <div class="save-row">
-            <div class="save-note">Saving here updates both your private account page and the public employer profile workers can open.</div>
-            <button class="save-btn" id="saveProfileBtn" type="submit">Save Profile</button>
-          </div>
-        </form>
       </div>
     </div>
   </main>
 </div>
+<script>
+function toggleField(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none'}
+function saveField(fieldId,viewId){document.getElementById(fieldId).style.display='none'}
+function toggleEdit(){window.location.href='client-profile.html'}
+</script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
@@ -246,152 +290,11 @@
       <a class="mobile-nav-drawer-item" href="payments.html">💳 Payments</a>
       <a class="mobile-nav-drawer-item" href="reviews.html">⭐ Reviews</a>
       <a class="mobile-nav-drawer-item" href="saved-workers.html">❤️ Saved Fundis</a>
-      <button class="mobile-nav-drawer-item mobile-logout-btn" type="button" onclick="window.KazixProfile.logout()">↩ Log Out</button>
     </div>
   </div>
 </nav>
 
-<script src="../assets/js/error-messages.js"></script>
-<script src="../assets/js/error-handler.js"></script>
-<script src="../assets/js/form-handler.js"></script>
-<script src="../assets/js/profile-utils.js"></script>
-<script>
-const {
-  formatLanguage,
-  formatLocation,
-  formatMemberSince,
-  formatPhone,
-  getAccessToken,
-  initials,
-  profilePath,
-  requestJson,
-  setHtml,
-  setText,
-} = window.KazixProfile;
 
-function setStatus(message, tone) {
-  const el = document.getElementById('profileStatus');
-  if (!message) {
-    el.hidden = true;
-    el.className = 'notice';
-    el.textContent = '';
-    return;
-  }
-  el.hidden = false;
-  el.className = `notice ${tone}`;
-  el.textContent = message;
-}
-
-function publicSummary(profile) {
-  const location = formatLocation(profile);
-  const memberSince = formatMemberSince(profile.created_at).replace('Member since ', '');
-  return `${profile.full_name || 'This employer'} is a KaziX client based in ${location}. Their public employer profile shows a verified account, preferred language (${formatLanguage(profile.preferred_language)}), and current location. Member since ${memberSince}.`;
-}
-
-function populateForm(profile) {
-  document.getElementById('fullName').value = profile.full_name || '';
-  document.getElementById('phone').value = formatPhone(profile.phone);
-  document.getElementById('email').value = profile.email || '';
-  document.getElementById('mpesaNumber').value = profile.mpesa_number || '';
-  document.getElementById('county').value = profile.county || '';
-  document.getElementById('area').value = profile.area || '';
-  document.getElementById('preferredLanguage').value = profile.preferred_language || 'en';
-  setText('#publicSummary', publicSummary(profile));
-}
-
-function renderSummary(profile) {
-  const name = profile.full_name || 'Unnamed client';
-  const avatar = initials(name);
-  document.title = `${name} — My Profile · KaziX`;
-  setText('#navUserAvatar', avatar);
-  setText('#navUserName', name);
-  setText('#sidebarAvatar', avatar);
-  setText('#sidebarName', name);
-  setText('#sidebarRole', 'Client account');
-  setText('#profileAvatar', avatar);
-  setText('#profileName', name);
-  setText('#profileType', 'Client · Employer profile');
-  setText('#verifiedPhone', profile.is_verified ? 'Verified' : 'Pending');
-  setText('#preferredLanguageBadge', formatLanguage(profile.preferred_language));
-  setText('#mpesaLinked', profile.mpesa_number ? 'Linked' : 'Not linked');
-  setText('#profileLocation', `📍 ${formatLocation(profile)}`);
-  setText('#profileMember', formatMemberSince(profile.created_at));
-  document.getElementById('publicProfileLink').href = profilePath('client', profile.id);
-
-  const badges = [];
-  if (profile.is_verified) {
-    badges.push('<span class="badge badge-verified">Phone verified</span>');
-  }
-  if (profile.mpesa_number) {
-    badges.push('<span class="badge badge-phone">M-Pesa linked</span>');
-  }
-  badges.push(`<span class="badge badge-muted">${window.KazixProfile.escapeHtml(formatLanguage(profile.preferred_language))}</span>`);
-  setHtml('#profileBadges', badges.join(''));
-}
-
-async function loadProfile() {
-  if (!getAccessToken()) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  try {
-    const data = await requestJson('/v1/profiles/me', { auth: true });
-    if (data?.profile?.role !== 'client') {
-      window.location.href = 'worker-profile-edit.html';
-      return;
-    }
-    populateForm(data.profile);
-    renderSummary(data.profile);
-    setStatus('', 'info');
-  } catch (err) {
-    setStatus(err.message || 'Failed to load your profile.', 'error');
-  }
-}
-
-async function saveProfile(event) {
-  event.preventDefault();
-
-  const fullName = document.getElementById('fullName').value.trim();
-  if (!fullName) {
-    setStatus('Please enter your full name before saving.', 'error');
-    return;
-  }
-
-  const payload = {
-    full_name: fullName,
-    email: document.getElementById('email').value.trim() || null,
-    mpesa_number: document.getElementById('mpesaNumber').value.trim() || null,
-    county: document.getElementById('county').value.trim() || null,
-    area: document.getElementById('area').value.trim() || null,
-    preferred_language: document.getElementById('preferredLanguage').value,
-  };
-
-  const button = document.getElementById('saveProfileBtn');
-  button.disabled = true;
-  button.textContent = 'Saving…';
-  setStatus('Saving your profile changes…', 'info');
-
-  try {
-    const data = await requestJson('/v1/profiles/me', {
-      auth: true,
-      method: 'PATCH',
-      body: payload,
-    });
-    populateForm(data.profile);
-    renderSummary(data.profile);
-    setStatus('Profile saved. Your public employer page now reflects the latest details.', 'success');
-  } catch (err) {
-    setStatus(err.message || 'Failed to save your profile.', 'error');
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Save Profile';
-  }
-}
-
-document.getElementById('clientProfileForm').addEventListener('submit', saveProfile);
-document.addEventListener('DOMContentLoaded', loadProfile);
-</script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>

@@ -6,108 +6,76 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>My Profile — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
-<link rel="stylesheet" href="../assets/css/error-components.css">
+
 <style>
-.main{max-width:1120px}
-.profile-layout{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;align-items:start}
+.main{max-width:1100px}
+.profile-layout{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start}
 .profile-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden;position:sticky;top:80px}
-.profile-cover{height:96px;background:var(--ink);position:relative;overflow:hidden}
-.profile-cover::after{content:'PRO';position:absolute;right:-4%;bottom:-8%;font-family:'Syne',sans-serif;font-weight:800;font-size:84px;opacity:0.06;letter-spacing:-0.06em;color:#F5F0E8}
-.profile-avatar-wrap{padding:0 1.5rem;margin-top:-34px;margin-bottom:0.9rem;position:relative}
-.p-avatar{width:68px;height:68px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-family:'Syne',sans-serif;font-weight:800;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.profile-cover{height:90px;background:var(--ink);position:relative;overflow:hidden}
+.profile-cover::after{content:'PRO';position:absolute;right:-5%;bottom:-10%;font-family:'Syne',sans-serif;font-weight:800;font-size:80px;opacity:0.06;letter-spacing:-0.06em;color:#F5F0E8}
+.profile-cover-edit{position:absolute;top:0.6rem;right:0.6rem;background:rgba(245,240,232,0.15);border:none;border-radius:2px;padding:0.3rem 0.6rem;font-size:0.68rem;color:#F5F0E8;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
+.profile-avatar-wrap{padding:0 1.5rem;margin-top:-32px;margin-bottom:0.75rem;position:relative}
+.p-avatar{width:64px;height:64px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.75rem;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.p-avatar-edit{position:absolute;bottom:2px;left:58px;width:20px;height:20px;border-radius:50%;background:var(--ink);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:0.55rem;cursor:pointer;color:white}
 .profile-info{padding:0 1.5rem 1.5rem}
-.p-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.18rem;letter-spacing:-0.03em;margin-bottom:0.15rem}
-.p-type{font-size:0.74rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.85rem}
-.p-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.1rem}
+.p-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-0.03em;margin-bottom:0.15rem}
+.p-type{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem}
+.p-badges{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem}
 .badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.05em}
 .badge-verified{background:rgba(27,107,58,0.12);color:var(--green)}
-.badge-warn{background:rgba(245,166,35,0.15);color:#854F0B}
-.badge-muted{background:var(--cream);color:var(--muted)}
-.p-stats{display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1.1rem}
+.badge-phone{background:rgba(245,166,35,0.15);color:#854F0B}
+.badge-member{background:var(--cream);color:var(--muted)}
+.p-stats{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem}
 .p-stat-row{display:flex;justify-content:space-between;align-items:center;font-size:0.82rem}
 .p-stat-label{color:var(--muted)}
 .p-stat-val{font-weight:700;font-family:'Syne',sans-serif;color:var(--ink)}
+.p-stat-val.green{color:var(--green)}
 .p-divider{height:1px;background:var(--border);margin:1rem 0}
-.p-location,.p-member{font-size:0.8rem;color:var(--muted)}
-.p-location{display:flex;align-items:center;gap:0.45rem;margin-bottom:0.45rem}
-.profile-actions{display:grid;gap:0.7rem;margin-top:1.1rem}
-.public-link{display:block;text-align:center;padding:0.72rem;border:1.5px solid var(--border);border-radius:2px;color:var(--ink);text-decoration:none;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;transition:all 0.2s}
-.public-link:hover{border-color:var(--ink);background:var(--cream)}
-.logout-btn{display:block;width:100%;padding:0.72rem;border:1.5px solid rgba(192,57,43,0.28);border-radius:2px;background:white;color:var(--rust);font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;transition:all 0.2s}
-.logout-btn:hover{border-color:var(--rust);background:rgba(192,57,43,0.06)}
-.logout-btn:disabled{opacity:0.6;cursor:wait}
-
+.p-location{display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted);margin-bottom:0.5rem}
+.p-member{font-size:0.75rem;color:var(--muted)}
+.edit-profile-btn{width:100%;padding:0.7rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s;margin-top:1.25rem}
+.edit-profile-btn:hover{background:var(--green)}
+.view-public-btn{width:100%;padding:0.65rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.8rem;border:1.5px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;text-decoration:none;display:block;text-align:center}
+.view-public-btn:hover{border-color:var(--ink)}
 .profile-right{display:flex;flex-direction:column;gap:1.25rem}
 .section-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden}
-.sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:0.75rem}
-.sc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.92rem}
-.sc-sub{font-size:0.78rem;color:var(--muted)}
+.sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem}
+.sc-edit{background:none;border:1px solid var(--border);padding:0.3rem 0.8rem;border-radius:2px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.72rem;cursor:pointer;color:var(--ink);transition:all 0.2s}
+.sc-edit:hover{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
 .sc-body{padding:1.25rem 1.5rem}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
-.field{display:flex;flex-direction:column;gap:0.4rem}
-.field.full{grid-column:1 / -1}
-.field-label{font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
-.field-help{font-size:0.75rem;color:var(--muted)}
-.text-input,.text-area,.select-input{width:100%;padding:0.8rem 0.95rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s}
-.text-input:focus,.text-area:focus,.select-input:focus{border-color:var(--ink)}
-.text-area{resize:vertical;min-height:120px;line-height:1.6}
-.readonly{opacity:0.75}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.8rem 0;border-top:1px solid var(--border)}
-.toggle-row:first-child{border-top:none;padding-top:0}
-.toggle-copy{flex:1}
-.toggle-label{font-size:0.9rem;font-weight:600}
-.toggle-sub{font-size:0.78rem;color:var(--muted);margin-top:0.15rem}
-.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.bio-text{font-size:0.9rem;line-height:1.75;color:var(--steel)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.info-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem}
+.info-val{font-size:0.875rem;color:var(--ink);font-weight:500}
+.skills-wrap{display:flex;flex-wrap:wrap;gap:0.5rem}
+.skill-chip{background:var(--cream);border:1.5px solid var(--border);font-size:0.78rem;font-weight:600;padding:0.3rem 0.75rem;border-radius:2px;color:var(--steel);cursor:pointer;transition:all 0.2s}
+.skill-chip.on{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
+.skill-chip:hover:not(.on){border-color:var(--ink)}
+.rate-input{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;background:var(--cream);color:var(--ink);outline:none}
+.rate-input:focus{border-color:var(--ink)}
+.id-block{background:rgba(27,107,58,0.06);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem}
+.id-badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:2px;background:var(--green);color:white;text-transform:uppercase;margin-left:0.5rem}
+.pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.pref-item{border:1.5px solid var(--border);border-radius:4px;padding:1rem;cursor:pointer;transition:all 0.2s}
+.pref-item:hover{border-color:var(--ink)}
+.pref-item.selected{border-color:var(--ink);background:rgba(13,13,13,0.03)}
+.toggle-switch{position:relative;width:42px;height:24px;flex-shrink:0}
 .toggle-switch input{opacity:0;width:0;height:0;position:absolute}
 .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;cursor:pointer;transition:background 0.2s}
 .toggle-slider::before{content:'';position:absolute;width:18px;height:18px;top:3px;left:3px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
 .toggle-switch input:checked + .toggle-slider{background:var(--green)}
-.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px)}
-.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent}
-.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
-.notice.success{background:rgba(27,107,58,0.08);border-color:rgba(27,107,58,0.2);color:var(--green)}
-.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
-.notice[hidden]{display:none}
-.skill-preview{display:flex;flex-wrap:wrap;gap:0.5rem}
-.skill-pill{display:inline-flex;align-items:center;padding:0.35rem 0.7rem;border-radius:999px;background:var(--cream);border:1px solid var(--border);font-size:0.8rem;color:var(--steel)}
-.save-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.25rem;flex-wrap:wrap}
-.save-note{font-size:0.78rem;color:var(--muted)}
-.save-btn{padding:0.85rem 1.4rem;background:var(--ink);color:#F5F0E8;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.84rem;cursor:pointer;transition:background 0.2s}
-.save-btn:hover{background:var(--green)}
-.save-btn:disabled{opacity:0.6;cursor:wait}
-.empty-copy{font-size:0.84rem;color:var(--muted)}
-.mobile-logout-btn{width:100%;background:none;border:none;text-align:left;cursor:pointer;color:#F5B7AE;font-family:'DM Sans',sans-serif}
-.mobile-logout-btn:hover{background:rgba(192,57,43,0.16);color:#F5F0E8}
-.mobile-logout-btn:disabled{opacity:0.6;cursor:wait}
-
-@media(max-width:900px){
-  .sidebar{display:none}
-  .profile-layout{grid-template-columns:1fr}
-  .profile-card{position:static}
-  .form-grid{grid-template-columns:1fr}
-}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(18px)}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.sidebar{display:none}.profile-layout{grid-template-columns:1fr}.profile-card{position:static}.info-grid,.pref-grid{grid-template-columns:1fr}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar" id="navUserAvatar">KX</div><span class="user-name" id="navUserName">My account</span></div>
+    <div class="user-chip"><div class="user-avatar">JK</div><span class="user-name">James Kamau</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -124,181 +92,125 @@
     <a class="nav-item active" href="worker-profile-edit.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
       <div class="sidebar-profile">
-        <div class="sp-avatar" id="sidebarAvatar">KX</div>
-        <div><div class="sp-name" id="sidebarName">My profile</div><div class="sp-role" id="sidebarRole">Pro account</div></div>
+        <div class="sp-avatar">🔧</div>
+        <div><div class="sp-name">James Kamau</div><div class="sp-role">Pro Account · Plumber</div></div>
       </div>
     </div>
   </aside>
-
   <main class="main">
     <div style="margin-bottom:2rem;animation:slideUp 0.4s ease both">
       <div class="page-title">My Profile</div>
-      <div class="page-sub">Manage the details clients see before they decide to hire you.</div>
+      <div class="page-sub">Manage how clients see you — a complete profile earns 3× more jobs</div>
     </div>
-
-    <div class="profile-layout" style="animation:slideUp 0.4s 0.05s ease both">
-      <section class="profile-card">
-        <div class="profile-cover"></div>
-        <div class="profile-avatar-wrap">
-          <div class="p-avatar" id="profileAvatar">KX</div>
-        </div>
+    <div class="profile-layout" style="animation:slideUp 0.4s 0.1s ease both">
+      <div class="profile-card">
+        <div class="profile-cover"><button class="profile-cover-edit">✎ Edit cover</button></div>
+        <div class="profile-avatar-wrap"><div class="p-avatar">🔧</div><div class="p-avatar-edit">✎</div></div>
         <div class="profile-info">
-          <div class="p-name" id="profileName">Loading…</div>
-          <div class="p-type" id="profileType">Pro account</div>
-          <div class="p-badges" id="profileBadges"></div>
+          <div class="p-name">James Kamau</div>
+          <div class="p-type">Master Plumber · Pro</div>
+          <div class="p-badges">
+            <span class="badge badge-verified">✓ ID Verified</span>
+            <span class="badge badge-phone">📱 M-Pesa Linked</span>
+            <span class="badge badge-member">Top Rated</span>
+          </div>
           <div class="p-stats">
-            <div class="p-stat-row"><span class="p-stat-label">Jobs completed</span><span class="p-stat-val" id="jobsCompleted">0</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Average rating</span><span class="p-stat-val" id="ratingAverage">0.0</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Rate range</span><span class="p-stat-val" id="rateRange">Not set</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Availability</span><span class="p-stat-val" id="availabilityState">Updating…</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Jobs completed</span><span class="p-stat-val">127</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Average rating</span><span class="p-stat-val green">4.9 ★</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Total earned</span><span class="p-stat-val">KES 487,000</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Response rate</span><span class="p-stat-val">98%</span></div>
           </div>
           <div class="p-divider"></div>
-          <div class="p-location" id="profileLocation">📍 Loading location…</div>
-          <div class="p-member" id="profileMember">Member since…</div>
-          <div class="profile-actions">
-            <a class="public-link" id="publicProfileLink" href="worker-profile.html">View Public Profile</a>
-            <button class="logout-btn" type="button" onclick="window.KazixProfile.logout()">Log Out</button>
+          <div class="p-location">📍 Westlands, Nairobi</div>
+          <div class="p-member">Member since March 2021 · 8 yrs experience</div>
+          <a href="worker-profile.html" class="view-public-btn">👁 View Public Profile</a>
+        </div>
+      </div>
+      <div class="profile-right">
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Bio</div><button class="sc-edit" onclick="toggleInline('bioF','bioV')">✎ Edit</button></div>
+          <div class="sc-body">
+            <div id="bioV"><p class="bio-text">Experienced master plumber with 8 years of active service across Nairobi. I specialise in residential and commercial pipe installations, drain unblocking, water tank repairs, and solar water heater setups. NCA-certified and fully equipped.</p></div>
+            <div id="bioF" style="display:none">
+              <textarea style="width:100%;padding:0.85rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:vertical;min-height:100px;outline:none;background:var(--cream);color:var(--ink)" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--border)'">Experienced master plumber with 8 years of active service across Nairobi.</textarea>
+              <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+                <button onclick="toggleInline('bioF','bioV')" style="padding:0.5rem 1.25rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border:none;border-radius:2px;cursor:pointer">Save</button>
+                <button onclick="toggleInline('bioF','bioV')" style="padding:0.5rem 1.25rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.78rem;border:1px solid var(--border);border-radius:2px;cursor:pointer">Cancel</button>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      <div class="profile-right">
-        <div class="notice info" id="profileStatus">Loading your profile…</div>
-
-        <form id="workerProfileForm">
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Profile Basics</div>
-                <div class="sc-sub">These details appear on your public worker profile.</div>
-              </div>
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Skills & Specialisations</div><button class="sc-edit">✎ Edit</button></div>
+          <div class="sc-body">
+            <div class="skills-wrap">
+              <div class="skill-chip on">🚿 Pipe fitting</div><div class="skill-chip on">🔩 Drain unblocking</div>
+              <div class="skill-chip on">💧 Water tank repair</div><div class="skill-chip on">☀️ Solar water heater</div>
+              <div class="skill-chip on">🚰 Bathroom repair</div><div class="skill-chip">🔧 Borehole pumps</div>
+              <div class="skill-chip">🪣 Septic systems</div>
             </div>
-            <div class="sc-body">
-              <div class="form-grid">
-                <label class="field">
-                  <span class="field-label">Full Name</span>
-                  <input class="text-input" id="fullName" name="full_name" type="text" required maxlength="120">
-                </label>
-                <label class="field">
-                  <span class="field-label">Trade</span>
-                  <select class="select-input" id="trade" name="trade" required></select>
-                </label>
-                <label class="field full">
-                  <span class="field-label">Bio</span>
-                  <textarea class="text-area" id="bio" name="bio" placeholder="Tell clients what kind of work you do best, where you work, and why they should trust you."></textarea>
-                </label>
-                <label class="field full">
-                  <span class="field-label">Skills</span>
-                  <input class="text-input" id="skills" name="skills" type="text" placeholder="Pipe fitting, CCTV installation, painting">
-                  <span class="field-help">Separate skills with commas.</span>
-                </label>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Rates & Availability</div><button class="sc-edit">✎ Edit</button></div>
+          <div class="sc-body">
+            <div style="display:flex;gap:1rem;margin-bottom:1.25rem">
+              <div style="flex:1"><div class="info-label">Min rate (KES/hr)</div><input class="rate-input" type="number" value="800"></div>
+              <div style="flex:1"><div class="info-label">Max rate (KES/hr)</div><input class="rate-input" type="number" value="2000"></div>
+            </div>
+            <div class="info-grid">
+              <div><div class="info-label">Years experience</div><div class="info-val">8 years</div></div>
+              <div><div class="info-label">Service radius</div><div class="info-val">Within 15 km</div></div>
+              <div><div class="info-label">Emergency callout</div><div class="info-val">Yes · +50% rate</div></div>
+              <div><div class="info-label">Payment type</div><div class="info-val">Hourly + fixed</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Contact & Location</div><button class="sc-edit">✎ Edit</button></div>
+          <div class="sc-body">
+            <div class="info-grid">
+              <div><div class="info-label">Phone</div><div class="info-val">+254 712 345 678</div></div>
+              <div><div class="info-label">M-Pesa Number</div><div class="info-val">+254 712 345 678 ✓</div></div>
+              <div><div class="info-label">County</div><div class="info-val">Nairobi</div></div>
+              <div><div class="info-label">Base Area</div><div class="info-val">Westlands</div></div>
+              <div><div class="info-label">Languages</div><div class="info-val">Swahili, English</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Identity Verification</div></div>
+          <div class="sc-body">
+            <div class="id-block">
+              <div style="font-size:1.5rem">🪪</div>
+              <div><div style="font-weight:600;font-size:0.875rem">Kenya National ID verified <span class="id-badge">✓ Approved</span></div><div style="font-size:0.75rem;color:var(--muted);margin-top:0.2rem">ID #23456789 · Verified January 2024 · KaziX KYC</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-card">
+          <div class="sc-header"><div class="sc-title">Privacy & Notifications</div></div>
+          <div class="sc-body">
+            <div style="display:flex;flex-direction:column;gap:0.75rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border-radius:4px;border:1px solid var(--border)">
+                <div><div style="font-size:0.875rem;font-weight:500">Show profile to clients</div><div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem">Clients can see your profile when you apply</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
               </div>
-              <div style="margin-top:1rem">
-                <div class="field-label" style="margin-bottom:0.55rem">Current Public Skills</div>
-                <div class="skill-preview" id="skillPreview"><span class="empty-copy">No skills added yet.</span></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border-radius:4px;border:1px solid var(--border)">
+                <div><div style="font-size:0.875rem;font-weight:500">SMS job alerts</div><div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem">Get an SMS when new jobs near you are posted</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;border-radius:4px;border:1px solid var(--border)">
+                <div><div style="font-size:0.875rem;font-weight:500">Show my hourly rate publicly</div><div style="font-size:0.72rem;color:var(--muted);margin-top:0.15rem">Display your rate range on your public profile</div></div>
+                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
               </div>
             </div>
           </div>
-
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Rates & Availability</div>
-                <div class="sc-sub">Keep these updated so clients know what to expect.</div>
-              </div>
-            </div>
-            <div class="sc-body">
-              <div class="form-grid">
-                <label class="field">
-                  <span class="field-label">Minimum Rate (KES)</span>
-                  <input class="text-input" id="rateMin" name="rate_min" type="number" min="0" step="1" placeholder="800">
-                </label>
-                <label class="field">
-                  <span class="field-label">Maximum Rate (KES)</span>
-                  <input class="text-input" id="rateMax" name="rate_max" type="number" min="0" step="1" placeholder="2000">
-                </label>
-                <label class="field">
-                  <span class="field-label">Years of Experience</span>
-                  <input class="text-input" id="experienceYears" name="experience_years" type="number" min="0" max="60" step="1" placeholder="5">
-                </label>
-                <label class="field">
-                  <span class="field-label">Service Radius (KM)</span>
-                  <input class="text-input" id="serviceRadius" name="service_radius_km" type="number" min="0" max="1000" step="1" placeholder="15">
-                </label>
-              </div>
-              <div style="margin-top:1rem">
-                <div class="toggle-row">
-                  <div class="toggle-copy">
-                    <div class="toggle-label">Available for new jobs</div>
-                    <div class="toggle-sub">Clients will see this on your public profile.</div>
-                  </div>
-                  <label class="toggle-switch"><input id="isAvailable" type="checkbox"><span class="toggle-slider"></span></label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Contact & Location</div>
-                <div class="sc-sub">Your verified phone number stays tied to login. Other fields can be updated here.</div>
-              </div>
-            </div>
-            <div class="sc-body">
-              <div class="form-grid">
-                <label class="field">
-                  <span class="field-label">Verified Phone</span>
-                  <input class="text-input readonly" id="phone" type="text" readonly>
-                </label>
-                <label class="field">
-                  <span class="field-label">Email</span>
-                  <input class="text-input" id="email" name="email" type="email" placeholder="you@example.com">
-                </label>
-                <label class="field">
-                  <span class="field-label">County</span>
-                  <input class="text-input" id="county" name="county" type="text" placeholder="Nairobi">
-                </label>
-                <label class="field">
-                  <span class="field-label">Area</span>
-                  <input class="text-input" id="area" name="area" type="text" placeholder="Westlands">
-                </label>
-                <label class="field">
-                  <span class="field-label">M-Pesa Number</span>
-                  <input class="text-input" id="mpesaNumber" name="mpesa_number" type="tel" placeholder="+254712345678">
-                </label>
-                <label class="field">
-                  <span class="field-label">Preferred Language</span>
-                  <select class="select-input" id="preferredLanguage" name="preferred_language">
-                    <option value="en">English</option>
-                    <option value="sw">Swahili</option>
-                  </select>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="section-card">
-            <div class="sc-header">
-              <div>
-                <div class="sc-title">Verification</div>
-                <div class="sc-sub">Your KYC status is managed by the KaziX team.</div>
-              </div>
-            </div>
-            <div class="sc-body">
-              <div class="notice info" id="kycNotice">Checking verification status…</div>
-            </div>
-          </div>
-
-          <div class="save-row">
-            <div class="save-note">Changes save directly to your KaziX profile and public worker page.</div>
-            <button class="save-btn" id="saveProfileBtn" type="submit">Save Profile</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </main>
 </div>
+<script>function toggleInline(fId,vId){var f=document.getElementById(fId);f.style.display=f.style.display==='none'?'block':'none'};document.querySelectorAll('.skill-chip').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('on')));</script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="worker-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
@@ -313,233 +225,11 @@
       <a class="mobile-nav-drawer-item active" href="worker-profile-edit.html">👤 Profile</a>
       <a class="mobile-nav-drawer-item" href="worker-earnings.html">💳 Earnings</a>
       <a class="mobile-nav-drawer-item" href="worker-reviews.html">⭐ Reviews</a>
-      <button class="mobile-nav-drawer-item mobile-logout-btn" type="button" onclick="window.KazixProfile.logout()">↩ Log Out</button>
     </div>
   </div>
 </nav>
 
-<script src="../assets/js/error-messages.js"></script>
-<script src="../assets/js/error-handler.js"></script>
-<script src="../assets/js/form-handler.js"></script>
-<script src="../assets/js/profile-utils.js"></script>
-<script>
-const {
-  arrayToCsv,
-  csvToArray,
-  formatCurrency,
-  formatLanguage,
-  formatLocation,
-  formatMemberSince,
-  formatPhone,
-  formatTrade,
-  getAccessToken,
-  initials,
-  profilePath,
-  requestJson,
-  setHtml,
-  setText,
-} = window.KazixProfile;
 
-const tradeOptions = [
-  'plumber',
-  'electrician',
-  'mason',
-  'mama_fua',
-  'carpenter',
-  'painter',
-  'roofer',
-  'gardener',
-  'driver_mover',
-  'security',
-  'other',
-];
-
-let currentPayload = null;
-
-function renderTradeOptions(selectedTrade) {
-  setHtml(
-    '#trade',
-    tradeOptions.map((trade) => (
-      `<option value="${trade}"${trade === selectedTrade ? ' selected' : ''}>${formatTrade(trade)}</option>`
-    )).join('')
-  );
-}
-
-function setStatus(message, tone) {
-  const el = document.getElementById('profileStatus');
-  el.hidden = false;
-  el.className = `notice ${tone}`;
-  el.textContent = message;
-}
-
-function renderBadges(profile, fundiProfile) {
-  const badges = [];
-  if (profile.is_verified || fundiProfile?.kyc_status === 'approved') {
-    badges.push('<span class="badge badge-verified">Verified</span>');
-  } else {
-    badges.push('<span class="badge badge-warn">Verification pending</span>');
-  }
-  badges.push(`<span class="badge badge-muted">${formatLanguage(profile.preferred_language)}</span>`);
-  if (fundiProfile?.is_available) {
-    badges.push('<span class="badge badge-verified">Available</span>');
-  }
-  if ((Number(fundiProfile?.rating_avg) || 0) >= 4.8 && (Number(fundiProfile?.jobs_completed) || 0) >= 5) {
-    badges.push('<span class="badge badge-muted">Top rated</span>');
-  }
-  setHtml('#profileBadges', badges.join(''));
-}
-
-function renderSkillsPreview(skills) {
-  const html = Array.isArray(skills) && skills.length
-    ? skills.map((skill) => `<span class="skill-pill">${window.KazixProfile.escapeHtml(skill)}</span>`).join('')
-    : '<span class="empty-copy">No skills added yet.</span>';
-  setHtml('#skillPreview', html);
-}
-
-function populateForm(data) {
-  const profile = data.profile || {};
-  const fundiProfile = data.fundi_profile || {};
-
-  document.getElementById('fullName').value = profile.full_name || '';
-  renderTradeOptions(fundiProfile.trade || 'other');
-  document.getElementById('bio').value = fundiProfile.bio || '';
-  document.getElementById('skills').value = arrayToCsv(fundiProfile.skills);
-  document.getElementById('email').value = profile.email || '';
-  document.getElementById('county').value = profile.county || '';
-  document.getElementById('area').value = profile.area || '';
-  document.getElementById('mpesaNumber').value = profile.mpesa_number || '';
-  document.getElementById('preferredLanguage').value = profile.preferred_language || 'en';
-  document.getElementById('phone').value = formatPhone(profile.phone);
-  document.getElementById('rateMin').value = fundiProfile.rate_min ?? '';
-  document.getElementById('rateMax').value = fundiProfile.rate_max ?? '';
-  document.getElementById('experienceYears').value = fundiProfile.experience_years ?? '';
-  document.getElementById('serviceRadius').value = fundiProfile.service_radius_km ?? '';
-  document.getElementById('isAvailable').checked = Boolean(fundiProfile.is_available);
-  renderSkillsPreview(fundiProfile.skills || []);
-}
-
-function renderSummary(data) {
-  const profile = data.profile || {};
-  const fundiProfile = data.fundi_profile || {};
-  const name = profile.full_name || 'Unnamed worker';
-  const trade = formatTrade(fundiProfile.trade);
-  const avatar = initials(name);
-  const rating = Number(fundiProfile.rating_avg || 0).toFixed(1);
-  const jobsCompleted = Number(fundiProfile.jobs_completed || 0);
-  const rateMin = fundiProfile.rate_min;
-  const rateMax = fundiProfile.rate_max;
-
-  document.title = `${name} — My Profile · KaziX`;
-  setText('#navUserAvatar', avatar);
-  setText('#navUserName', name);
-  setText('#sidebarAvatar', avatar);
-  setText('#sidebarName', name);
-  setText('#sidebarRole', `Pro account · ${trade}`);
-  setText('#profileAvatar', avatar);
-  setText('#profileName', name);
-  setText('#profileType', `${trade} · Worker profile`);
-  setText('#jobsCompleted', jobsCompleted.toLocaleString());
-  setText('#ratingAverage', `${rating} ★`);
-  setText('#availabilityState', fundiProfile.is_available ? 'Open to work' : 'Not available');
-  setText('#profileLocation', `📍 ${formatLocation(profile)}`);
-  setText('#profileMember', `${formatMemberSince(profile.created_at)} · ${fundiProfile.experience_years || 0} yrs experience`);
-  setText(
-    '#rateRange',
-    rateMin == null && rateMax == null
-      ? 'Not set'
-      : `${formatCurrency(rateMin)} to ${formatCurrency(rateMax)}`
-  );
-  document.getElementById('publicProfileLink').href = profilePath('fundi', profile.id);
-  renderBadges(profile, fundiProfile);
-
-  const kycStatus = fundiProfile.kyc_status || 'pending';
-  const humanStatus = kycStatus.replace(/_/g, ' ');
-  document.getElementById('kycNotice').className = `notice ${kycStatus === 'approved' ? 'success' : 'info'}`;
-  document.getElementById('kycNotice').textContent = `KYC status: ${humanStatus}. ${kycStatus === 'approved' ? 'Your verified badge is visible on your public profile.' : 'Once approved, your verified badge will appear to clients.'}`;
-}
-
-function numOrNull(value) {
-  if (value === '' || value === null || value === undefined) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-async function loadProfile() {
-  if (!getAccessToken()) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  try {
-    const data = await requestJson('/v1/profiles/me', { auth: true });
-    if (data?.profile?.role !== 'fundi') {
-      window.location.href = 'client-profile.html';
-      return;
-    }
-    currentPayload = data;
-    populateForm(data);
-    renderSummary(data);
-    setStatus('Your real profile is now connected to the backend. Update any field below and save when you are ready.', 'info');
-  } catch (err) {
-    setStatus(err.message || 'Failed to load your profile.', 'error');
-  }
-}
-
-async function saveProfile(event) {
-  event.preventDefault();
-
-  const fullName = document.getElementById('fullName').value.trim();
-  if (!fullName) {
-    setStatus('Please enter your full name before saving.', 'error');
-    return;
-  }
-
-  const payload = {
-    full_name: fullName,
-    trade: document.getElementById('trade').value,
-    bio: document.getElementById('bio').value.trim() || null,
-    skills: csvToArray(document.getElementById('skills').value),
-    email: document.getElementById('email').value.trim() || null,
-    county: document.getElementById('county').value.trim() || null,
-    area: document.getElementById('area').value.trim() || null,
-    mpesa_number: document.getElementById('mpesaNumber').value.trim() || null,
-    preferred_language: document.getElementById('preferredLanguage').value,
-    rate_min: numOrNull(document.getElementById('rateMin').value),
-    rate_max: numOrNull(document.getElementById('rateMax').value),
-    experience_years: numOrNull(document.getElementById('experienceYears').value),
-    service_radius_km: numOrNull(document.getElementById('serviceRadius').value),
-    is_available: document.getElementById('isAvailable').checked,
-  };
-
-  const button = document.getElementById('saveProfileBtn');
-  button.disabled = true;
-  button.textContent = 'Saving…';
-  setStatus('Saving your profile changes…', 'info');
-
-  try {
-    const data = await requestJson('/v1/profiles/me', {
-      auth: true,
-      method: 'PATCH',
-      body: payload,
-    });
-    currentPayload = data;
-    populateForm(data);
-    renderSummary(data);
-    setStatus('Profile saved. Your public worker page now reflects the latest changes.', 'success');
-  } catch (err) {
-    setStatus(err.message || 'Failed to save your profile.', 'error');
-  } finally {
-    button.disabled = false;
-    button.textContent = 'Save Profile';
-  }
-}
-
-document.getElementById('workerProfileForm').addEventListener('submit', saveProfile);
-document.getElementById('skills').addEventListener('input', (event) => {
-  renderSkillsPreview(csvToArray(event.target.value));
-});
-document.addEventListener('DOMContentLoaded', loadProfile);
-</script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>

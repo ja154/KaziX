@@ -26,7 +26,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 
 /* Job header dark card */
 .job-header{background:var(--ink);color:#F5F0E8;border-radius:6px;padding:2rem 2.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
-.job-header::after{content:attr(data-watermark);position:absolute;right:2%;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-weight:800;font-size:6rem;opacity:0.05;pointer-events:none;letter-spacing:-0.06em;color:white}
+.job-header::after{content:'CCTV';position:absolute;right:2%;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-weight:800;font-size:6rem;opacity:0.05;pointer-events:none;letter-spacing:-0.06em;color:white}
 .jh-eye{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem;flex-wrap:wrap}
 .trade-tag{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--saffron);background:rgba(245,166,35,0.12);padding:0.2rem 0.6rem;border-radius:2px}
 .status-open{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:2px;background:rgba(27,107,58,0.2);color:#6DD598;text-transform:uppercase}
@@ -107,66 +107,82 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6}
     <li><a href="find-workers.html">Find Workers</a></li>
     <li><a href="worker-jobs.html">Find Jobs</a></li>
     <li><a href="for-pros.html">For Pros</a></li>
-    <li data-auth="guest"><a href="login.html" class="nav-cta">Sign In</a></li>
-    <li data-auth-slot="profile" style="display:none"></li>
+    <li><a href="login.html" class="nav-cta">Sign In</a></li>
   </ul>
 </nav>
 
 <div class="breadcrumb">
   <a href="index.html">Home</a> ›
   <a href="worker-jobs.html">Find Jobs</a> ›
-  <a href="worker-jobs.html" id="breadcrumbTrade">Loading…</a> ›
-  <span id="breadcrumbTitle">Job details</span>
+  <a href="worker-jobs.html">Electrician · Nairobi</a> ›
+  <span>Install CCTV cameras — Kilimani</span>
 </div>
 
 <div class="job-layout">
 
   <!-- LEFT MAIN CONTENT -->
   <div>
-    <div class="job-header" id="jobHeader" data-watermark="JOB">
+    <div class="job-header">
       <div class="jh-eye">
-        <span class="trade-tag" id="jobTradeTag">Loading…</span>
-        <span class="status-open" id="jobStatusBadge">● Open</span>
-        <span class="booking-ref" id="jobReference">KaziX job</span>
+        <span class="trade-tag">⚡ Electrician</span>
+        <span class="status-open">● Open</span>
+        <span class="booking-ref">Booking #KX-0198</span>
       </div>
-      <div class="jh-title" id="jobTitleText">Loading job…</div>
-      <div class="jh-meta" id="jobMeta"></div>
+      <div class="jh-title">Install CCTV cameras — Kilimani</div>
+      <div class="jh-meta">
+        <span>📍 Kilimani, Nairobi</span>
+        <span>📅 Posted 2 days ago</span>
+        <span>⏰ Closes in 1 day</span>
+        <span>👥 5 applicants</span>
+      </div>
     </div>
 
-    <div class="urgency-alert" id="urgencyAlert" style="display:none"></div>
+    <div class="urgency-alert">⏰ This job closes in 24 hours — apply soon.</div>
 
     <div class="detail-card">
       <div class="dc-title">Job Description</div>
-      <div class="dc-body" id="jobDescriptionBody">
-        Loading the full job description…
+      <div class="dc-body">
+        <p>Need 4 CCTV cameras installed around my residential compound in Kilimani covering the main gate, front door, back yard, and parking area.</p>
+        <ul class="req-list">
+          <li>4 cameras total — Hikvision or Dahua preferred</li>
+          <li>NVR/DVR recording unit with 7-day storage</li>
+          <li>Cables concealed in conduit where possible</li>
+          <li>Remote viewing setup on client's phone</li>
+          <li>UPS for the NVR unit required</li>
+        </ul>
+        <p style="margin-top:1rem">Client can supply equipment or fundi can source at cost — please specify in your bid. KPLC-licensed electricians preferred.</p>
       </div>
     </div>
 
     <div class="detail-card">
       <div class="dc-title">Job Details</div>
       <div class="detail-grid">
-        <div class="detail-tile"><div class="dt-label">Budget</div><div class="dt-val money" id="detailBudget">Loading…</div></div>
-        <div class="detail-tile"><div class="dt-label">Payment</div><div class="dt-val" id="detailPayment">Loading…</div></div>
-        <div class="detail-tile"><div class="dt-label">Location</div><div class="dt-val" id="detailLocation">Loading…</div></div>
-        <div class="detail-tile"><div class="dt-label">Urgency</div><div class="dt-val" id="detailUrgency">Loading…</div></div>
-        <div class="detail-tile"><div class="dt-label">Preferred Date</div><div class="dt-val" id="detailDate">Loading…</div></div>
-        <div class="detail-tile"><div class="dt-label">Materials</div><div class="dt-val" id="detailMaterials">Loading…</div></div>
+        <div class="detail-tile"><div class="dt-label">Budget</div><div class="dt-val money">KES 3,000 – 7,000</div></div>
+        <div class="detail-tile"><div class="dt-label">Payment</div><div class="dt-val">M-Pesa escrow</div></div>
+        <div class="detail-tile"><div class="dt-label">Location</div><div class="dt-val">Kilimani, Nairobi</div></div>
+        <div class="detail-tile"><div class="dt-label">Duration</div><div class="dt-val">1 day estimated</div></div>
+        <div class="detail-tile"><div class="dt-label">Preferred Date</div><div class="dt-val">Thursday or Friday</div></div>
+        <div class="detail-tile"><div class="dt-label">Materials</div><div class="dt-val">Fundi to source or supply</div></div>
       </div>
     </div>
 
     <div class="client-card">
       <div class="dc-title">About the Client</div>
       <div class="cl-top">
-        <div class="cl-avatar" id="clientAvatar">🏠</div>
+        <div class="cl-avatar">🏠</div>
         <div style="flex:1">
-          <div class="cl-name" id="clientName">Loading client…</div>
-          <div class="cl-type" id="clientType">KaziX client</div>
+          <div class="cl-name">Alex K. <span class="badge-verified">✓ Verified</span></div>
+          <div class="cl-type">Homeowner · Client Account</div>
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--saffron);font-size:0.85rem">★★★★★ <span style="font-weight:700;color:var(--ink)">4.8</span></div>
+          <div style="font-size:0.72rem;color:var(--muted)">as a client</div>
         </div>
       </div>
       <div class="cl-stats">
-        <div><div class="cs-val" id="clientLocation">—</div><div class="cs-label">Location</div></div>
-        <div><div class="cs-val" id="clientLanguage">—</div><div class="cs-label">Language</div></div>
-        <div><div class="cs-val" id="clientMemberSince">—</div><div class="cs-label">Member Since</div></div>
+        <div><div class="cs-val">15</div><div class="cs-label">Jobs posted</div></div>
+        <div><div class="cs-val">12</div><div class="cs-label">Completed</div></div>
+        <div><div class="cs-val">80%</div><div class="cs-label">Hire rate</div></div>
       </div>
     </div>
   </div>
@@ -174,28 +190,32 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6}
   <!-- RIGHT SIDEBAR -->
   <aside>
     <div class="apply-card" id="applyCard">
-      <div class="ac-budget" id="applyBudget">Loading…</div>
-      <div class="ac-budget-sub" id="applyBudgetSub">Fetching payment details…</div>
-      <div id="applyStatus" style="display:none;margin-bottom:1rem;padding:0.75rem 0.9rem;border-radius:4px;font-size:0.82rem;line-height:1.6"></div>
+      <div class="ac-budget">KES 3,000 – 7,000</div>
+      <div class="ac-budget-sub">Fixed price · M-Pesa escrow</div>
 
       <label class="field-label">Your Bid (KES) *</label>
       <input class="field-input" type="number" id="bidInput" placeholder="e.g. 4,500">
-      <div style="font-size:0.72rem;color:var(--muted);margin:-0.75rem 0 1.1rem">Send the amount you want to charge for this work.</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin:-0.75rem 0 1.1rem">Average bid so far: KES 4,200</div>
 
       <label class="field-label">Cover Note</label>
       <textarea class="field-input" id="coverNote" placeholder="Briefly describe your experience with CCTV installs and how you'd approach this job…"></textarea>
 
       <div class="escrow-note">📱 If hired, payment is placed in M-Pesa escrow before you start. Your earnings are always protected.</div>
 
-      <button class="apply-btn" id="applySubmitButton" type="button" onclick="submitApply()">Apply for this Job →</button>
+      <button class="apply-btn" onclick="submitApply()">Apply for this Job →</button>
       <div class="apply-note">Your profile and rating will be shared with the client. KaziX never charges fundis to apply.</div>
     </div>
 
     <div class="similar-card">
       <div class="similar-title">Similar jobs near you</div>
-      <div id="similarJobsList">
-        <div class="sj-meta">Loading related jobs…</div>
-      </div>
+      <a href="job-detail.html" class="similar-job">
+        <span class="sj-icon">⚡</span>
+        <div><div class="sj-name">Repair electrical fault — Lavington</div><div class="sj-meta">KES 2,000 · 2.4km · 1 applicant</div></div>
+      </a>
+      <a href="job-detail.html" class="similar-job">
+        <span class="sj-icon">🔌</span>
+        <div><div class="sj-name">Install outdoor lighting — Westlands</div><div class="sj-meta">KES 3,500 · 0.9km · 3 applicants</div></div>
+      </a>
     </div>
   </aside>
 
@@ -226,358 +246,27 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6}
 </div>
 
 <script>
-const TRADE_ICONS = {
-  plumber: '🚿',
-  electrician: '⚡',
-  mason: '🧱',
-  mama_fua: '👗',
-  carpenter: '🪚',
-  painter: '🎨',
-  roofer: '🏠',
-  gardener: '🌿',
-  driver_mover: '🛻',
-  security: '🔒',
-};
-const TRADE_LABELS = {
-  plumber: 'Plumber',
-  electrician: 'Electrician',
-  mason: 'Mason',
-  mama_fua: 'Mama Fua',
-  carpenter: 'Carpenter',
-  painter: 'Painter',
-  roofer: 'Roofer',
-  gardener: 'Gardener',
-  driver_mover: 'Driver / Mover',
-  security: 'Security',
-};
-
-let currentJob = null;
-let clientProfile = null;
-let isApplying = false;
-
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function getJobIdFromQuery() {
-  const params = new URLSearchParams(window.location.search);
-  return (params.get('id') || '').trim();
-}
-
-function formatBudget(job) {
-  const min = Number.isFinite(job.budget_min) ? job.budget_min : null;
-  const max = Number.isFinite(job.budget_max) ? job.budget_max : null;
-  if (min !== null && max !== null) {
-    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
-  }
-  if (min !== null) {
-    return `From KES ${min.toLocaleString()}`;
-  }
-  if (max !== null) {
-    return `Up to KES ${max.toLocaleString()}`;
-  }
-  return 'Budget on request';
-}
-
-function formatRelativeDate(value) {
-  if (!value) return 'Recently posted';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Recently posted';
-  const diffMs = Date.now() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Posted just now';
-  if (diffHours < 24) return `Posted ${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Posted yesterday';
-  return `Posted ${diffDays} days ago`;
-}
-
-function formatDate(value) {
-  if (!value) return 'Flexible timing';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function formatLanguage(value) {
-  if (value === 'sw') return 'Swahili';
-  if (value === 'en') return 'English';
-  return 'Not set';
-}
-
-function formatMemberSince(value) {
-  if (!value) return 'New';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'New';
-  return date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
-}
-
-function watermarkFromTitle(title) {
-  const letters = String(title || 'JOB')
-    .replace(/[^a-z0-9\s]/gi, '')
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.slice(0, 4).toUpperCase())
-    .join(' ');
-  return letters || 'JOB';
-}
-
-function showApplyStatus(message, tone) {
-  const status = document.getElementById('applyStatus');
-  status.style.display = 'block';
-  status.textContent = message;
-  if (tone === 'success') {
-    status.style.background = 'rgba(27,107,58,0.08)';
-    status.style.border = '1px solid rgba(27,107,58,0.2)';
-    status.style.color = 'var(--green)';
+function submitApply() {
+  const bid = document.getElementById('bidInput').value;
+  if (!bid) {
+    const inp = document.getElementById('bidInput');
+    inp.style.borderColor = '#C0392B';
+    inp.placeholder = 'Enter your bid amount to continue';
+    inp.focus();
+    setTimeout(() => { inp.style.borderColor = ''; inp.placeholder = 'e.g. 1500'; }, 3000);
     return;
   }
-  status.style.background = 'rgba(192,57,43,0.08)';
-  status.style.border = '1px solid rgba(192,57,43,0.2)';
-  status.style.color = 'var(--rust)';
-}
 
-function clearApplyStatus() {
-  const status = document.getElementById('applyStatus');
-  status.style.display = 'none';
-  status.textContent = '';
-}
-
-function setApplyBusy(isBusy) {
-  isApplying = isBusy;
-  const button = document.getElementById('applySubmitButton');
-  button.disabled = isBusy;
-  button.textContent = isBusy ? 'Submitting…' : 'Apply for this Job →';
-}
-
-function renderDescription(text) {
-  if (!text) {
-    document.getElementById('jobDescriptionBody').innerHTML = '<p>No description was added for this job yet.</p>';
-    return;
-  }
-  const paragraphs = text
-    .split(/\n+/)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean);
-  document.getElementById('jobDescriptionBody').innerHTML = paragraphs
-    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
-    .join('');
-}
-
-function renderJob(job) {
-  currentJob = job;
-  const tradeLabel = TRADE_LABELS[job.trade] || 'Skilled Worker';
-  const tradeIcon = TRADE_ICONS[job.trade] || '🛠️';
-  const location = [job.area, job.county].filter(Boolean).join(', ') || 'Location pending';
-  const applyButton = document.getElementById('applySubmitButton');
-
-  document.title = `${job.title} — KaziX`;
-  document.getElementById('breadcrumbTrade').textContent = `${tradeLabel} · ${job.county || 'Kenya'}`;
-  document.getElementById('breadcrumbTitle').textContent = job.title;
-  document.getElementById('jobHeader').setAttribute('data-watermark', watermarkFromTitle(job.title));
-  document.getElementById('jobTradeTag').textContent = `${tradeIcon} ${tradeLabel}`;
-  document.getElementById('jobStatusBadge').textContent = `● ${job.status || 'open'}`;
-  document.getElementById('jobReference').textContent = `Job #${job.id.slice(0, 8).toUpperCase()}`;
-  document.getElementById('jobTitleText').textContent = job.title;
-  document.getElementById('jobMeta').innerHTML = `
-    <span>📍 ${escapeHtml(location)}</span>
-    <span>📅 ${escapeHtml(formatRelativeDate(job.created_at))}</span>
-    <span>🗓️ ${escapeHtml(formatDate(job.preferred_date))}</span>
-    <span>💳 ${escapeHtml(job.payment_type || 'fixed')}</span>
+  document.getElementById('applyCard').innerHTML = `
+    <div style="text-align:center;padding:2rem 1rem">
+      <div style="font-size:3rem;margin-bottom:1rem">✅</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-0.03em;margin-bottom:0.5rem">Application Sent!</div>
+      <div style="font-size:0.875rem;color:var(--muted);line-height:1.65;margin-bottom:1.75rem">Alex will be notified of your bid. Most clients respond within 2 hours.</div>
+      <a href="my-applications.html" style="display:block;padding:0.85rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border-radius:2px;text-decoration:none;margin-bottom:0.6rem">View My Applications →</a>
+      <a href="worker-jobs.html" style="display:block;padding:0.85rem;background:var(--cream);color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.875rem;border-radius:2px;text-decoration:none;border:1px solid var(--border)">Browse More Jobs</a>
+    </div>
   `;
-
-  const urgencyAlert = document.getElementById('urgencyAlert');
-  if (job.urgency === 'urgent') {
-    urgencyAlert.style.display = 'block';
-    urgencyAlert.textContent = '⏰ The client marked this job as urgent, so fast responses have the best chance.';
-  } else {
-    urgencyAlert.style.display = 'none';
-  }
-
-  renderDescription(job.description);
-  document.getElementById('detailBudget').textContent = formatBudget(job);
-  document.getElementById('detailPayment').textContent = job.payment_type || 'fixed';
-  document.getElementById('detailLocation').textContent = location;
-  document.getElementById('detailUrgency').textContent = job.urgency === 'urgent' ? 'Urgent' : 'Flexible';
-  document.getElementById('detailDate').textContent = job.preferred_time
-    ? `${formatDate(job.preferred_date)} · ${job.preferred_time}`
-    : formatDate(job.preferred_date);
-  document.getElementById('detailMaterials').textContent = job.materials_provided
-    ? 'Client will provide materials'
-    : 'Materials to be agreed';
-
-  document.getElementById('applyBudget').textContent = formatBudget(job);
-  document.getElementById('applyBudgetSub').textContent = `${job.payment_type || 'fixed'} · ${job.urgency === 'urgent' ? 'Urgent request' : 'Standard request'}`;
-
-  if (job.status !== 'open') {
-    applyButton.disabled = true;
-    showApplyStatus('This job is no longer accepting applications.', 'error');
-  } else {
-    applyButton.disabled = false;
-    clearApplyStatus();
-  }
 }
-
-function renderClientProfile() {
-  const profile = clientProfile?.profile || clientProfile || null;
-  const name = profile?.full_name || currentJob?.profiles?.full_name || 'Private client';
-  const initials = name.trim().slice(0, 1).toUpperCase() || 'C';
-  const location = [profile?.area || currentJob?.profiles?.area, profile?.county || currentJob?.profiles?.county]
-    .filter(Boolean)
-    .join(', ');
-
-  document.getElementById('clientAvatar').textContent = initials;
-  document.getElementById('clientName').innerHTML = `${escapeHtml(name)}${profile?.is_verified ? ' <span class="badge-verified">✓ Verified</span>' : ''}`;
-  document.getElementById('clientType').textContent = 'KaziX client';
-  document.getElementById('clientLocation').textContent = location || 'Not shared';
-  document.getElementById('clientLanguage').textContent = formatLanguage(profile?.preferred_language);
-  document.getElementById('clientMemberSince').textContent = formatMemberSince(profile?.created_at);
-}
-
-function renderSimilarJobs(jobs) {
-  const container = document.getElementById('similarJobsList');
-  if (!jobs.length) {
-    container.innerHTML = '<div class="sj-meta">No similar jobs available right now.</div>';
-    return;
-  }
-
-  container.innerHTML = jobs.map((job) => {
-    const icon = TRADE_ICONS[job.trade] || '🛠️';
-    const location = [job.area, job.county].filter(Boolean).join(', ');
-    return `
-      <a href="job-detail.html?id=${encodeURIComponent(job.id)}" class="similar-job">
-        <span class="sj-icon">${icon}</span>
-        <div>
-          <div class="sj-name">${escapeHtml(job.title)}</div>
-          <div class="sj-meta">${escapeHtml(formatBudget(job))} · ${escapeHtml(location || 'Location pending')}</div>
-        </div>
-      </a>
-    `;
-  }).join('');
-}
-
-async function loadClientProfile(clientId) {
-  if (!clientId) {
-    renderClientProfile();
-    return;
-  }
-
-  try {
-    clientProfile = await window.KazixProfile.requestJson(`/v1/profiles/${encodeURIComponent(clientId)}`, {
-      showError: false,
-    });
-  } catch (error) {
-    console.warn('Could not load public client profile', error);
-  }
-  renderClientProfile();
-}
-
-async function loadSimilarJobs() {
-  if (!currentJob?.trade) {
-    renderSimilarJobs([]);
-    return;
-  }
-
-  try {
-    const payload = await window.KazixProfile.requestJson(
-      `/v1/jobs?trade=${encodeURIComponent(currentJob.trade)}&limit=6`,
-      { showError: false }
-    );
-    const similarJobs = (payload?.data || []).filter((job) => job.id !== currentJob.id).slice(0, 3);
-    renderSimilarJobs(similarJobs);
-  } catch (error) {
-    console.warn('Could not load similar jobs', error);
-    renderSimilarJobs([]);
-  }
-}
-
-async function submitApply() {
-  if (isApplying) {
-    return;
-  }
-
-  const jobId = getJobIdFromQuery();
-  const bid = Number.parseInt(document.getElementById('bidInput').value, 10);
-  if (!jobId) {
-    showApplyStatus('This job is missing its ID. Open it again from the jobs board.', 'error');
-    return;
-  }
-  if (!window.KazixProfile.getAccessToken()) {
-    const next = encodeURIComponent(location.pathname + location.search);
-    window.location.href = `login.html?next=${next}`;
-    return;
-  }
-  if (!Number.isFinite(bid) || bid < 1) {
-    showApplyStatus('Enter your bid amount before applying.', 'error');
-    return;
-  }
-
-  try {
-    setApplyBusy(true);
-    clearApplyStatus();
-    await window.KazixProfile.requestJson('/v1/applications', {
-      auth: true,
-      method: 'POST',
-      body: {
-        job_id: jobId,
-        bid_amount: bid,
-        cover_note: document.getElementById('coverNote').value.trim() || null,
-      },
-      showError: false,
-    });
-    document.getElementById('applyCard').innerHTML = `
-      <div style="text-align:center;padding:2rem 1rem">
-        <div style="font-size:3rem;margin-bottom:1rem">✅</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem;letter-spacing:-0.03em;margin-bottom:0.5rem">Application Sent!</div>
-        <div style="font-size:0.875rem;color:var(--muted);line-height:1.65;margin-bottom:1.75rem">The client can now review your bid for <strong>${escapeHtml(currentJob?.title || 'this job')}</strong>.</div>
-        <a href="worker-jobs.html" style="display:block;padding:0.85rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border-radius:2px;text-decoration:none">Browse More Jobs</a>
-      </div>
-    `;
-  } catch (error) {
-    console.error('Failed to submit application', error);
-    showApplyStatus(error.message || 'Could not submit your application right now.', 'error');
-  } finally {
-    setApplyBusy(false);
-  }
-}
-
-async function initJobDetailPage() {
-  const jobId = getJobIdFromQuery();
-  if (!jobId) {
-    document.getElementById('jobTitleText').textContent = 'Job not found';
-    document.getElementById('jobDescriptionBody').innerHTML = '<p>Open this page from the live jobs board so we know which job to load.</p>';
-    showApplyStatus('Open this job from the live jobs board to apply.', 'error');
-    document.getElementById('applySubmitButton').disabled = true;
-    return;
-  }
-
-  try {
-    const job = await window.KazixProfile.requestJson(`/v1/jobs/${encodeURIComponent(jobId)}`, {
-      showError: false,
-    });
-    renderJob(job);
-    await Promise.all([
-      loadClientProfile(job.client_id),
-      loadSimilarJobs(),
-    ]);
-  } catch (error) {
-    console.error('Failed to load job detail', error);
-    document.getElementById('jobTitleText').textContent = 'Could not load this job';
-    document.getElementById('jobDescriptionBody').innerHTML = `<p>${escapeHtml(error.message || 'Try again in a moment.')}</p>`;
-    showApplyStatus('This job could not be loaded right now.', 'error');
-    document.getElementById('applySubmitButton').disabled = true;
-  }
-}
-
-document.addEventListener('DOMContentLoaded', initJobDetailPage);
 </script>
-<script src="../assets/js/profile-utils.js"></script>
-<script src="../assets/js/auth-state.js"></script>
 </body>
 </html>

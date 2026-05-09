@@ -8,725 +8,299 @@
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
 body.app{height:100vh;overflow:hidden}
+
+/* MESSAGES LAYOUT */
 .msg-shell{display:flex;flex:1;overflow:hidden}
-.conv-list{width:340px;flex-shrink:0;background:white;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.conv-header{padding:1.2rem 1.2rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0}
-.conv-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.02rem;margin-bottom:0.75rem}
-.conv-sub{font-size:0.75rem;color:var(--muted);line-height:1.5;margin-bottom:0.85rem}
-.conv-search{width:100%;padding:0.65rem 0.95rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:var(--cream);color:var(--ink);outline:none}
+
+/* CONVERSATION LIST */
+.conv-list{width:320px;flex-shrink:0;background:white;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.conv-header{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.conv-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:0.75rem}
+.conv-search{width:100%;padding:0.6rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s}
 .conv-search:focus{border-color:var(--ink)}
 .conv-items{flex:1;overflow-y:auto}
-.conv-state,.chat-state{padding:1.25rem;color:var(--muted);font-size:0.82rem;line-height:1.6}
-.conv-item{display:flex;align-items:flex-start;gap:0.8rem;padding:0.95rem 1.15rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative}
+.conv-item{display:flex;align-items:flex-start;gap:0.85rem;padding:1rem 1.25rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative}
 .conv-item:hover{background:var(--cream)}
 .conv-item.active{background:rgba(13,13,13,0.04)}
 .conv-item.unread{background:rgba(245,166,35,0.04)}
-.ci-avatar,.chat-header-avatar,.bubble-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:700;flex-shrink:0;border:1px solid var(--border);overflow:hidden}
-.bubble-avatar{width:28px;height:28px;font-size:0.72rem}
-.ci-avatar img,.chat-header-avatar img,.bubble-avatar img{width:100%;height:100%;object-fit:cover}
+.ci-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;border:1px solid var(--border);position:relative}
+.ci-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid white}
 .ci-info{flex:1;min-width:0}
-.ci-name{font-weight:600;font-size:0.875rem;display:flex;justify-content:space-between;gap:0.75rem;align-items:center;margin-bottom:0.15rem}
-.ci-time{font-size:0.66rem;color:var(--muted);font-weight:400;flex-shrink:0}
-.ci-job{font-size:0.68rem;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem}
+.ci-name{font-weight:600;font-size:0.875rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:0.15rem}
+.ci-time{font-size:0.65rem;color:var(--muted);font-weight:400}
+.ci-job{font-size:0.68rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem}
 .ci-preview{font-size:0.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ci-unread-badge{position:absolute;right:0.9rem;top:1rem;min-width:18px;height:18px;border-radius:999px;background:var(--saffron);color:var(--ink);font-size:0.64rem;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 0.3rem}
+.ci-unread-badge{position:absolute;right:1rem;top:1rem;width:18px;height:18px;border-radius:50%;background:var(--saffron);color:var(--ink);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* CHAT AREA */
 .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.chat-header{padding:1rem 1.4rem;border-bottom:1px solid var(--border);background:white;display:flex;align-items:flex-start;gap:0.95rem;flex-shrink:0}
-.chat-head-copy{flex:1;min-width:0}
+.chat-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:white;display:flex;align-items:center;gap:1rem;flex-shrink:0}
+.chat-header-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid var(--border);position:relative}
+.chat-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid white}
 .chat-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem}
-.chat-sub{font-size:0.73rem;color:var(--muted);margin-top:0.15rem;line-height:1.5}
-.chat-context-row{display:flex;gap:0.45rem;flex-wrap:wrap;margin-top:0.6rem}
-.status-chip{display:inline-flex;align-items:center;gap:0.25rem;padding:0.28rem 0.6rem;border-radius:999px;font-size:0.66rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
-.status-chip.soft{background:rgba(13,13,13,0.06);color:var(--ink)}
-.status-chip.warn{background:rgba(245,166,35,0.14);color:#854F0B}
-.status-chip.good{background:rgba(27,107,58,0.1);color:var(--green)}
-.chat-actions{display:flex;gap:0.55rem;flex-wrap:wrap;justify-content:flex-end}
-.chat-action-btn{padding:0.45rem 0.9rem;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;transition:all 0.2s;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:0.35rem}
-.chat-action-btn:hover{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
-.chat-action-btn.primary{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
-.chat-action-btn.primary:hover{background:var(--green);border-color:var(--green)}
-.chat-messages{flex:1;overflow-y:auto;padding:1.4rem;display:flex;flex-direction:column;gap:1rem;background:linear-gradient(180deg,#f7f2ea 0%,#f0ebe3 100%)}
-.date-sep{text-align:center;font-size:0.67rem;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;position:relative;margin:0.35rem 0}
-.date-sep::before,.date-sep::after{content:'';position:absolute;top:50%;width:36%;height:1px;background:rgba(13,13,13,0.08)}
+.chat-sub{font-size:0.72rem;color:var(--muted);margin-top:0.1rem}
+.chat-actions{margin-left:auto;display:flex;gap:0.5rem}
+.chat-action-btn{padding:0.4rem 0.85rem;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:0.72rem;transition:all 0.2s;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:0.3rem}
+.chat-action-btn:hover{background:var(--ink);color:white;border-color:var(--ink)}
+.chat-action-btn.primary{background:var(--ink);color:white;border-color:var(--ink)}
+.chat-action-btn.primary:hover{background:var(--green)}
+.chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;background:var(--cream)}
+
+/* DATE SEPARATOR */
+.date-sep{text-align:center;font-size:0.68rem;color:var(--muted);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;position:relative;margin:0.5rem 0}
+.date-sep::before,.date-sep::after{content:'';position:absolute;top:50%;width:38%;height:1px;background:var(--border)}
 .date-sep::before{left:0}
 .date-sep::after{right:0}
-.sys-msg{text-align:center;font-size:0.74rem;color:var(--muted);background:rgba(255,255,255,0.6);border:1px solid rgba(13,13,13,0.06);border-radius:999px;padding:0.5rem 1rem;margin:0 auto;max-width:88%}
-.sys-msg a{color:var(--rust);font-weight:700;text-decoration:none}
-.msg-bubble{display:flex;gap:0.6rem;align-items:flex-end;max-width:74%}
+
+/* MESSAGES */
+.msg-bubble{display:flex;gap:0.6rem;align-items:flex-end;max-width:72%}
 .msg-bubble.outgoing{flex-direction:row-reverse;margin-left:auto}
-.bubble-content{background:white;border:1px solid rgba(13,13,13,0.08);border-radius:14px;border-bottom-left-radius:4px;padding:0.78rem 1rem;font-size:0.875rem;line-height:1.55;color:var(--ink);max-width:100%;word-break:break-word;box-shadow:0 4px 18px rgba(13,13,13,0.03)}
-.msg-bubble.outgoing .bubble-content{background:var(--ink);color:#F5F0E8;border-color:var(--ink);border-bottom-right-radius:4px;border-bottom-left-radius:14px;box-shadow:none}
-.bubble-time{font-size:0.64rem;color:var(--muted);padding-top:0.3rem}
+.bubble-avatar{width:28px;height:28px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;border:1px solid var(--border)}
+.bubble-content{background:white;border:1px solid var(--border);border-radius:12px;border-bottom-left-radius:3px;padding:0.75rem 1rem;font-size:0.875rem;line-height:1.55;color:var(--ink);max-width:100%;word-break:break-word}
+.msg-bubble.outgoing .bubble-content{background:var(--ink);color:#F5F0E8;border-color:var(--ink);border-bottom-right-radius:3px;border-bottom-left-radius:12px}
+.bubble-time{font-size:0.62rem;color:var(--muted);flex-shrink:0;padding-bottom:2px}
 .msg-bubble.outgoing .bubble-time{text-align:right}
-.empty-card{background:white;border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.25rem;max-width:420px;align-self:center;text-align:center;box-shadow:0 8px 30px rgba(13,13,13,0.04)}
-.empty-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:0.35rem}
-.empty-card-sub{font-size:0.82rem;color:var(--muted);line-height:1.6}
-.chat-input-area{padding:1rem 1.4rem;border-top:1px solid var(--border);background:white;flex-shrink:0}
-.composer-status{display:none;padding:0.75rem 0.9rem;border-radius:4px;margin-bottom:0.8rem;font-size:0.78rem;line-height:1.5}
-.composer-status.open{display:block}
-.composer-status.error{background:rgba(192,57,43,0.08);color:var(--rust);border:1px solid rgba(192,57,43,0.18)}
-.composer-status.info{background:rgba(13,13,13,0.04);color:var(--ink);border:1px solid rgba(13,13,13,0.08)}
+
+/* SYSTEM MESSAGE */
+.sys-msg{text-align:center;font-size:0.75rem;color:var(--muted);background:rgba(13,13,13,0.05);border-radius:20px;padding:0.4rem 1rem;margin:0 auto;max-width:80%}
+.sys-msg a{color:var(--rust);font-weight:600;text-decoration:none}
+
+/* JOB CARD IN CHAT */
+.chat-job-card{background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;font-size:0.82rem;max-width:280px}
+.cjc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;margin-bottom:0.3rem}
+.cjc-sub{color:var(--muted);font-size:0.72rem}
+.cjc-btn{display:inline-block;margin-top:0.65rem;padding:0.4rem 1rem;background:var(--ink);color:white;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;border:none}
+
+/* CHAT INPUT */
+.chat-input-area{padding:1rem 1.5rem;border-top:1px solid var(--border);background:white;flex-shrink:0}
 .chat-input-wrap{display:flex;gap:0.75rem;align-items:flex-end}
-.chat-input-box{flex:1;padding:0.8rem 1rem;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:none;outline:none;background:var(--cream);max-height:140px;line-height:1.5;transition:border-color 0.2s}
+.chat-input-box{flex:1;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:none;outline:none;background:var(--cream);max-height:120px;line-height:1.5;transition:border-color 0.2s}
 .chat-input-box:focus{border-color:var(--ink)}
-.chat-input-box:disabled{opacity:0.75;cursor:not-allowed}
-.send-btn{min-width:44px;height:44px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;color:white;flex-shrink:0;transition:background 0.2s}
-.send-btn:hover:not(:disabled){background:var(--green)}
-.send-btn:disabled{opacity:0.55;cursor:not-allowed}
-@media(max-width:1080px){.conv-list{width:300px}}
-@media(max-width:900px){
-  body.app{overflow:auto}
-  .sidebar{display:none}
-  .app-shell{padding-bottom:76px}
-  .msg-shell{min-height:calc(100vh - 120px)}
-}
-@media(max-width:760px){
-  .msg-shell{flex-direction:column}
-  .conv-list{width:100%;max-height:34vh;border-right:none;border-bottom:1px solid var(--border)}
-  .chat-header{flex-direction:column}
-  .chat-actions{width:100%;justify-content:flex-start}
-  .chat-messages{padding:1rem}
-  .msg-bubble{max-width:88%}
-}
+.send-btn{width:42px;height:42px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;color:white;flex-shrink:0;transition:background 0.2s}
+.send-btn:hover{background:var(--green)}
+.chat-input-extras{display:flex;gap:0.5rem;margin-bottom:0.6rem}
+.extra-btn{padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:20px;background:white;font-size:0.72rem;cursor:pointer;transition:all 0.2s;color:var(--muted)}
+.extra-btn:hover{border-color:var(--ink);color:var(--ink)}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:900px){.sidebar{display:none}.conv-list{width:280px}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
-    <button class="notif-btn" type="button">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
+    <button class="notif-btn">🔔<span class="notif-dot"></span></button>
+    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
   </div>
 </nav>
-
 <div class="app-shell">
-  <aside class="sidebar" id="appSidebar"></aside>
+  <aside class="sidebar">
+    <div class="sidebar-section">Main</div>
+    <a class="nav-item" href="client-dashboard.html"><span class="ni-icon">📊</span>Dashboard</a>
+    <a class="nav-item" href="my-jobs.html"><span class="ni-icon">📋</span>My Jobs</a>
+    <a class="nav-item" href="job-applicants.html"><span class="ni-icon">👥</span>Applications</a>
+    <a class="nav-item" href="my-hires.html"><span class="ni-icon">🤝</span>My Hires</a>
+    <div class="sidebar-section">Discover</div>
+    <a class="nav-item" href="find-workers.html"><span class="ni-icon">🔍</span>Find Fundis</a>
+    <a class="nav-item" href="saved-workers.html"><span class="ni-icon">❤️</span>Saved Fundis</a>
+    <a class="nav-item" href="post-job.html"><span class="ni-icon">➕</span>Post a Job</a>
+    <div class="sidebar-section">Account</div>
+    <a class="nav-item active" href="messages.html"><span class="ni-icon">💬</span>Messages</a>
+    <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
+    <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
+    <div class="sidebar-bottom">
+      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
+    </div>
+  </aside>
 
   <div class="msg-shell">
-    <section class="conv-list">
+    <!-- CONVERSATION LIST -->
+    <div class="conv-list">
       <div class="conv-header">
         <div class="conv-title">Messages</div>
-        <div class="conv-sub">Live conversations tied to applications and hires now sync here.</div>
-        <input class="conv-search" id="threadSearch" type="search" placeholder="Search people, jobs, or messages">
+        <input class="conv-search" type="text" placeholder="Search conversations…">
       </div>
-      <div class="conv-items" id="threadsList">
-        <div class="conv-state">Loading conversations…</div>
+      <div class="conv-items">
+        <div class="conv-item unread active" onclick="selectConv('james')">
+          <div class="ci-avatar">🔧<div class="ci-online"></div></div>
+          <div class="ci-info">
+            <div class="ci-name">James Kamau <span class="ci-time">2 min</span></div>
+            <div class="ci-job">Plumber · Job #KX-0187</div>
+            <div class="ci-preview" style="color:var(--ink);font-weight:500">Nimewasili Westlands, niko njiani…</div>
+          </div>
+          <div class="ci-unread-badge">1</div>
+        </div>
+        <div class="conv-item unread" onclick="selectConv('mary')">
+          <div class="ci-avatar">🎨<div class="ci-online"></div></div>
+          <div class="ci-info">
+            <div class="ci-name">Mary Akinyi <span class="ci-time">1 hr</span></div>
+            <div class="ci-job">Painter · Job #KX-0192</div>
+            <div class="ci-preview" style="color:var(--ink);font-weight:500">Nimekamilisha chumba cha kwanza…</div>
+          </div>
+          <div class="ci-unread-badge">1</div>
+        </div>
+        <div class="conv-item" onclick="selectConv('faith')">
+          <div class="ci-avatar">⚡</div>
+          <div class="ci-info">
+            <div class="ci-name">Faith Njeri <span class="ci-time">Yesterday</span></div>
+            <div class="ci-job">Electrician · Job #KX-0198</div>
+            <div class="ci-preview">I can come Thursday morning…</div>
+          </div>
+        </div>
+        <div class="conv-item" onclick="selectConv('peter')">
+          <div class="ci-avatar">🪚</div>
+          <div class="ci-info">
+            <div class="ci-name">Peter Odhiambo <span class="ci-time">3 days</span></div>
+            <div class="ci-job">Carpenter · Job #KX-0181</div>
+            <div class="ci-preview">Thank you for the review! Any…</div>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <section class="chat-area">
-      <div class="chat-header" id="chatHeader">
-        <div class="chat-state">Choose a conversation to start messaging.</div>
+    <!-- CHAT AREA -->
+    <div class="chat-area">
+      <div class="chat-header">
+        <div class="chat-header-avatar">🔧<div class="chat-online"></div></div>
+        <div>
+          <div class="chat-name">James Kamau</div>
+          <div class="chat-sub">Master Plumber · ● Online now · Nairobi</div>
+        </div>
+        <div class="chat-actions">
+          <a href="worker-profile.html" class="chat-action-btn">👤 View Profile</a>
+          <a href="my-jobs.html" class="chat-action-btn">📋 Job #KX-0187</a>
+          <a href="job-applicants.html" class="chat-action-btn primary">✅ Hire James</a>
+        </div>
       </div>
+
       <div class="chat-messages" id="chatMessages">
-        <div class="empty-card">
-          <div class="empty-card-title">Your inbox is getting connected</div>
-          <div class="empty-card-sub">Open a job or application conversation from the left and you can message directly here.</div>
+        <!-- System: booking created -->
+        <div class="sys-msg">James applied to your job · <a href="job-applicants.html">View application →</a></div>
+
+        <div class="date-sep">Today</div>
+
+        <!-- James messages -->
+        <div class="msg-bubble">
+          <div class="bubble-avatar">🔧</div>
+          <div>
+            <div class="bubble-content">Habari Alex! Nimeona kazi yako ya kutengeneza bomba. Ninaweza kuja leo asubuhi au kesho. Nimefanya kazi kama hii mara nyingi Westlands.</div>
+            <div class="bubble-time">9:14 AM</div>
+          </div>
+        </div>
+
+        <!-- Alex response -->
+        <div class="msg-bubble outgoing">
+          <div class="bubble-avatar">🏠</div>
+          <div>
+            <div class="bubble-content">Asante James. Bomba liko chini ya sinki ya kitchen — linatoa maji mengi. Je, unaweza kuja leo mchana?</div>
+            <div class="bubble-time">9:22 AM</div>
+          </div>
+        </div>
+
+        <!-- Job card attachment -->
+        <div class="msg-bubble">
+          <div class="bubble-avatar">🔧</div>
+          <div>
+            <div class="chat-job-card">
+              <div class="cjc-title">Fix leaking pipe — Westlands</div>
+              <div class="cjc-sub">🚿 Plumber · KES 500–1,500 · My bid: KES 800</div>
+              <a href="my-applications.html" class="cjc-btn">View my application</a>
+            </div>
+            <div class="bubble-time">9:25 AM</div>
+          </div>
+        </div>
+
+        <div class="msg-bubble">
+          <div class="bubble-avatar">🔧</div>
+          <div>
+            <div class="bubble-content">Ndiyo, ninaweza kuja saa 6 mchana — yaani saa sita. Nitatumia spare parts zangu. Bei yangu ni KES 800 kwa kazi hii yote.</div>
+            <div class="bubble-time">9:26 AM</div>
+          </div>
+        </div>
+
+        <div class="msg-bubble outgoing">
+          <div class="bubble-avatar">🏠</div>
+          <div>
+            <div class="bubble-content">Sawa James, nakusubiria. Address yangu ni Westlands Gardens, Block C, Apartment 12. Gate code: 4521.</div>
+            <div class="bubble-time">9:31 AM</div>
+          </div>
+        </div>
+
+        <div class="sys-msg">Alex sent James a booking request · KES 800 · <a href="my-hires.html">View booking →</a></div>
+
+        <!-- Latest unread -->
+        <div class="msg-bubble" style="animation:slideUp 0.3s ease both">
+          <div class="bubble-avatar">🔧</div>
+          <div>
+            <div class="bubble-content">Nimewasili Westlands, niko njiani kwako sasa. Nitafika dakika 5 — 10.</div>
+            <div class="bubble-time" style="color:var(--saffron);font-weight:600">Just now · Unread</div>
+          </div>
         </div>
       </div>
+
+      <!-- INPUT -->
       <div class="chat-input-area">
-        <div class="composer-status info" id="composerStatus"></div>
+        <div class="chat-input-extras">
+          <button class="extra-btn">📎 Attach photo</button>
+          <button class="extra-btn">📍 Share location</button>
+          <button class="extra-btn">📋 Share job</button>
+        </div>
         <div class="chat-input-wrap">
-          <textarea class="chat-input-box" id="msgInput" rows="1" placeholder="Choose a conversation first" disabled></textarea>
-          <button class="send-btn" id="sendButton" type="button" disabled>➤</button>
+          <textarea class="chat-input-box" id="msgInput" placeholder="Type a message… / Andika ujumbe…" rows="1" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
       </div>
-    </section>
+    </div>
   </div>
 </div>
 
-<nav class="mobile-nav" id="mobileNav" aria-label="Primary navigation"></nav>
-
-<script src="../assets/js/profile-utils.js"></script>
 <script>
-const APP_NAV = {
-  client: {
-    sections: [
-      {
-        title: 'Main',
-        items: [
-          { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
-          { href: 'my-jobs.html', icon: '📋', label: 'My Jobs' },
-          { href: 'job-applicants.html', icon: '👥', label: 'Applications' },
-          { href: 'my-hires.html', icon: '🤝', label: 'My Hires' },
-        ],
-      },
-      {
-        title: 'Account',
-        items: [
-          { href: 'notifications.html', icon: '🔔', label: 'Notifications' },
-          { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-          { href: 'client-profile.html', icon: '👤', label: 'My Profile' },
-        ],
-      },
-    ],
-    mobile: [
-      { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
-      { href: 'my-jobs.html', icon: '📋', label: 'Jobs' },
-      { href: 'notifications.html', icon: '🔔', label: 'Alerts' },
-      { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-    ],
-    accountIcon: '🏠',
-  },
-  fundi: {
-    sections: [
-      {
-        title: 'Work',
-        items: [
-          { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
-          { href: 'worker-jobs.html', icon: '🔍', label: 'Find Jobs' },
-          { href: 'my-applications.html', icon: '📋', label: 'My Applications' },
-          { href: 'worker-hires.html', icon: '🤝', label: 'Active Contracts' },
-        ],
-      },
-      {
-        title: 'Account',
-        items: [
-          { href: 'notifications.html', icon: '🔔', label: 'Notifications' },
-          { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-          { href: 'worker-profile-edit.html', icon: '👤', label: 'My Profile' },
-        ],
-      },
-    ],
-    mobile: [
-      { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
-      { href: 'worker-jobs.html', icon: '🔍', label: 'Jobs' },
-      { href: 'notifications.html', icon: '🔔', label: 'Alerts' },
-      { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-    ],
-    accountIcon: '🔧',
-  },
-  admin: {
-    sections: [
-      {
-        title: 'Admin',
-        items: [
-          { href: 'admin-dashboard.html', icon: '🛡️', label: 'Dashboard' },
-          { href: 'notifications.html', icon: '🔔', label: 'Notifications' },
-          { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-        ],
-      },
-    ],
-    mobile: [
-      { href: 'admin-dashboard.html', icon: '🛡️', label: 'Admin' },
-      { href: 'notifications.html', icon: '🔔', label: 'Alerts' },
-      { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
-      { href: 'index.html', icon: '🏠', label: 'Home' },
-    ],
-    accountIcon: '🛡️',
-  },
-};
-
-let currentRole = 'client';
-let threads = [];
-let activeThread = null;
-let threadMessages = [];
-let isSending = false;
-let currentUserName = 'My account';
-let currentUserAvatarUrl = '';
-
-function escapeHtml(value) {
-  return window.KazixProfile.escapeHtml(value);
-}
-
-function initials(name) {
-  return window.KazixProfile.initials(name);
-}
-
-function threadKey(thread) {
-  return `${thread.application_id || thread.booking_id || thread.job_id || 'draft'}:${thread.participant_id || 'unknown'}`;
-}
-
-function getThreadQueryFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    participantId: (params.get('participant') || '').trim() || null,
-    jobId: (params.get('job') || '').trim() || null,
-    applicationId: (params.get('application') || '').trim() || null,
-    bookingId: (params.get('booking') || '').trim() || null,
-  };
-}
-
-function syncThreadQuery(thread) {
-  const next = window.KazixProfile.buildPagePath('messages.html', {
-    participant: thread?.participant_id,
-    job: thread?.job_id,
-    application: thread?.application_id,
-    booking: thread?.booking_id,
-  });
-  window.history.replaceState({}, '', next);
-}
-
-function formatRelativeTime(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const diffMs = Date.now() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d`;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-function formatMessageTime(value) {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
-function formatDateLabel(value) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  const today = new Date();
-  const startToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const startDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays = Math.round((startToday.getTime() - startDate.getTime()) / 86400000);
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function roleTag(role) {
-  if (role === 'fundi') return 'Fundi';
-  if (role === 'admin') return 'Admin';
-  return 'Client';
-}
-
-function formatLocation(thread) {
-  return [thread?.participant_area, thread?.participant_county].filter(Boolean).join(', ');
-}
-
-function getContextHref(thread) {
-  if (thread.booking_id) {
-    return currentRole === 'fundi' ? 'worker-hires.html' : 'my-hires.html';
-  }
-  if (currentRole === 'client' && thread.job_id) {
-    return window.KazixProfile.buildPagePath('job-applicants.html', { job: thread.job_id });
-  }
-  if (currentRole === 'fundi' && thread.application_id) {
-    return 'my-applications.html';
-  }
-  if (thread.job_id) {
-    return window.KazixProfile.buildPagePath('job-detail.html', { id: thread.job_id });
-  }
-  return currentRole === 'fundi' ? 'worker-dashboard.html' : 'client-dashboard.html';
-}
-
-function getContextLabel(thread) {
-  if (thread.booking_id) {
-    return currentRole === 'fundi' ? 'View Contract' : 'View Hire';
-  }
-  if (currentRole === 'client') return 'Review Application';
-  if (thread.application_id) return 'My Application';
-  return 'View Job';
-}
-
-function getProfileHref(thread) {
-  return window.KazixProfile.profilePath(thread.participant_role === 'client' ? 'client' : 'fundi', thread.participant_id);
-}
-
-function statusChipMarkup(thread) {
-  const chips = [];
-  if (thread.application_status) {
-    const tone = thread.application_status === 'hired'
-      ? 'good'
-      : thread.application_status === 'shortlisted'
-        ? 'warn'
-        : 'soft';
-    chips.push(`<span class="status-chip ${tone}">${escapeHtml(thread.application_status)}</span>`);
-  }
-  if (thread.booking_status) {
-    const tone = thread.booking_status === 'completed' ? 'good' : 'soft';
-    chips.push(`<span class="status-chip ${tone}">${escapeHtml(thread.booking_status)}</span>`);
-  }
-  return chips.join('');
-}
-
-function avatarMarkup(thread, className) {
-  const name = thread?.participant_name || 'KaziX user';
-  if (thread?.participant_avatar_url) {
-    return `<div class="${className}"><img src="${escapeHtml(thread.participant_avatar_url)}" alt="${escapeHtml(name)}"></div>`;
-  }
-  return `<div class="${className}">${escapeHtml(initials(name))}</div>`;
-}
-
-function ownAvatarMarkup(className) {
-  if (currentUserAvatarUrl) {
-    return `<div class="${className}"><img src="${escapeHtml(currentUserAvatarUrl)}" alt="${escapeHtml(currentUserName)}"></div>`;
-  }
-  return `<div class="${className}">${escapeHtml(initials(currentUserName))}</div>`;
-}
-
-function setComposerStatus(message, tone) {
-  const box = document.getElementById('composerStatus');
-  if (!message) {
-    box.className = 'composer-status info';
-    box.textContent = '';
-    return;
-  }
-  box.className = `composer-status ${tone || 'info'} open`;
-  box.textContent = message;
-}
-
-function renderSidebar(role) {
-  const config = APP_NAV[role] || APP_NAV.client;
-  const sectionMarkup = config.sections.map((section) => `
-    <div class="sidebar-section">${escapeHtml(section.title)}</div>
-    ${section.items.map((item) => `
-      <a class="nav-item${item.active ? ' active' : ''}" href="${escapeHtml(item.href)}">
-        <span class="ni-icon">${item.icon}</span>${escapeHtml(item.label)}
-      </a>
-    `).join('')}
-  `).join('');
-
-  document.getElementById('appSidebar').innerHTML = `
-    ${sectionMarkup}
-    <div class="sidebar-bottom">
-      <div class="sidebar-profile">
-        <div class="sp-avatar">${config.accountIcon}</div>
-        <div>
-          <div class="sp-name">My account</div>
-          <div class="sp-role">${escapeHtml(roleTag(role))} account</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function renderMobileNav(role) {
-  const config = APP_NAV[role] || APP_NAV.client;
-  document.getElementById('mobileNav').innerHTML = config.mobile.map((item) => `
-    <a class="mobile-nav-item${item.active ? ' active' : ''}" href="${escapeHtml(item.href)}">
-      <span class="mn-icon">${item.icon}</span><span class="mn-label">${escapeHtml(item.label)}</span>
-    </a>
-  `).join('');
-}
-
-function mergedThreads() {
-  if (!activeThread) return threads.slice();
-  const items = threads.slice();
-  if (!items.some((thread) => threadKey(thread) === threadKey(activeThread))) {
-    items.unshift(activeThread);
-  }
-  return items;
-}
-
-function filteredThreads() {
-  const query = document.getElementById('threadSearch').value.trim().toLowerCase();
-  return mergedThreads().filter((thread) => {
-    if (!query) return true;
-    const haystack = [
-      thread.participant_name,
-      thread.job_title,
-      thread.latest_message_preview,
-      thread.participant_trade,
-    ].join(' ').toLowerCase();
-    return haystack.includes(query);
-  });
-}
-
-function renderThreads() {
-  const list = document.getElementById('threadsList');
-  const visible = filteredThreads();
-  if (!visible.length) {
-    list.innerHTML = '<div class="conv-state">No conversations match that search yet.</div>';
-    return;
-  }
-
-  list.innerHTML = visible.map((thread) => {
-    const isActive = activeThread && threadKey(thread) === threadKey(activeThread);
-    const preview = thread.latest_message_preview || `Start the conversation about ${thread.job_title || 'this job'}.`;
-    const unread = Number(thread.unread_count) || 0;
-    const location = formatLocation(thread);
-    const trade = thread.participant_trade ? window.KazixProfile.formatTrade(thread.participant_trade) : roleTag(thread.participant_role);
-    return `
-      <button class="conv-item${isActive ? ' active' : ''}${unread ? ' unread' : ''}" type="button" data-thread="${escapeHtml(threadKey(thread))}">
-        ${avatarMarkup(thread, 'ci-avatar')}
-        <div class="ci-info">
-          <div class="ci-name">
-            <span>${escapeHtml(thread.participant_name || 'KaziX user')}</span>
-            <span class="ci-time">${escapeHtml(formatRelativeTime(thread.last_message_at))}</span>
-          </div>
-          <div class="ci-job">${escapeHtml(thread.job_title || trade)}</div>
-          <div class="ci-preview">${escapeHtml(location ? `${trade} · ${location} · ${preview}` : `${trade} · ${preview}`)}</div>
-        </div>
-        ${unread ? `<div class="ci-unread-badge">${escapeHtml(String(unread))}</div>` : ''}
-      </button>
-    `;
-  }).join('');
-}
-
-function renderChatHeader() {
-  const header = document.getElementById('chatHeader');
-  if (!activeThread) {
-    header.innerHTML = '<div class="chat-state">Open an application or hire conversation to start messaging.</div>';
-    return;
-  }
-
-  const tradeLabel = activeThread.participant_trade
-    ? window.KazixProfile.formatTrade(activeThread.participant_trade)
-    : roleTag(activeThread.participant_role);
-  const location = formatLocation(activeThread);
-  const contextLine = [tradeLabel, location].filter(Boolean).join(' · ');
-
-  header.innerHTML = `
-    ${avatarMarkup(activeThread, 'chat-header-avatar')}
-    <div class="chat-head-copy">
-      <div class="chat-name">${escapeHtml(activeThread.participant_name || 'KaziX user')}</div>
-      <div class="chat-sub">${escapeHtml(contextLine || 'Conversation linked to a live KaziX job')}</div>
-      <div class="chat-sub">${escapeHtml(activeThread.job_title || 'Job context pending')}</div>
-      <div class="chat-context-row">${statusChipMarkup(activeThread)}</div>
-    </div>
-    <div class="chat-actions">
-      <a href="${escapeHtml(getProfileHref(activeThread))}" class="chat-action-btn">👤 View Profile</a>
-      <a href="${escapeHtml(getContextHref(activeThread))}" class="chat-action-btn primary">${escapeHtml(getContextLabel(activeThread))}</a>
-    </div>
-  `;
-}
-
-function renderMessages() {
-  const wrap = document.getElementById('chatMessages');
-  const input = document.getElementById('msgInput');
-  const sendButton = document.getElementById('sendButton');
-
-  if (!activeThread) {
-    input.disabled = true;
-    input.placeholder = 'Choose a conversation first';
-    sendButton.disabled = true;
-    wrap.innerHTML = `
-      <div class="empty-card">
-        <div class="empty-card-title">No conversation selected</div>
-        <div class="empty-card-sub">Open a worker or client thread from the left to continue from an application or hire.</div>
-      </div>
-    `;
-    return;
-  }
-
-  input.disabled = false;
-  input.placeholder = `Message ${activeThread.participant_name || 'this user'}…`;
-  sendButton.disabled = isSending;
-
-  const blocks = [];
-  blocks.push(`
-    <div class="sys-msg">
-      Conversation linked to <strong>${escapeHtml(activeThread.job_title || 'your KaziX job')}</strong>
-    </div>
-  `);
-
-  if (!threadMessages.length) {
-    blocks.push(`
-      <div class="empty-card">
-        <div class="empty-card-title">Say hello</div>
-        <div class="empty-card-sub">No messages have been sent here yet. Your first message will stay attached to this live job context.</div>
-      </div>
-    `);
-    wrap.innerHTML = blocks.join('');
-    return;
-  }
-
-  let lastDateLabel = '';
-  threadMessages.forEach((message) => {
-    const dateLabel = formatDateLabel(message.created_at);
-    if (dateLabel && dateLabel !== lastDateLabel) {
-      blocks.push(`<div class="date-sep">${escapeHtml(dateLabel)}</div>`);
-      lastDateLabel = dateLabel;
-    }
-
-    const outgoing = message.sender_id === activeThread.current_user_id;
-    blocks.push(`
-      <div class="msg-bubble${outgoing ? ' outgoing' : ''}">
-        ${outgoing ? ownAvatarMarkup('bubble-avatar') : avatarMarkup(activeThread, 'bubble-avatar')}
-        <div>
-          <div class="bubble-content">${escapeHtml(message.body || '')}</div>
-          <div class="bubble-time">${escapeHtml(formatMessageTime(message.created_at))}</div>
-        </div>
-      </div>
-    `);
-  });
-
-  wrap.innerHTML = blocks.join('');
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-async function loadThreads() {
-  const payload = await window.KazixProfile.requestJson('/v1/messages/threads', {
-    auth: true,
-    showError: false,
-  });
-  threads = Array.isArray(payload?.data) ? payload.data : [];
-}
-
-async function openThread(context, options = {}) {
-  if (!context?.participantId) return;
-  const params = new URLSearchParams();
-  params.set('participant_id', context.participantId);
-  if (context.jobId) params.set('job_id', context.jobId);
-  if (context.applicationId) params.set('application_id', context.applicationId);
-  if (context.bookingId) params.set('booking_id', context.bookingId);
-
-  const payload = await window.KazixProfile.requestJson(`/v1/messages/thread?${params.toString()}`, {
-    auth: true,
-    showError: false,
-  });
-
-  activeThread = payload?.thread || null;
-  threadMessages = Array.isArray(payload?.messages) ? payload.messages : [];
-  if (activeThread) {
-    const activeKey = threadKey(activeThread);
-    let foundThread = false;
-    threads = threads.map((thread) => {
-      if (threadKey(thread) !== activeKey) {
-        return thread;
-      }
-      foundThread = true;
-      return { ...thread, ...activeThread, unread_count: 0 };
-    });
-    if (!foundThread) {
-      threads.unshift({ ...activeThread, unread_count: 0 });
-    }
-  }
-  if (activeThread && options.syncUrl !== false) {
-    syncThreadQuery(activeThread);
-  }
-  renderThreads();
-  renderChatHeader();
-  renderMessages();
-  setComposerStatus('');
-  if (window.KazixProfile) {
-    window.KazixProfile.clearNotificationSummaryCache();
-    window.KazixProfile.hydrateNotificationSummary({ silent: true, force: true });
-  }
-}
-
-async function sendMessage() {
-  if (isSending || !activeThread) return;
+function sendMessage() {
   const input = document.getElementById('msgInput');
   const text = input.value.trim();
   if (!text) return;
-
-  try {
-    isSending = true;
-    document.getElementById('sendButton').disabled = true;
-    setComposerStatus('');
-    await window.KazixProfile.requestJson('/v1/messages', {
-      auth: true,
-      method: 'POST',
-      body: {
-        participant_id: activeThread.participant_id,
-        job_id: activeThread.job_id,
-        application_id: activeThread.application_id,
-        booking_id: activeThread.booking_id,
-        body: text,
-      },
-      showError: false,
-    });
-    input.value = '';
-    await loadThreads();
-    await openThread({
-      participantId: activeThread.participant_id,
-      jobId: activeThread.job_id,
-      applicationId: activeThread.application_id,
-      bookingId: activeThread.booking_id,
-    });
-  } catch (error) {
-    console.error('Failed to send message', error);
-    setComposerStatus(error.message || 'Could not send your message right now.', 'error');
-  } finally {
-    isSending = false;
-    document.getElementById('sendButton').disabled = !activeThread;
-  }
+  const msgs = document.getElementById('chatMessages');
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble outgoing';
+  bubble.style.animation = 'slideUp 0.25s ease both';
+  bubble.innerHTML = `<div class="bubble-avatar">🏠</div><div><div class="bubble-content">${text}</div><div class="bubble-time">Just now</div></div>`;
+  msgs.appendChild(bubble);
+  input.value = '';
+  msgs.scrollTop = msgs.scrollHeight;
 }
-
-function bindEvents() {
-  document.getElementById('threadSearch').addEventListener('input', renderThreads);
-
-  document.getElementById('threadsList').addEventListener('click', async function (event) {
-    const button = event.target.closest('[data-thread]');
-    if (!button) return;
-    const nextThread = mergedThreads().find((thread) => threadKey(thread) === button.dataset.thread);
-    if (!nextThread) return;
-    try {
-      await openThread({
-        participantId: nextThread.participant_id,
-        jobId: nextThread.job_id,
-        applicationId: nextThread.application_id,
-        bookingId: nextThread.booking_id,
-      });
-    } catch (error) {
-      console.error('Failed to open thread', error);
-      setComposerStatus(error.message || 'Could not open that conversation.', 'error');
-    }
-  });
-
-  document.getElementById('sendButton').addEventListener('click', sendMessage);
-  document.getElementById('msgInput').addEventListener('keydown', function (event) {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      sendMessage();
-    }
-  });
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 }
-
-async function initMessagesPage() {
-  try {
-    const shellData = await window.KazixProfile.getMyProfile();
-    currentRole = shellData?.profile?.role || 'client';
-    currentUserName = shellData?.profile?.full_name || shellData?.profile?.email || 'My account';
-    currentUserAvatarUrl = shellData?.profile?.avatar_url || '';
-    renderSidebar(currentRole);
-    renderMobileNav(currentRole);
-    await window.KazixProfile.hydrateShell({ data: shellData, silent: false });
-    bindEvents();
-    await loadThreads();
-
-    const query = getThreadQueryFromUrl();
-    if (query.participantId) {
-      await openThread(query);
-    } else if (threads.length) {
-      await openThread({
-        participantId: threads[0].participant_id,
-        jobId: threads[0].job_id,
-        applicationId: threads[0].application_id,
-        bookingId: threads[0].booking_id,
-      });
-    } else {
-      renderThreads();
-      renderChatHeader();
-      renderMessages();
-    }
-  } catch (error) {
-    console.error('Failed to initialize messages page', error);
-    document.getElementById('threadsList').innerHTML = `<div class="conv-state">${escapeHtml(error.message || 'Could not load your inbox right now.')}</div>`;
-    document.getElementById('chatHeader').innerHTML = '<div class="chat-state">Messages are temporarily unavailable.</div>';
-    document.getElementById('chatMessages').innerHTML = `
-      <div class="empty-card">
-        <div class="empty-card-title">Could not load conversations</div>
-        <div class="empty-card-sub">${escapeHtml(error.message || 'Try refreshing again in a moment.')}</div>
-      </div>
-    `;
-  }
+function selectConv(name) {
+  document.querySelectorAll('.conv-item').forEach(c => c.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  event.currentTarget.classList.remove('unread');
+  event.currentTarget.querySelector('.ci-unread-badge')?.remove();
 }
-
-document.addEventListener('DOMContentLoaded', initMessagesPage);
+document.getElementById('chatMessages').scrollTop = 99999;
 </script>
+
+<nav class="mobile-nav" aria-label="Primary">
+  <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
+  <a class="mobile-nav-item" href="my-jobs.html"><span class="mn-icon">📋</span><span class="mn-label">Jobs</span></a>
+  <a class="mobile-nav-item" href="find-workers.html"><span class="mn-icon">🔍</span><span class="mn-label">Find</span></a>
+  <a class="mobile-nav-item active" href="messages.html"><span class="mn-icon">💬</span><span class="mn-label">Messages</span></a>
+  <div class="mobile-nav-more">
+    <button class="mobile-nav-item mobile-nav-more-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" aria-label="Open navigation menu">
+      <span class="mn-icon">⋯</span><span class="mn-label">More</span>
+    </button>
+    <div class="mobile-nav-drawer" id="mobile-drawer" role="navigation" aria-label="Secondary pages" aria-hidden="true">
+      <a class="mobile-nav-drawer-item" href="client-profile.html">👤 Profile</a>
+      <a class="mobile-nav-drawer-item" href="notifications.html">🔔 Notifications</a>
+      <a class="mobile-nav-drawer-item" href="payments.html">💳 Payments</a>
+      <a class="mobile-nav-drawer-item" href="reviews.html">⭐ Reviews</a>
+      <a class="mobile-nav-drawer-item" href="saved-workers.html">❤️ Saved Fundis</a>
+    </div>
+  </div>
+</nav>
+
+
+<script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>

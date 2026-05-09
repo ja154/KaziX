@@ -6,24 +6,15 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>My Applications — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
+
 <style>
-.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:2rem;flex-wrap:wrap}
-.tab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;background:none;border-top:none;border-left:none;border-right:none}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:2rem}
+.tab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem}
 .tab:hover{color:var(--ink)}
 .tab.active{color:var(--ink);border-bottom-color:var(--ink)}
 .tab .tc{font-size:0.65rem;padding:0.1rem 0.45rem;border-radius:10px;background:var(--cream);color:var(--muted)}
 .tab.active .tc{background:var(--ink);color:#F5F0E8}
 .apps-list{display:flex;flex-direction:column;gap:1rem}
-.state-card{background:white;border:1px solid var(--border);border-radius:6px;padding:2rem 1.5rem;text-align:center}
-.state-icon{font-size:2.4rem;margin-bottom:0.9rem;opacity:0.65}
-.state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--ink);margin-bottom:0.5rem}
-.state-sub{font-size:0.84rem;color:var(--muted);line-height:1.65;margin-bottom:1.25rem}
-.state-link{display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.2rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;text-decoration:none}
-.page-message{display:none;padding:0.9rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.82rem;line-height:1.6}
-.page-message.open{display:block}
-.page-message.success{background:rgba(27,107,58,0.08);color:var(--green);border:1px solid rgba(27,107,58,0.18)}
-.page-message.error{background:rgba(192,57,43,0.08);color:var(--rust);border:1px solid rgba(192,57,43,0.18)}
-
 .app-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;transition:box-shadow 0.2s;position:relative;overflow:hidden;animation:slideUp 0.4s ease both}
 .app-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06)}
 .app-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
@@ -31,7 +22,6 @@
 .app-card.c-hired::before{background:var(--green)}
 .app-card.c-shortlisted::before{background:var(--ink)}
 .app-card.c-rejected::before{background:var(--muted)}
-.app-card.c-withdrawn::before{background:rgba(13,13,13,0.28)}
 .ac-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
 .ac-icon{width:42px;height:42px;border-radius:4px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
 .ac-info{flex:1;min-width:0}
@@ -43,7 +33,6 @@
 .sp-hired{background:rgba(27,107,58,0.1);color:var(--green)}
 .sp-shortlisted{background:rgba(13,13,13,0.08);color:var(--ink)}
 .sp-rejected{background:var(--cream);color:var(--muted)}
-.sp-withdrawn{background:rgba(13,13,13,0.06);color:var(--muted)}
 .ac-bid{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem}
 .timeline{display:flex;margin-bottom:1rem}
 .tl-step{flex:1;text-align:center;position:relative}
@@ -53,49 +42,30 @@
 .dot-done{background:var(--ink);color:#F5F0E8}
 .dot-active{background:var(--saffron);color:var(--ink)}
 .dot-wait{background:white;border:2px solid var(--border)}
-.dot-muted{background:var(--cream);color:var(--muted)}
 .tl-label{font-size:0.6rem;color:var(--muted)}
 .tl-step.done .tl-label{color:var(--ink);font-weight:600}
 .tl-step.active .tl-label{font-weight:700;color:var(--ink)}
 .ac-note{font-size:0.875rem;line-height:1.65;color:var(--steel);padding-left:0.85rem;border-left:2px solid var(--border);margin-bottom:1rem;font-style:italic}
-.info-banner{border-radius:4px;padding:0.75rem 1rem;font-size:0.82rem;margin-bottom:1rem;line-height:1.55}
-.info-banner.success{background:rgba(27,107,58,0.07);border:1px solid rgba(27,107,58,0.2);color:var(--green)}
-.info-banner.warn{background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.22);color:#854F0B}
-.info-banner.muted{background:var(--cream);border:1px solid rgba(13,13,13,0.06);color:var(--muted)}
+.hired-banner{background:rgba(27,107,58,0.07);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:0.75rem 1rem;font-size:0.82rem;color:var(--green);margin-bottom:1rem}
 .ac-actions{display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center}
 .ac-actions a,.ac-actions button{padding:0.45rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem}
-.ac-actions button[disabled]{opacity:0.6;cursor:not-allowed}
 .btn-view{background:var(--ink);color:#F5F0E8;border:none}
 .btn-view:hover{background:var(--green)}
 .btn-msg{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 .btn-msg:hover{background:var(--ink);color:#F5F0E8}
 .btn-withdraw{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.btn-withdraw:hover:not([disabled]){color:var(--rust);border-color:var(--rust)}
+.btn-withdraw:hover{color:var(--rust);border-color:var(--rust)}
 .ac-applied{font-size:0.72rem;color:var(--muted);margin-left:auto}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
-<script>
-(function(){
-  if (!localStorage.getItem("kazix_access_token")) {
-    var next = encodeURIComponent(location.pathname + location.search);
-    location.replace("login.html?next=" + next);
-    return;
-  }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
-})();
-</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
+    <div class="user-chip"><div class="user-avatar">JK</div><span class="user-name">James Kamau</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -111,380 +81,124 @@
     <a class="nav-item" href="worker-reviews.html"><span class="ni-icon">⭐</span>My Reviews</a>
     <a class="nav-item" href="worker-profile-edit.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🔧</div><div><div class="sp-name">My account</div><div class="sp-role">Pro account</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">🔧</div><div><div class="sp-name">James Kamau</div><div class="sp-role">Pro Account · Plumber</div></div></div>
     </div>
   </aside>
   <main class="main">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;animation:slideUp 0.4s ease both">
-      <div>
-        <div class="page-title">My Applications</div>
-        <div class="page-sub" id="applicationsSubtitle">Track every job you've applied to on KaziX</div>
-      </div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;animation:slideUp 0.4s ease both">
+      <div><div class="page-title">My Applications</div><div class="page-sub">Track every job you've applied to on KaziX</div></div>
       <a href="worker-jobs.html" style="padding:0.65rem 1.25rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;border-radius:2px;text-decoration:none;flex-shrink:0">🔍 Find More Jobs</a>
     </div>
-
-    <div class="page-message success" id="pageMessage"></div>
-
     <div class="tabs">
-      <button class="tab active" type="button" data-status="all">All <span class="tc">0</span></button>
-      <button class="tab" type="button" data-status="pending">Pending <span class="tc">0</span></button>
-      <button class="tab" type="button" data-status="shortlisted">Shortlisted <span class="tc">0</span></button>
-      <button class="tab" type="button" data-status="hired">Hired <span class="tc">0</span></button>
-      <button class="tab" type="button" data-status="rejected">Not Selected <span class="tc">0</span></button>
-      <button class="tab" type="button" data-status="withdrawn">Withdrawn <span class="tc">0</span></button>
+      <div class="tab active" onclick="filterApps('all',this)">All <span class="tc">6</span></div>
+      <div class="tab" onclick="filterApps('pending',this)">Pending <span class="tc">3</span></div>
+      <div class="tab" onclick="filterApps('shortlisted',this)">Shortlisted <span class="tc">1</span></div>
+      <div class="tab" onclick="filterApps('hired',this)">Hired <span class="tc">1</span></div>
+      <div class="tab" onclick="filterApps('rejected',this)">Not Selected <span class="tc">1</span></div>
     </div>
-
     <div class="apps-list" id="appsList">
-      <div class="state-card">
-        <div class="state-icon">⏳</div>
-        <div class="state-title">Loading your applications…</div>
-        <div class="state-sub">Fetching the latest statuses from the backend.</div>
+      <!-- HIRED -->
+      <div class="app-card c-hired" data-status="hired" style="animation-delay:0.05s">
+        <div class="ac-top">
+          <div class="ac-icon">🚿</div>
+          <div class="ac-info"><div class="ac-title">Fix leaking pipe — Westlands kitchen</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 Westlands · 0.9km</span><span>Applied 3 days ago</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-hired">✓ Hired</span><div class="ac-bid">KES 800</div></div>
+        </div>
+        <div class="hired-banner">🎉 You were hired! Escrow of KES 800 confirmed. Job starts today.</div>
+        <div class="timeline">
+          <div class="tl-step done"><div class="tl-dot dot-done">✓</div><div class="tl-label">Applied</div></div>
+          <div class="tl-step done"><div class="tl-dot dot-done">✓</div><div class="tl-label">Shortlisted</div></div>
+          <div class="tl-step done"><div class="tl-dot dot-done">✓</div><div class="tl-label">Hired</div></div>
+          <div class="tl-step active"><div class="tl-dot dot-active">●</div><div class="tl-label">In Progress</div></div>
+          <div class="tl-step"><div class="tl-dot dot-wait"></div><div class="tl-label">Complete</div></div>
+        </div>
+        <div class="ac-actions">
+          <a href="worker-hires.html" class="btn-view">✅ View Contract</a>
+          <a href="messages.html" class="btn-msg">💬 Message Client</a>
+        </div>
+      </div>
+      <!-- SHORTLISTED -->
+      <div class="app-card c-shortlisted" data-status="shortlisted" style="animation-delay:0.1s">
+        <div class="ac-top">
+          <div class="ac-icon">💧</div>
+          <div class="ac-info"><div class="ac-title">Water tank installation — Lavington</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 Lavington · 4.2km</span><span>Applied 1 day ago</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-shortlisted">★ Shortlisted</span><div class="ac-bid">KES 5,500</div></div>
+        </div>
+        <div class="timeline">
+          <div class="tl-step done"><div class="tl-dot dot-done">✓</div><div class="tl-label">Applied</div></div>
+          <div class="tl-step active"><div class="tl-dot dot-active">★</div><div class="tl-label">Shortlisted</div></div>
+          <div class="tl-step"><div class="tl-dot dot-wait"></div><div class="tl-label">Decision</div></div>
+          <div class="tl-step"><div class="tl-dot dot-wait"></div><div class="tl-label">Hired</div></div>
+          <div class="tl-step"><div class="tl-dot dot-wait"></div><div class="tl-label">Complete</div></div>
+        </div>
+        <div class="ac-note">"Available immediately. I will supply a 10,000L tank + all fittings and handle complete installation."</div>
+        <div class="ac-actions">
+          <a href="job-detail.html" class="btn-view">👁 View Job</a>
+          <a href="messages.html" class="btn-msg">💬 Message</a>
+          <button class="btn-withdraw" onclick="this.closest('.app-card').style.opacity='0.5'">Withdraw</button>
+          <span class="ac-applied">Applied 1 day ago · 4 applicants</span>
+        </div>
+      </div>
+      <!-- PENDING 1 -->
+      <div class="app-card c-pending" data-status="pending" style="animation-delay:0.15s">
+        <div class="ac-top">
+          <div class="ac-icon">☀️</div>
+          <div class="ac-info"><div class="ac-title">Solar water heater installation — Karen</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 Karen · 8.4km</span><span>Applied 2 days ago</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-pending">Pending</span><div class="ac-bid">KES 9,500</div></div>
+        </div>
+        <div class="ac-note">"I have installed 15+ solar systems this year. Can supply and install within 2 days. NCA certified."</div>
+        <div class="ac-actions">
+          <a href="job-detail.html" class="btn-view">👁 View Job</a>
+          <button class="btn-withdraw" onclick="this.closest('.app-card').style.opacity='0.5'">Withdraw</button>
+          <span class="ac-applied">Applied 2 days ago · 6 applicants</span>
+        </div>
+      </div>
+      <!-- PENDING 2 -->
+      <div class="app-card c-pending" data-status="pending" style="animation-delay:0.2s">
+        <div class="ac-top">
+          <div class="ac-icon">🏗️</div>
+          <div class="ac-info"><div class="ac-title">Commercial plumbing — CBD office block</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 CBD · 5.1km</span><span>Applied today</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-pending">Pending</span><div class="ac-bid">KES 18,000</div></div>
+        </div>
+        <div class="ac-note">"NCA-certified. I have completed 3 office block plumbing projects in CBD this year."</div>
+        <div class="ac-actions">
+          <a href="job-detail.html" class="btn-view">👁 View Job</a>
+          <button class="btn-withdraw" onclick="this.closest('.app-card').style.opacity='0.5'">Withdraw</button>
+          <span class="ac-applied">Applied today · 2 applicants</span>
+        </div>
+      </div>
+      <!-- PENDING 3 -->
+      <div class="app-card c-pending" data-status="pending" style="animation-delay:0.22s">
+        <div class="ac-top">
+          <div class="ac-icon">🚰</div>
+          <div class="ac-info"><div class="ac-title">Drain unblocking — Kasarani apartment</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 Kasarani · 6.3km</span><span>Applied today</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-pending">Pending</span><div class="ac-bid">KES 1,200</div></div>
+        </div>
+        <div class="ac-actions">
+          <a href="job-detail.html" class="btn-view">👁 View Job</a>
+          <button class="btn-withdraw" onclick="this.closest('.app-card').style.opacity='0.5'">Withdraw</button>
+          <span class="ac-applied">Applied today · 8 applicants</span>
+        </div>
+      </div>
+      <!-- REJECTED -->
+      <div class="app-card c-rejected" data-status="rejected" style="animation-delay:0.25s;opacity:0.7">
+        <div class="ac-top">
+          <div class="ac-icon" style="opacity:0.5">🔧</div>
+          <div class="ac-info"><div class="ac-title" style="color:var(--muted)">Bathroom renovation — South B</div><div class="ac-sub"><span>🚿 Plumber</span><span>📍 South B · 7.8km</span><span>Applied 5 days ago</span></div></div>
+          <div class="ac-right"><span class="status-pill sp-rejected">Not selected</span><div class="ac-bid" style="color:var(--muted)">KES 12,000</div></div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);padding:0.6rem 0.85rem;background:var(--cream);border-radius:4px;margin-bottom:1rem">Another fundi was selected. Consider adding more photos to your profile to improve your chances.</div>
+        <div class="ac-actions"><a href="worker-jobs.html" class="btn-view">🔍 Find Similar Jobs</a></div>
       </div>
     </div>
   </main>
 </div>
 <script>
-const TRADE_ICONS = {
-  plumber: '🚿',
-  electrician: '⚡',
-  mason: '🧱',
-  mama_fua: '👗',
-  carpenter: '🪚',
-  painter: '🎨',
-  roofer: '🏠',
-  gardener: '🌿',
-  driver_mover: '🛻',
-  security: '🔒',
-  other: '🛠️',
-};
-
-const STATUS_META = {
-  pending: { label: 'Pending', pillClass: 'sp-pending', cardClass: 'c-pending' },
-  shortlisted: { label: 'Shortlisted', pillClass: 'sp-shortlisted', cardClass: 'c-shortlisted' },
-  hired: { label: 'Hired', pillClass: 'sp-hired', cardClass: 'c-hired' },
-  rejected: { label: 'Not selected', pillClass: 'sp-rejected', cardClass: 'c-rejected' },
-  withdrawn: { label: 'Withdrawn', pillClass: 'sp-withdrawn', cardClass: 'c-withdrawn' },
-};
-
-let allApplications = [];
-let currentFilter = 'all';
-let busyApplicationIds = new Set();
-
-function escapeHtml(value) {
-  if (window.KazixProfile && typeof window.KazixProfile.escapeHtml === 'function') {
-    return window.KazixProfile.escapeHtml(value);
-  }
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+function filterApps(status,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.app-card').forEach(c=>{c.style.display=(status==='all'||c.dataset.status===status)?'block':'none'});
 }
-
-function getTradeIcon(trade) {
-  return TRADE_ICONS[trade] || '🛠️';
-}
-
-function getTradeLabel(trade) {
-  if (window.KazixProfile && typeof window.KazixProfile.formatTrade === 'function') {
-    return window.KazixProfile.formatTrade(trade);
-  }
-  return 'Skilled Worker';
-}
-
-function formatCurrency(value) {
-  return Number.isFinite(value) && value > 0
-    ? `KES ${value.toLocaleString()}`
-    : 'Bid not shared';
-}
-
-function formatRelativeTime(value) {
-  if (!value) return 'Applied recently';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Applied recently';
-  const diffMs = Date.now() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  if (diffHours < 1) return 'Applied just now';
-  if (diffHours < 24) return `Applied ${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Applied yesterday';
-  return `Applied ${diffDays} days ago`;
-}
-
-function formatBudget(job) {
-  const min = Number(job?.budget_min);
-  const max = Number(job?.budget_max);
-  const hasMin = Number.isFinite(min) && min >= 0;
-  const hasMax = Number.isFinite(max) && max >= 0;
-  if (hasMin && hasMax) {
-    return `KES ${min.toLocaleString()} - ${max.toLocaleString()}`;
-  }
-  if (hasMin) {
-    return `From KES ${min.toLocaleString()}`;
-  }
-  if (hasMax) {
-    return `Up to KES ${max.toLocaleString()}`;
-  }
-  return 'Budget on request';
-}
-
-function setPageMessage(message, tone) {
-  const box = document.getElementById('pageMessage');
-  if (!message) {
-    box.className = 'page-message success';
-    box.textContent = '';
-    return;
-  }
-  box.className = `page-message ${tone || 'success'} open`;
-  box.textContent = message;
-}
-
-function renderStateCard(icon, title, body, linkHref, linkLabel) {
-  document.getElementById('appsList').innerHTML = `
-    <div class="state-card">
-      <div class="state-icon">${icon}</div>
-      <div class="state-title">${escapeHtml(title)}</div>
-      <div class="state-sub">${escapeHtml(body)}</div>
-      ${linkHref ? `<a class="state-link" href="${escapeHtml(linkHref)}">${escapeHtml(linkLabel || 'Open')}</a>` : ''}
-    </div>
-  `;
-}
-
-function getVisibleApplications() {
-  if (currentFilter === 'all') {
-    return allApplications;
-  }
-  return allApplications.filter((application) => application.status === currentFilter);
-}
-
-function updateLocalBadge() {
-  const count = allApplications.filter((application) => application.status !== 'withdrawn').length;
-  if (window.KazixProfile && typeof window.KazixProfile.setNavCount === 'function') {
-    window.KazixProfile.setNavCount('my-applications.html', count);
-  }
-}
-
-function renderTabs() {
-  const counts = {
-    all: allApplications.length,
-    pending: allApplications.filter((application) => application.status === 'pending').length,
-    shortlisted: allApplications.filter((application) => application.status === 'shortlisted').length,
-    hired: allApplications.filter((application) => application.status === 'hired').length,
-    rejected: allApplications.filter((application) => application.status === 'rejected').length,
-    withdrawn: allApplications.filter((application) => application.status === 'withdrawn').length,
-  };
-
-  document.querySelectorAll('.tab').forEach((tab) => {
-    const status = tab.dataset.status;
-    const badge = tab.querySelector('.tc');
-    if (badge) {
-      badge.textContent = counts[status] ?? 0;
-    }
-    tab.classList.toggle('active', status === currentFilter);
-  });
-}
-
-function timelineMarkup(status) {
-  const reviewDone = ['shortlisted', 'hired', 'rejected'].includes(status);
-  const outcomeLabel = status === 'shortlisted'
-    ? 'Shortlisted'
-    : status === 'hired'
-      ? 'Selected'
-      : status === 'rejected'
-        ? 'Declined'
-        : status === 'withdrawn'
-          ? 'Withdrawn'
-          : 'Decision';
-  const contractLabel = status === 'hired' ? 'Hired' : 'Hired';
-
-  return `
-    <div class="timeline">
-      <div class="tl-step done"><div class="tl-dot dot-done">✓</div><div class="tl-label">Applied</div></div>
-      <div class="tl-step ${status === 'pending' ? 'active' : reviewDone ? 'done' : ''}">
-        <div class="tl-dot ${status === 'pending' ? 'dot-active' : reviewDone ? 'dot-done' : 'dot-wait'}">${status === 'pending' ? '●' : reviewDone ? '✓' : ''}</div>
-        <div class="tl-label">Review</div>
-      </div>
-      <div class="tl-step ${['shortlisted', 'rejected', 'withdrawn'].includes(status) ? 'active' : status === 'hired' ? 'done' : ''}">
-        <div class="tl-dot ${['shortlisted', 'rejected', 'withdrawn'].includes(status) ? (status === 'withdrawn' ? 'dot-muted' : 'dot-active') : status === 'hired' ? 'dot-done' : 'dot-wait'}">${status === 'shortlisted' ? '★' : status === 'rejected' ? '✕' : status === 'withdrawn' ? '•' : status === 'hired' ? '✓' : ''}</div>
-        <div class="tl-label">${escapeHtml(outcomeLabel)}</div>
-      </div>
-      <div class="tl-step ${status === 'hired' ? 'active' : ''}">
-        <div class="tl-dot ${status === 'hired' ? 'dot-active' : 'dot-wait'}">${status === 'hired' ? '●' : ''}</div>
-        <div class="tl-label">${escapeHtml(contractLabel)}</div>
-      </div>
-    </div>
-  `;
-}
-
-function bannerForApplication(application) {
-  const jobStatus = application?.jobs?.status;
-  if (application.status === 'hired') {
-    return { tone: 'success', text: 'You were hired for this job. Open your contract to track the next steps.' };
-  }
-  if (application.status === 'withdrawn') {
-    return { tone: 'muted', text: 'You withdrew this application. You can still review the job details below.' };
-  }
-  if (application.status === 'rejected') {
-    return { tone: 'muted', text: 'Another worker was selected for this job. Keep applying to similar roles to improve your chances.' };
-  }
-  if (jobStatus === 'cancelled' || jobStatus === 'expired') {
-    return { tone: 'warn', text: `This listing is now ${jobStatus}. The client may no longer be reviewing new applications.` };
-  }
-  if (application.status === 'shortlisted') {
-    return { tone: 'warn', text: 'The client shortlisted you. Stay ready for a message or hire decision.' };
-  }
-  return null;
-}
-
-function renderApplications() {
-  renderTabs();
-  updateLocalBadge();
-
-  if (!allApplications.length) {
-    document.getElementById('applicationsSubtitle').textContent = 'You have not applied to any jobs yet.';
-    renderStateCard('🧭', 'No applications yet', 'Browse live jobs and send your first application to start getting hired.', 'worker-jobs.html', '🔍 Browse Jobs');
-    return;
-  }
-
-  document.getElementById('applicationsSubtitle').textContent = `Track ${allApplications.length} application${allApplications.length === 1 ? '' : 's'} across your active job search.`;
-  const visible = getVisibleApplications();
-  if (!visible.length) {
-    renderStateCard('🔎', 'No applications in this tab', 'Switch filters to view other application statuses.');
-    return;
-  }
-
-  document.getElementById('appsList').innerHTML = visible.map((application, index) => {
-    const job = application.jobs || {};
-    const meta = STATUS_META[application.status] || STATUS_META.pending;
-    const banner = bannerForApplication(application);
-    const jobLink = job.id ? `job-detail.html?id=${encodeURIComponent(job.id)}` : 'worker-jobs.html';
-    const messageHref = job.client_id && window.KazixProfile && typeof window.KazixProfile.buildMessagesPath === 'function'
-      ? window.KazixProfile.buildMessagesPath({
-        participantId: job.client_id,
-        jobId: job.id,
-        applicationId: application.id,
-      })
-      : 'messages.html';
-    const bidAmount = Number(application.bid_amount);
-    const isBusy = busyApplicationIds.has(application.id);
-    const canWithdraw = ['pending', 'shortlisted'].includes(application.status);
-
-    return `
-      <div class="app-card ${meta.cardClass}" style="animation-delay:${(index + 1) * 0.05}s">
-        <div class="ac-top">
-          <div class="ac-icon">${getTradeIcon(job.trade)}</div>
-          <div class="ac-info">
-            <div class="ac-title">${escapeHtml(job.title || 'Job no longer available')}</div>
-            <div class="ac-sub">
-              <span>${escapeHtml(getTradeLabel(job.trade))}</span>
-              <span>📍 ${escapeHtml([job.area, job.county].filter(Boolean).join(', ') || 'Location pending')}</span>
-              <span>${escapeHtml(formatRelativeTime(application.created_at))}</span>
-              <span>💰 ${escapeHtml(formatBudget(job))}</span>
-            </div>
-          </div>
-          <div class="ac-right">
-            <span class="status-pill ${meta.pillClass}">${escapeHtml(meta.label)}</span>
-            <div class="ac-bid">${escapeHtml(formatCurrency(bidAmount))}</div>
-          </div>
-        </div>
-        ${banner ? `<div class="info-banner ${escapeHtml(banner.tone)}">${escapeHtml(banner.text)}</div>` : ''}
-        ${timelineMarkup(application.status)}
-        <div class="ac-note">${escapeHtml(application.cover_note || 'You did not include a cover note with this application.')}</div>
-        <div class="ac-actions">
-          ${application.status === 'hired'
-            ? '<a href="worker-hires.html" class="btn-view">✅ View Contract</a>'
-            : `<a href="${escapeHtml(jobLink)}" class="btn-view">👁 View Job</a>`
-          }
-          <a href="${escapeHtml(messageHref)}" class="btn-msg">💬 Message</a>
-          ${canWithdraw
-            ? `<button class="btn-withdraw" type="button" data-action="withdraw" data-id="${escapeHtml(application.id)}" ${isBusy ? 'disabled' : ''}>Withdraw</button>`
-            : ''
-          }
-          ${application.status === 'rejected'
-            ? '<a href="worker-jobs.html" class="btn-view">🔍 Find Similar Jobs</a>'
-            : ''
-          }
-          <span class="ac-applied">Listing status: ${escapeHtml(job.status || 'unknown')}</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function withdrawApplication(applicationId) {
-  if (!window.confirm('Withdraw this application? The client will see that you stepped back.')) {
-    return;
-  }
-
-  try {
-    busyApplicationIds.add(applicationId);
-    renderApplications();
-    const updated = await window.KazixProfile.requestJson(`/v1/applications/${encodeURIComponent(applicationId)}`, {
-      auth: true,
-      method: 'PATCH',
-      body: { status: 'withdrawn' },
-      showError: false,
-    });
-    allApplications = allApplications.map((application) => (
-      application.id === applicationId
-        ? { ...application, ...updated }
-        : application
-    ));
-    window.KazixProfile.clearDashboardStateCache();
-    window.KazixProfile.hydrateDashboardState({ silent: true, force: true });
-    setPageMessage('Application withdrawn successfully.', 'success');
-    renderApplications();
-  } catch (error) {
-    console.error('Failed to withdraw application', error);
-    setPageMessage(error.message || 'Could not withdraw this application right now.', 'error');
-  } finally {
-    busyApplicationIds.delete(applicationId);
-    renderApplications();
-  }
-}
-
-async function initMyApplicationsPage() {
-  try {
-    const shellData = await window.KazixProfile.hydrateShell({ silent: false });
-    const role = shellData?.profile?.role || '';
-    if (!['fundi', 'admin'].includes(role)) {
-      renderStateCard('🔒', 'Worker access only', 'This page is only available for worker accounts.', 'client-dashboard.html', '⬅ Back to dashboard');
-      return;
-    }
-
-    const payload = await window.KazixProfile.requestJson('/v1/applications/mine', {
-      auth: true,
-      showError: false,
-    });
-    allApplications = Array.isArray(payload?.data) ? payload.data : [];
-    renderApplications();
-  } catch (error) {
-    console.error('Failed to load worker applications', error);
-    renderStateCard('⚠️', 'Could not load your applications', error.message || 'Try refreshing again in a moment.');
-  }
-}
-
-document.querySelectorAll('.tab').forEach((tab) => {
-  tab.addEventListener('click', function () {
-    currentFilter = this.dataset.status || 'all';
-    renderApplications();
-  });
-});
-
-document.getElementById('appsList').addEventListener('click', function (event) {
-  const button = event.target.closest('[data-action="withdraw"]');
-  if (!button) {
-    return;
-  }
-  const applicationId = button.dataset.id;
-  if (!applicationId) {
-    return;
-  }
-  withdrawApplication(applicationId);
-});
-
-document.addEventListener('DOMContentLoaded', initMyApplicationsPage);
 </script>
 
 <nav class="mobile-nav" aria-label="Primary">
@@ -504,7 +218,7 @@ document.addEventListener('DOMContentLoaded', initMyApplicationsPage);
   </div>
 </nav>
 
-<script src="../assets/js/profile-utils.js"></script>
+
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>
