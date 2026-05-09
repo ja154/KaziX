@@ -103,6 +103,7 @@ footer{background:var(--ink);color:#F5F0E8;padding:3rem 6% 2rem;display:grid;gri
   .nav-links{flex-wrap:wrap}
 }
 </style>
+<link rel="stylesheet" href="../assets/css/kx-body-refinements.css">
 </head>
 <body>
 <nav>
@@ -117,94 +118,119 @@ footer{background:var(--ink);color:#F5F0E8;padding:3rem 6% 2rem;display:grid;gri
   <div data-auth-slot="profile" style="display:none"></div>
 </nav>
 
-<section class="page-hero">
-  <div class="hero-inner">
-    <div class="eyebrow">Careers</div>
-    <h1 class="hero-title">Build the trusted services marketplace</h1>
-    <p class="hero-sub">Join KaziX to create tools that help local pros thrive and give clients confidence in every booking.</p>
-    <div class="hero-actions">
-      <a href="#roles" class="hero-btn hero-primary">View Open Roles</a>
-      <a href="about.html" class="hero-btn hero-secondary">Learn About KaziX</a>
-    </div>
-  </div>
-</section>
+<main class="kx-page-body">
+  <div class="kx-page">
+    <section class="kx-hero kx-shell">
+      <div class="kx-hero__eyebrow">Careers</div>
+      <h1 class="kx-hero__h1">Build the trusted services marketplace.</h1>
+      <p class="kx-hero__sub">Join KaziX to create tools that help local pros thrive and give clients confidence in every booking.</p>
+      <div class="kx-hero__actions">
+        <a href="#roles" class="kx-btn kx-btn--primary">View Open Roles</a>
+        <a href="about.html" class="kx-btn kx-btn--ghost">Learn About KaziX</a>
+      </div>
+    </section>
 
-<section class="page-content">
-  <h2 class="section-title">Why KaziX</h2>
-  <div class="benefits-grid">
-    <div class="benefit-card">
-      <div class="benefit-title">Mission-driven impact</div>
-      <div class="benefit-text">Your work helps fundis grow their livelihoods and helps clients hire with confidence.</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-title">Built for Kenya</div>
-      <div class="benefit-text">We design for local realities with reliable payments, mobile-first UX, and fast support.</div>
-    </div>
-    <div class="benefit-card">
-      <div class="benefit-title">High ownership</div>
-      <div class="benefit-text">Small teams, big responsibility, and room to build end-to-end features.</div>
-    </div>
-  </div>
+    <section class="kx-section">
+      <div class="kx-shell">
+        <div class="kx-section-eyebrow">Why KaziX</div>
+        <h2 class="kx-section-h2">Work with a small team on meaningful problems.</h2>
+        <p class="kx-section-sub">We build for real-world hiring, real money movement, and real trust challenges.</p>
+        <div class="kx-grid-3">
+          <div class="kx-card">
+            <div class="kx-card__title">Mission-driven impact</div>
+            <div class="kx-card__text">Your work helps fundis grow their livelihoods and helps clients hire with confidence.</div>
+          </div>
+          <div class="kx-card">
+            <div class="kx-card__title">Built for Kenya</div>
+            <div class="kx-card__text">We design for local realities with reliable payments, mobile-first UX, and fast support.</div>
+          </div>
+          <div class="kx-card">
+            <div class="kx-card__title">High ownership</div>
+            <div class="kx-card__text">Small teams, big responsibility, and room to build end-to-end features.</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <h2 id="roles" class="section-title">Open Roles</h2>
-  <div class="roles-grid">
-    <div class="role-card">
-      <div class="role-title">Product Designer</div>
-      <div class="role-meta">Nairobi or Remote - Full time</div>
-      <div class="role-tags">
-        <span class="role-tag">Design System</span>
-        <span class="role-tag">Research</span>
+    <section class="kx-section kx-section--alt">
+      <div class="kx-shell">
+        <div class="kx-section-eyebrow">Open Roles</div>
+        <h2 id="roles" class="kx-section-h2">Current opportunities</h2>
+        <p class="kx-section-sub">A few of the roles we are actively hiring for right now.</p>
+        <div class="kx-grid-2">
+          <div class="kx-card">
+            <div class="kx-card__title">Product Designer</div>
+            <div class="kx-card__text kx-mb-4">Nairobi or Remote · Full time</div>
+            <div class="kx-pills kx-mb-6">
+              <span class="kx-pill">Design System</span>
+              <span class="kx-pill">Research</span>
+            </div>
+            <a class="kx-btn kx-btn--ghost" href="mailto:careers@kazix.co.ke">Apply via email</a>
+          </div>
+          <div class="kx-card">
+            <div class="kx-card__title">Frontend Engineer</div>
+            <div class="kx-card__text kx-mb-4">Nairobi or Remote · Full time</div>
+            <div class="kx-pills kx-mb-6">
+              <span class="kx-pill">HTML/CSS</span>
+              <span class="kx-pill">Accessibility</span>
+            </div>
+            <a class="kx-btn kx-btn--ghost" href="mailto:careers@kazix.co.ke">Apply via email</a>
+          </div>
+          <div class="kx-card">
+            <div class="kx-card__title">Operations Lead</div>
+            <div class="kx-card__text kx-mb-4">Nairobi · Full time</div>
+            <div class="kx-pills kx-mb-6">
+              <span class="kx-pill">Disputes</span>
+              <span class="kx-pill">Quality</span>
+            </div>
+            <a class="kx-btn kx-btn--ghost" href="mailto:careers@kazix.co.ke">Apply via email</a>
+          </div>
+          <div class="kx-card">
+            <div class="kx-card__title">Trust and Safety Analyst</div>
+            <div class="kx-card__text kx-mb-4">Remote · Contract</div>
+            <div class="kx-pills kx-mb-6">
+              <span class="kx-pill">Escrow</span>
+              <span class="kx-pill">Compliance</span>
+            </div>
+            <a class="kx-btn kx-btn--ghost" href="mailto:careers@kazix.co.ke">Apply via email</a>
+          </div>
+        </div>
       </div>
-      <a class="role-link" href="mailto:careers@kazix.co.ke">Apply via email</a>
-    </div>
-    <div class="role-card">
-      <div class="role-title">Frontend Engineer</div>
-      <div class="role-meta">Nairobi or Remote - Full time</div>
-      <div class="role-tags">
-        <span class="role-tag">HTML/CSS</span>
-        <span class="role-tag">Accessibility</span>
-      </div>
-      <a class="role-link" href="mailto:careers@kazix.co.ke">Apply via email</a>
-    </div>
-    <div class="role-card">
-      <div class="role-title">Operations Lead</div>
-      <div class="role-meta">Nairobi - Full time</div>
-      <div class="role-tags">
-        <span class="role-tag">Disputes</span>
-        <span class="role-tag">Quality</span>
-      </div>
-      <a class="role-link" href="mailto:careers@kazix.co.ke">Apply via email</a>
-    </div>
-    <div class="role-card">
-      <div class="role-title">Trust and Safety Analyst</div>
-      <div class="role-meta">Remote - Contract</div>
-      <div class="role-tags">
-        <span class="role-tag">Escrow</span>
-        <span class="role-tag">Compliance</span>
-      </div>
-      <a class="role-link" href="mailto:careers@kazix.co.ke">Apply via email</a>
-    </div>
-  </div>
+    </section>
 
-  <h2 class="section-title">Hiring Process</h2>
-  <div class="process-grid">
-    <div class="process-card">
-      <div class="process-step">01</div>
-      <div class="process-title">Intro Call</div>
-      <div class="process-text">We learn about your experience and share what we are building.</div>
-    </div>
-    <div class="process-card">
-      <div class="process-step">02</div>
-      <div class="process-title">Skill Exercise</div>
-      <div class="process-text">A practical task focused on the role, with clear expectations.</div>
-    </div>
-    <div class="process-card">
-      <div class="process-step">03</div>
-      <div class="process-title">Team Chat</div>
-      <div class="process-text">Meet the team and discuss how you would approach real problems.</div>
-    </div>
+    <section class="kx-section">
+      <div class="kx-shell">
+        <div class="kx-section-eyebrow">Hiring Process</div>
+        <h2 class="kx-section-h2">What to expect</h2>
+        <p class="kx-section-sub">We keep the process practical, clear, and lightweight.</p>
+        <div class="kx-timeline__connector" aria-hidden="true">
+          <span class="kx-timeline__dot"></span>
+          <span class="kx-timeline__line"></span>
+          <span class="kx-timeline__dot"></span>
+          <span class="kx-timeline__line"></span>
+          <span class="kx-timeline__dot"></span>
+        </div>
+        <div class="kx-timeline__grid">
+          <div class="kx-timeline__item">
+            <div class="kx-timeline__num">01</div>
+            <div class="kx-timeline__title">Intro call</div>
+            <div class="kx-timeline__desc">We learn about your experience and share what we are building.</div>
+          </div>
+          <div class="kx-timeline__item">
+            <div class="kx-timeline__num">02</div>
+            <div class="kx-timeline__title">Skill exercise</div>
+            <div class="kx-timeline__desc">A practical task focused on the role, with clear expectations and scope.</div>
+          </div>
+          <div class="kx-timeline__item">
+            <div class="kx-timeline__num">03</div>
+            <div class="kx-timeline__title">Team chat</div>
+            <div class="kx-timeline__desc">Meet the team and discuss how you would approach real problems together.</div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
-</section>
+</main>
 
 <footer>
   <div class="fb">
