@@ -6,6 +6,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>My Profile — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/error-components.css">
 <style>
 .main{max-width:1100px}
 
@@ -92,17 +93,37 @@
 .toggle-slider::before{content:'';position:absolute;width:18px;height:18px;top:3px;left:3px;border-radius:50%;background:white;transition:transform 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2)}
 .toggle-switch input:checked + .toggle-slider{background:var(--green)}
 .toggle-switch input:checked + .toggle-slider::before{transform:translateX(18px)}
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin-bottom:1.25rem}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
+.readonly-panel{padding:1rem;border:1px dashed var(--border);border-radius:4px;background:var(--cream);font-size:0.84rem;line-height:1.7;color:var(--steel)}
+.view-public-btn{display:block;text-align:center;text-decoration:none}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.profile-layout{grid-template-columns:1fr}.profile-card{position:static}.info-grid,.pref-grid{grid-template-columns:1fr}}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem('kazix_access_token')) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace('login.html?next=' + next);
+    return;
+  }
+  window.revealClientProfilePage = function () {
+    var gate = document.getElementById('auth-gate-style');
+    if (gate) gate.remove();
+  };
+})();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -121,7 +142,7 @@
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item active" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">KX</div><div><div class="sp-name">My profile</div><div class="sp-role">Client account</div></div></div>
     </div>
   </aside>
 
@@ -130,6 +151,7 @@
       <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.04em;margin-bottom:0.25rem">My Profile</div>
       <div style="font-size:0.9rem;color:var(--muted)">Manage how you appear to fundis and update your preferences</div>
     </div>
+    <div class="notice info" id="profileStatus" hidden></div>
 
     <div class="profile-layout" style="animation:slideUp 0.4s 0.1s ease both">
 
@@ -139,29 +161,27 @@
           <button class="profile-cover-edit">✎ Edit cover</button>
         </div>
         <div class="profile-avatar-wrap">
-          <div class="p-avatar">🏠</div>
+          <div class="p-avatar" id="profileAvatar">KX</div>
           <div class="p-avatar-edit">✎</div>
         </div>
         <div class="profile-info">
-          <div class="p-name">Alex Kuria</div>
-          <div class="p-type">Client · Employer</div>
-          <div class="p-badges">
-            <span class="badge badge-verified">✓ Phone Verified</span>
-            <span class="badge badge-phone">📱 M-Pesa Linked</span>
-            <span class="badge badge-member">Member since 2024</span>
+          <div class="p-name" id="profileName">Loading…</div>
+          <div class="p-type" id="profileType">Client · Employer</div>
+          <div class="p-badges" id="profileBadges">
+            <span class="badge badge-member">Loading account details…</span>
           </div>
           <div class="p-stats">
-            <div class="p-stat-row"><span class="p-stat-label">Jobs posted</span><span class="p-stat-val">15</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Jobs completed</span><span class="p-stat-val green">12</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Total spent</span><span class="p-stat-val">KES 48,200</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Avg. job value</span><span class="p-stat-val">KES 4,017</span></div>
-            <div class="p-stat-row"><span class="p-stat-label">Hire rate</span><span class="p-stat-val">80%</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Jobs posted</span><span class="p-stat-val" id="statJobsPosted">—</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Jobs completed</span><span class="p-stat-val green" id="statJobsCompleted">—</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Total spent</span><span class="p-stat-val" id="statTotalSpent">—</span></div>
+            <div class="p-stat-row"><span class="p-stat-label">Avg. job value</span><span class="p-stat-val" id="statAvgJobValue">—</span></div>
+            <div class="p-stat-row"><span class="p-stat-label" id="statRateLabel">Completion rate</span><span class="p-stat-val" id="statHireRate">—</span></div>
           </div>
           <div class="p-divider"></div>
-          <div class="p-location">📍 Kilimani, Nairobi</div>
-          <div class="p-member">Member since January 2024</div>
+          <div class="p-location" id="profileLocation">📍 Loading location…</div>
+          <div class="p-member" id="profileMember">Loading account age…</div>
           <button class="edit-profile-btn" onclick="toggleEdit()">✎ Edit Profile</button>
-          <button class="view-public-btn">👁 View Public Profile</button>
+          <a class="view-public-btn" id="publicProfileLink" href="client-public-profile.html">👁 View Public Profile</a>
         </div>
       </div>
 
@@ -175,9 +195,9 @@
             <button class="sc-edit" onclick="toggleField('aboutField')">✎ Edit</button>
           </div>
           <div class="sc-body">
-            <div id="aboutView"><p class="bio-text">Homeowner in Kilimani, Nairobi. I frequently need reliable fundis for maintenance and renovations. I value punctuality, quality work, and professional communication.</p></div>
+            <div id="aboutView"><p class="bio-text" id="aboutText">Loading your profile summary…</p></div>
             <div id="aboutField" style="display:none">
-              <textarea style="width:100%;padding:0.85rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:vertical;min-height:100px;outline:none;background:var(--cream);color:var(--ink)" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--border)'">Homeowner in Kilimani, Nairobi. I frequently need reliable fundis for maintenance and renovations. I value punctuality, quality work, and professional communication.</textarea>
+              <textarea id="aboutTextarea" style="width:100%;padding:0.85rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:vertical;min-height:100px;outline:none;background:var(--cream);color:var(--ink)" onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--border)'"></textarea>
               <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
                 <button onclick="saveField('aboutField','aboutView')" style="padding:0.5rem 1.25rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border:none;border-radius:2px;cursor:pointer">Save</button>
                 <button onclick="toggleField('aboutField')" style="padding:0.5rem 1.25rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.78rem;border:1px solid var(--border);border-radius:2px;cursor:pointer">Cancel</button>
@@ -194,12 +214,12 @@
           </div>
           <div class="sc-body">
             <div class="info-grid">
-              <div class="info-item"><div class="info-label">Phone</div><div class="info-val">+254 712 345 678</div></div>
-              <div class="info-item"><div class="info-label">Email</div><div class="info-val">alex.kuria@email.com</div></div>
-              <div class="info-item"><div class="info-label">County</div><div class="info-val">Nairobi</div></div>
-              <div class="info-item"><div class="info-label">Area</div><div class="info-val">Kilimani</div></div>
-              <div class="info-item"><div class="info-label">M-Pesa Number</div><div class="info-val">+254 712 345 678 ✓</div></div>
-              <div class="info-item"><div class="info-label">Preferred Language</div><div class="info-val">English</div></div>
+              <div class="info-item"><div class="info-label">Phone</div><div class="info-val" id="infoPhone">—</div></div>
+              <div class="info-item"><div class="info-label">Email</div><div class="info-val" id="infoEmail">—</div></div>
+              <div class="info-item"><div class="info-label">County</div><div class="info-val" id="infoCounty">—</div></div>
+              <div class="info-item"><div class="info-label">Area</div><div class="info-val" id="infoArea">—</div></div>
+              <div class="info-item"><div class="info-label">M-Pesa Number</div><div class="info-val" id="infoMpesa">—</div></div>
+              <div class="info-item"><div class="info-label">Preferred Language</div><div class="info-val" id="infoLanguage">—</div></div>
             </div>
           </div>
         </div>
@@ -211,13 +231,10 @@
             <a href="my-jobs.html" style="font-size:0.78rem;color:var(--rust);text-decoration:none;font-weight:600">View all →</a>
           </div>
           <div class="sc-body">
-            <table class="history-table">
-              <thead><tr><th>Job</th><th>Fundi</th><th>Rating</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
-              <tbody>
-                <tr><td><span class="ht-trade">🪚</span></td><td class="ht-title">Fix garden fence</td><td><div class="ht-worker"><div class="ht-w-avatar">🪚</div>Peter O.</div></td><td class="ht-stars">★★★★★</td><td class="ht-amount">KES 3,500</td><td><span class="status-pill sp-done">Done</span></td></tr>
-                <tr><td><span class="ht-trade">🚿</span></td><td class="ht-title">Kitchen pipe repair</td><td><div class="ht-worker"><div class="ht-w-avatar">🔧</div>James K.</div></td><td class="ht-stars">★★★★★</td><td class="ht-amount">KES 1,800</td><td><span class="status-pill sp-done">Done</span></td></tr>
-                <tr><td><span class="ht-trade">🎨</span></td><td class="ht-title">Paint bedroom + living room</td><td><div class="ht-worker"><div class="ht-w-avatar">🎨</div>Mary A.</div></td><td>—</td><td class="ht-amount">KES 3,200</td><td><span class="status-pill sp-progress">Active</span></td></tr>
-                <tr><td><span class="ht-trade">⚡</span></td><td class="ht-title">Install CCTV cameras</td><td>—</td><td>—</td><td class="ht-amount">KES 5,000</td><td><span class="status-pill sp-progress">Reviewing</span></td></tr>
+            <table class="history-table" id="profileHistoryTable">
+              <thead><tr><th>Job</th><th>Location</th><th>Amount</th><th>Status</th><th>Updated</th></tr></thead>
+              <tbody id="jobHistoryBody">
+                <tr><td colspan="5" class="ht-date">Loading recent activity…</td></tr>
               </tbody>
             </table>
           </div>
@@ -229,39 +246,16 @@
             <div class="sc-title">Hiring Preferences</div>
             <button class="sc-edit">✎ Edit</button>
           </div>
-          <div class="sc-body">
-            <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.75rem">I prefer fundis who are</div>
-            <div class="pref-grid">
-              <div class="pref-item selected"><div class="pref-icon">✓</div><div class="pref-label">ID Verified</div><div class="pref-sub">Only verified fundis</div></div>
-              <div class="pref-item selected"><div class="pref-icon">⭐</div><div class="pref-label">4.5+ Rated</div><div class="pref-sub">Top-rated workers only</div></div>
-              <div class="pref-item"><div class="pref-icon">📍</div><div class="pref-label">Within 5km</div><div class="pref-sub">Very close to me</div></div>
-              <div class="pref-item selected"><div class="pref-icon">💬</div><div class="pref-label">English Speaking</div><div class="pref-sub">Can communicate in English</div></div>
-            </div>
+          <div class="sc-body" id="preferencesBody">
+            <div class="readonly-panel">Hiring preferences on this screen are being reconnected to live account settings. No placeholder choices are shown now.</div>
           </div>
         </div>
 
         <!-- PRIVACY & NOTIFICATIONS -->
         <div class="section-card">
           <div class="sc-header"><div class="sc-title">Privacy & Notifications</div></div>
-          <div class="sc-body">
-            <div class="toggle-list">
-              <div class="toggle-row">
-                <div class="toggle-info"><div class="toggle-label">Show profile to fundis</div><div class="toggle-sub">Fundis can see your name and job history when you contact them</div></div>
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><div class="toggle-label">SMS job alerts</div><div class="toggle-sub">Receive SMS when fundis apply to your jobs</div></div>
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><div class="toggle-label">Push notifications</div><div class="toggle-sub">Real-time alerts in the app</div></div>
-                <label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>
-              </div>
-              <div class="toggle-row">
-                <div class="toggle-info"><div class="toggle-label">Marketing emails</div><div class="toggle-sub">Tips, new features, and offers from KaziX</div></div>
-                <label class="toggle-switch"><input type="checkbox"><span class="toggle-slider"></span></label>
-              </div>
-            </div>
+          <div class="sc-body" id="privacyBody">
+            <div class="readonly-panel">Privacy and notification toggles are not persisted from this page yet, so the previous demo switches have been removed.</div>
           </div>
         </div>
 
@@ -270,8 +264,15 @@
   </main>
 </div>
 <script>
-function toggleField(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none'}
-function saveField(fieldId,viewId){document.getElementById(fieldId).style.display='none'}
+function toggleField(id){
+  const el=document.getElementById(id);
+  if (!el) return;
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+function saveField(fieldId,viewId){
+  const field=document.getElementById(fieldId);
+  if (field) field.style.display='none';
+}
 function toggleEdit(){window.location.href='client-profile.html'}
 </script>
 
@@ -295,6 +296,215 @@ function toggleEdit(){window.location.href='client-profile.html'}
 </nav>
 
 
+<script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
+<script>
+const {
+  escapeHtml,
+  formatCurrency,
+  formatLanguage,
+  formatLocation,
+  formatMemberSince,
+  formatPhone,
+  getAccessToken,
+  getDashboardState,
+  getMyProfile,
+  initials,
+  profilePath,
+  setHtml,
+  setText,
+} = window.KazixProfile;
+
+function revealClientProfile() {
+  if (typeof window.revealClientProfilePage === 'function') {
+    window.revealClientProfilePage();
+  }
+}
+
+function setStatus(message, tone) {
+  const el = document.getElementById('profileStatus');
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `notice ${tone || 'info'}`;
+  el.textContent = message;
+}
+
+function formatDate(value) {
+  if (!value) return 'Recently';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function budgetLabel(item) {
+  const min = Number(item?.budget_min || 0);
+  const max = Number(item?.budget_max || 0);
+  if (min > 0 && max > 0) return `${formatCurrency(min)}-${formatCurrency(max)}`;
+  if (min > 0) return formatCurrency(min);
+  if (max > 0) return formatCurrency(max);
+  return 'Negotiable';
+}
+
+function statusClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'completed' || normalized === 'done' || normalized === 'released') return 'sp-done';
+  return 'sp-progress';
+}
+
+function statusLabel(status) {
+  const normalized = String(status || '').replace(/_/g, ' ').trim();
+  return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : 'Pending';
+}
+
+function completionRate(clientState) {
+  const total = Number(clientState?.jobs?.total || 0);
+  const completed = Number(clientState?.jobs?.completed || 0);
+  if (!total) return '0%';
+  return `${Math.round((completed / total) * 100)}%`;
+}
+
+function publicSummary(profile, clientState) {
+  const name = profile.full_name || 'This employer';
+  const location = formatLocation(profile);
+  const parts = [`${name} is a KaziX client`];
+
+  if (location !== 'Location not added yet') {
+    parts[0] += ` based in ${location}`;
+  }
+  parts[0] += '.';
+
+  parts.push(`Preferred language: ${formatLanguage(profile.preferred_language)}.`);
+  parts.push(profile.is_verified ? 'Phone verified.' : 'Phone verification pending.');
+
+  if (profile.mpesa_number) {
+    parts.push('M-Pesa is linked for escrow-backed bookings.');
+  }
+
+  const totalJobs = Number(clientState?.jobs?.total || 0);
+  const completedJobs = Number(clientState?.jobs?.completed || 0);
+  if (totalJobs > 0) {
+    parts.push(`${completedJobs} of ${totalJobs} posted jobs are completed.`);
+  }
+
+  return parts.join(' ');
+}
+
+function renderHistory(clientState) {
+  const body = document.getElementById('jobHistoryBody');
+  if (!body) return;
+
+  const recentHires = Array.isArray(clientState?.recent_hires) ? clientState.recent_hires : [];
+  const recentJobs = Array.isArray(clientState?.recent_jobs) ? clientState.recent_jobs : [];
+  const rows = recentHires.length ? recentHires : recentJobs;
+
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="5" class="ht-date">No recent job activity yet.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = rows.slice(0, 4).map((item) => {
+    const location = [item.area, item.county].filter(Boolean).join(', ') || 'Location pending';
+    const amount = recentHires.length
+      ? formatCurrency(item.agreed_amount)
+      : budgetLabel(item);
+    const when = formatDate(item.updated_at || item.created_at || item.start_date);
+
+    return `
+      <tr>
+        <td class="ht-title">${escapeHtml(item.title || 'Untitled job')}</td>
+        <td>${escapeHtml(location)}</td>
+        <td class="ht-amount">${escapeHtml(amount)}</td>
+        <td><span class="status-pill ${statusClass(item.status)}">${escapeHtml(statusLabel(item.status))}</span></td>
+        <td class="ht-date">${escapeHtml(when)}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderProfile(profile, dashboardState) {
+  const clientState = dashboardState?.client || {};
+  const name = profile.full_name || 'My account';
+  const avatar = initials(name);
+
+  document.title = `${name} — My Profile · KaziX`;
+  setText('#profileAvatar', avatar);
+  setText('#profileName', name);
+  setText('#profileType', 'Client · Employer');
+  setText('#profileLocation', `📍 ${formatLocation(profile)}`);
+  setText('#profileMember', formatMemberSince(profile.created_at));
+  document.getElementById('publicProfileLink').href = profilePath('client', profile.id);
+
+  setText('#statJobsPosted', String(Number(clientState?.jobs?.total || 0)));
+  setText('#statJobsCompleted', String(Number(clientState?.jobs?.completed || 0)));
+  setText('#statTotalSpent', formatCurrency(clientState?.payments?.total_spent || 0));
+  setText('#statAvgJobValue', formatCurrency(clientState?.payments?.avg_job_value || 0));
+  setText('#statHireRate', completionRate(clientState));
+
+  setText('#aboutText', publicSummary(profile, clientState));
+  const aboutTextarea = document.getElementById('aboutTextarea');
+  if (aboutTextarea) {
+    aboutTextarea.value = publicSummary(profile, clientState);
+  }
+
+  setText('#infoPhone', formatPhone(profile.phone));
+  setText('#infoEmail', profile.email || 'Not set');
+  setText('#infoCounty', profile.county || 'Not set');
+  setText('#infoArea', profile.area || 'Not set');
+  setText('#infoMpesa', profile.mpesa_number ? `${formatPhone(profile.mpesa_number)} ✓` : 'Not linked');
+  setText('#infoLanguage', formatLanguage(profile.preferred_language));
+
+  const badges = [];
+  if (profile.is_verified) {
+    badges.push('<span class="badge badge-verified">Phone verified</span>');
+  }
+  if (profile.mpesa_number) {
+    badges.push('<span class="badge badge-phone">M-Pesa linked</span>');
+  }
+  badges.push(`<span class="badge badge-member">${escapeHtml(formatMemberSince(profile.created_at))}</span>`);
+  setHtml('#profileBadges', badges.join(''));
+
+  renderHistory(clientState);
+}
+
+async function initClientProfile() {
+  if (!getAccessToken()) {
+    window.location.replace('login.html');
+    return;
+  }
+
+  document.querySelectorAll('.profile-cover-edit, .p-avatar-edit, .edit-profile-btn, .sc-edit').forEach((el) => {
+    el.style.display = 'none';
+  });
+  document.getElementById('aboutField').remove();
+
+  try {
+    const [profileData, dashboardState] = await Promise.all([
+      getMyProfile(),
+      getDashboardState({ silent: true }).catch(() => null),
+    ]);
+
+    if (profileData?.profile?.role !== 'client') {
+      window.location.replace('worker-profile-edit.html');
+      return;
+    }
+
+    renderProfile(profileData.profile, dashboardState);
+    setStatus('', 'info');
+  } catch (error) {
+    console.error('Failed to hydrate client profile', error);
+    setStatus(error?.message || 'Failed to load your profile.', 'error');
+  } finally {
+    revealClientProfile();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initClientProfile);
+</script>
 </body>
 </html>
