@@ -64,7 +64,8 @@
   --kx-space-16: 64px;
 
   /* Typography */
-  --kx-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --kx-font: "DM Sans", sans-serif;
+  --kx-display-font: "Syne", sans-serif;
   --kx-font-size-xs: 11px;
   --kx-font-size-sm: 12px;
   --kx-font-size-base: 14px;
@@ -135,8 +136,9 @@
 }
 
 .kx-page-body .kx-hero__h1 {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-3xl);
-  font-weight: 500;
+  font-weight: 800;
   color: var(--kx-text-primary);
   letter-spacing: -0.04em;
   line-height: 1.05;
@@ -163,9 +165,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--kx-space-2);
-  font-family: var(--kx-font);
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-base);
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
   border: none;
   transition: opacity 0.12s ease;
@@ -209,8 +211,9 @@
 }
 
 .kx-page-body .kx-section-h2 {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-xl);
-  font-weight: 500;
+  font-weight: 800;
   color: var(--kx-text-primary);
   letter-spacing: -0.03em;
   margin-bottom: var(--kx-space-1);
@@ -255,8 +258,9 @@
 }
 
 .kx-page-body .kx-card__title {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-md);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   letter-spacing: -0.02em;
   margin-bottom: var(--kx-space-2);
@@ -335,8 +339,9 @@
 }
 
 .kx-page-body .kx-note__title {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-base);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   margin-bottom: var(--kx-space-2);
 }
@@ -371,8 +376,9 @@
 }
 
 .kx-page-body .kx-callout__title {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-xl);
-  font-weight: 500;
+  font-weight: 800;
   line-height: 1.15;
   letter-spacing: -0.03em;
   color: var(--kx-white);
@@ -424,8 +430,9 @@
 }
 
 .kx-page-body .kx-ruled__num {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-2xl);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   letter-spacing: -0.04em;
   line-height: 1;
@@ -499,8 +506,9 @@
 }
 
 .kx-page-body .kx-rows__name {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-base);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   margin-bottom: 2px;
 }
@@ -511,8 +519,9 @@
 }
 
 .kx-page-body .kx-rows__value {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-lg);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   letter-spacing: -0.03em;
   white-space: nowrap;
@@ -567,8 +576,9 @@
 }
 
 .kx-page-body .kx-timeline__title {
+  font-family: var(--kx-display-font);
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   margin-bottom: var(--kx-space-1);
 }
@@ -627,8 +637,9 @@
 }
 
 .kx-page-body .kx-category__name {
+  font-family: var(--kx-display-font);
   font-size: var(--kx-font-size-base);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--kx-text-primary);
   margin-bottom: 3px;
 }
