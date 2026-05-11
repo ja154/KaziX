@@ -1,12 +1,15 @@
 """
 app/api/v1/bookings.py
 ──────────────────────
+GET  /v1/bookings               → list bookings for the signed-in client or fundi
 POST /v1/bookings/hire          → client hires a fundi (creates booking)
 GET  /v1/bookings/{id}          → get booking detail
 POST /v1/bookings/{id}/complete → client marks job complete, triggers escrow release
 """
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Literal
+
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, ClientUser
@@ -17,11 +20,72 @@ from app.services.notifications import create_notification
 logger = get_logger(__name__)
 router = APIRouter()
 
+BOOKING_LIST_SELECT = (
+    "id, job_id, application_id, client_id, fundi_id, agreed_amount, start_date, status, "
+    "escrow_status, mpesa_receipt, created_at, updated_at, escrow_held_at, escrow_released_at, "
+    "job:jobs!job_id(id, title, trade, county, area, status, created_at, updated_at), "
+    "client_profile:profiles!client_id(id, full_name, phone, avatar_url, county, area), "
+    "fundi_profile:profiles!fundi_id(id, full_name, phone, avatar_url, county, area), "
+    "fundi_details:fundi_profiles!fundi_id(trade, rating_avg, jobs_completed, experience_years, kyc_status, is_available), "
+    "transactions(id, type, amount, mpesa_ref, status, created_at)"
+)
+
 
 class HireRequest(BaseModel):
     application_id: str
     agreed_amount:  int = Field(..., ge=1)
     start_date:     str | None = None  # ISO date
+
+
+@router.get("/")
+async def list_bookings(
+    user: CurrentUser,
+    role: Literal["client", "fundi"] | None = Query(None),
+    status_filter: str | None = Query(None, alias="status"),
+):
+    admin = get_admin_client()
+
+    if user.role not in {"client", "fundi"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bookings can only be listed for signed-in client or fundi accounts.",
+        )
+
+    effective_role = role or user.role
+    if effective_role != user.role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view bookings for your own account role.",
+        )
+
+    try:
+        query = (
+            admin.table("bookings")
+            .select(BOOKING_LIST_SELECT)
+            .eq("client_id" if effective_role == "client" else "fundi_id", user.user_id)
+        )
+
+        normalized_status = str(status_filter or "").strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized_status and normalized_status != "all":
+            if normalized_status == "active":
+                query = query.in_("status", ["confirmed", "in_progress"])
+            elif normalized_status == "awaiting_payment":
+                query = query.eq("escrow_status", "pending")
+            elif normalized_status in {"confirmed", "in_progress", "completed", "cancelled", "disputed"}:
+                query = query.eq("status", normalized_status)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Unsupported booking status filter.",
+                )
+
+        result = query.order("created_at", desc=True).execute()
+        return result.data or []
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to list bookings", user_id=user.user_id, role=effective_role, error=str(exc))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch bookings.")
 
 
 @router.post("/hire", status_code=status.HTTP_201_CREATED)

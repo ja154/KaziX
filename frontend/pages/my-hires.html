@@ -74,6 +74,22 @@
 .ccb-review{background:rgba(245,166,35,0.15);color:#854F0B;border:1px solid rgba(245,166,35,0.3)}
 .ccb-review:hover{background:var(--saffron);color:var(--ink);border-color:var(--saffron)}
 .ccb-rehire{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.page-notice{display:none;padding:0.9rem 1rem;border-radius:6px;margin-bottom:1rem;font-size:0.88rem;line-height:1.6}
+.page-notice.is-visible{display:block}
+.page-notice.is-success{background:#E8F5E9;color:#1B5E20;border:1px solid rgba(27,94,32,0.18)}
+.page-notice.is-error{background:#FDECEA;color:#B71C1C;border:1px solid rgba(183,28,28,0.15)}
+.page-notice.is-info{background:var(--cream);color:var(--steel);border:1px solid var(--border)}
+.hire-tabs{flex-wrap:wrap}
+.htab{background:transparent;border-left:none;border-right:none;border-top:none}
+.empty-state{padding:2.5rem 1.5rem;border:1px dashed var(--border);border-radius:8px;background:#FCFBF8;text-align:center}
+.empty-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.35rem}
+.empty-sub{font-size:0.9rem;color:var(--muted);line-height:1.65;max-width:560px;margin:0 auto 1rem}
+.empty-cta{display:inline-flex;align-items:center;justify-content:center;padding:0.7rem 1.1rem;background:var(--ink);color:#F5F0E8;text-decoration:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem}
+.empty-cta:hover{background:var(--green)}
+.hire-note{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:1rem}
+.hire-meta-row{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.hire-stars{color:#F5A623;font-size:0.82rem}
+.hire-rating-copy{font-size:0.8rem;color:var(--muted)}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.cc-details{grid-template-columns:1fr 1fr}}
@@ -123,19 +139,19 @@
 
   <main class="main">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;animation:slideUp 0.4s ease both">
-      <div><div class="page-title">My Hires</div><div class="page-sub">Active contracts, job progress and payment escrow</div></div>
+      <div><div class="page-title">My Hires</div><div class="page-sub" id="hiresSubtitle">Active contracts, job progress and payment escrow</div></div>
     </div>
 
-    <div class="hire-tabs">
-      <div class="htab active">Active <span class="tc">2</span></div>
-      <div class="htab">Awaiting Payment <span class="tc">1</span></div>
-      <div class="htab">Completed <span class="tc">12</span></div>
-      <div class="htab">Disputed <span class="tc">0</span></div>
+    <div class="page-notice is-info is-visible" id="hireNotice">Loading your hires…</div>
+
+    <div class="hire-tabs" id="hireTabs">
+      <button class="htab active" type="button" data-filter="active">Active <span class="tc" id="tabCountActive">0</span></button>
+      <button class="htab" type="button" data-filter="awaiting_payment">Awaiting Payment <span class="tc" id="tabCountAwaiting">0</span></button>
+      <button class="htab" type="button" data-filter="completed">Completed <span class="tc" id="tabCountCompleted">0</span></button>
+      <button class="htab" type="button" data-filter="disputed">Disputed <span class="tc" id="tabCountDisputed">0</span></button>
     </div>
 
     <div class="contracts">
-
-      <!-- Contract 1: In Progress -->
       <div id="hiresContainer" style="display:grid;gap:1rem;padding-top:.5rem">
         <div style="padding:2rem;text-align:center;color:#888;font-family:'DM Sans',sans-serif">
           Loading your hires…
@@ -146,29 +162,11 @@
   </main>
 </div>
 
-<script>
-function confirmComplete(bookingId) {
-  var btn = document.querySelector('[data-booking-id="' + bookingId + '"] .complete-btn, .complete-btn');
-  var container = btn ? btn.closest('.hire-card, .booking-card, [data-booking-id]') : null;
-  var notice = document.getElementById('complete-notice-' + bookingId) || document.getElementById('complete-notice');
-  if (notice) {
-    notice.textContent = 'Payment release is handled automatically via M-Pesa escrow once the job is marked complete on your booking.';
-    notice.style.display = 'block';
-  } else {
-    var el = document.createElement('div');
-    el.style.cssText = 'background:#E8F5E9;color:#1B5E20;padding:.85rem 1rem;border-radius:8px;margin-top:.75rem;font-family:inherit;font-size:.9rem';
-    el.textContent = 'Payment release is handled automatically via M-Pesa escrow. Contact support if you need assistance.';
-    if (container) container.appendChild(el);
-    else document.querySelector('main').prepend(el);
-  }
-}
-</script>
-
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
-  <a class="mobile-nav-item active" href="my-jobs.html"><span class="mn-icon">📋</span><span class="mn-label">Jobs</span></a>
+  <a class="mobile-nav-item" href="my-jobs.html"><span class="mn-icon">📋</span><span class="mn-label">Jobs</span></a>
   <a class="mobile-nav-item" href="find-workers.html"><span class="mn-icon">🔍</span><span class="mn-label">Find</span></a>
-  <a class="mobile-nav-item" href="messages.html"><span class="mn-icon">💬</span><span class="mn-label">Messages</span></a>
+  <a class="mobile-nav-item active" href="my-hires.html"><span class="mn-icon">🤝</span><span class="mn-label">Hires</span></a>
   <div class="mobile-nav-more">
     <button class="mobile-nav-item mobile-nav-more-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" aria-label="Open navigation menu">
       <span class="mn-icon">⋯</span><span class="mn-label">More</span>
@@ -188,40 +186,446 @@ function confirmComplete(bookingId) {
 <script src="../assets/js/mobile-nav.js"></script>
 
 <script>
-(async function loadHires() {
-  var helpers = window.KazixProfile;
-  var container = document.getElementById('hiresContainer');
-  if (!helpers || !container) return;
+var hiresState = {
+  bookings: [],
+  filter: 'active',
+  loading: true,
+  busyBookingId: null,
+};
+
+var hireHelpers = window.KazixProfile || {};
+var hireContainer = document.getElementById('hiresContainer');
+var hireTabs = document.getElementById('hireTabs');
+var hireNotice = document.getElementById('hireNotice');
+var hireSubtitle = document.getElementById('hiresSubtitle');
+
+function firstRecord(value) {
+  if (Array.isArray(value)) return value[0] || null;
+  return value || null;
+}
+
+function normalizedBookingStatus(booking) {
+  return String(booking && booking.status || '').trim().toLowerCase();
+}
+
+function normalizedEscrowStatus(booking) {
+  return String(booking && booking.escrow_status || '').trim().toLowerCase();
+}
+
+function isAwaitingPayment(booking) {
+  return normalizedEscrowStatus(booking) === 'pending' && ['confirmed', 'in_progress'].includes(normalizedBookingStatus(booking));
+}
+
+function isActiveHire(booking) {
+  return ['confirmed', 'in_progress'].includes(normalizedBookingStatus(booking));
+}
+
+function isCompletedHire(booking) {
+  return normalizedBookingStatus(booking) === 'completed';
+}
+
+function isDisputedHire(booking) {
+  return normalizedBookingStatus(booking) === 'disputed';
+}
+
+function bookingMatchesFilter(booking, filter) {
+  if (filter === 'awaiting_payment') return isAwaitingPayment(booking);
+  if (filter === 'completed') return isCompletedHire(booking);
+  if (filter === 'disputed') return isDisputedHire(booking);
+  return isActiveHire(booking);
+}
+
+function filterCount(filter) {
+  return hiresState.bookings.filter(function (booking) {
+    return bookingMatchesFilter(booking, filter);
+  }).length;
+}
+
+function showHireNotice(message, tone) {
+  if (!hireNotice) return;
+  if (!message) {
+    hireNotice.className = 'page-notice';
+    hireNotice.textContent = '';
+    return;
+  }
+  hireNotice.className = 'page-notice is-visible is-' + (tone || 'info');
+  hireNotice.textContent = message;
+}
+
+function formatDate(value) {
+  if (!value) return 'Not scheduled';
+  var date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not scheduled';
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatDateTime(value) {
+  if (!value) return 'Not available';
+  var date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return date.toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }) + ' · ' + date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+function formatRating(value) {
+  var rating = Number(value || 0);
+  if (!rating) return 'New on KaziX';
+  return rating.toFixed(1) + ' rating';
+}
+
+function formatJobsCompleted(value) {
+  var total = Number(value || 0);
+  if (!total) return 'No completed jobs yet';
+  return total + ' completed ' + (total === 1 ? 'job' : 'jobs');
+}
+
+function bookingStatusMeta(booking) {
+  var status = normalizedBookingStatus(booking);
+  var escrow = normalizedEscrowStatus(booking);
+
+  if (status === 'completed') {
+    return {
+      pillClass: 'cs-active',
+      label: escrow === 'released' ? 'Completed · Paid' : 'Completed',
+      note: escrow === 'released'
+        ? 'This hire has been completed and the escrow payment has been released.'
+        : 'This hire has been completed. Escrow release is being processed.',
+    };
+  }
+
+  if (status === 'disputed') {
+    return {
+      pillClass: 'cs-pending',
+      label: 'Disputed',
+      note: 'This booking is currently in dispute. Support will contact both parties with the next steps.',
+    };
+  }
+
+  if (escrow === 'pending') {
+    return {
+      pillClass: 'cs-pending',
+      label: 'Awaiting Payment',
+      note: 'M-Pesa escrow has not been confirmed yet. The booking is reserved, but funds are still pending.',
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      pillClass: 'cs-active',
+      label: 'In Progress',
+      note: 'Escrow is secured and the fundi is actively working on this job.',
+    };
+  }
+
+  if (status === 'confirmed') {
+    return {
+      pillClass: 'cs-active',
+      label: 'Confirmed',
+      note: 'The hire is confirmed and ready to begin.',
+    };
+  }
+
+  return {
+    pillClass: 'cs-done',
+    label: status ? status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ') : 'Booked',
+    note: 'This booking is available in your hire history.',
+  };
+}
+
+function escrowMeta(booking) {
+  var escrow = normalizedEscrowStatus(booking);
+  if (escrow === 'held') {
+    return { label: 'Escrow secured', progress: 100 };
+  }
+  if (escrow === 'released') {
+    return { label: 'Escrow released', progress: 100 };
+  }
+  if (escrow === 'refunded') {
+    return { label: 'Escrow refunded', progress: 100 };
+  }
+  return { label: 'Escrow pending', progress: 28 };
+}
+
+function timelineState(booking) {
+  var status = normalizedBookingStatus(booking);
+  var escrow = normalizedEscrowStatus(booking);
+  return {
+    hired: true,
+    escrow: escrow === 'held' || escrow === 'released' || escrow === 'refunded',
+    started: status === 'in_progress' || status === 'completed',
+    completed: status === 'completed',
+  };
+}
+
+function locationLabel(job, profile) {
+  var parts = [];
+  if (job && job.area) parts.push(job.area);
+  if (job && job.county) parts.push(job.county);
+  if (!parts.length && profile && profile.area) parts.push(profile.area);
+  if (!parts.length && profile && profile.county) parts.push(profile.county);
+  return parts.length ? parts.join(', ') : 'Location pending';
+}
+
+function escapeHtml(value) {
+  return hireHelpers.escapeHtml ? hireHelpers.escapeHtml(value) : String(value == null ? '' : value);
+}
+
+function emptyState(title, description, href, cta) {
+  return '<div class="empty-state">'
+    + '<div class="empty-title">' + escapeHtml(title) + '</div>'
+    + '<div class="empty-sub">' + escapeHtml(description) + '</div>'
+    + (href && cta ? '<a class="empty-cta" href="' + escapeHtml(href) + '">' + escapeHtml(cta) + '</a>' : '')
+    + '</div>';
+}
+
+function renderTabs() {
+  var activeCount = filterCount('active');
+  var awaitingCount = filterCount('awaiting_payment');
+  var completedCount = filterCount('completed');
+  var disputedCount = filterCount('disputed');
+
+  var activeEl = document.getElementById('tabCountActive');
+  var awaitingEl = document.getElementById('tabCountAwaiting');
+  var completedEl = document.getElementById('tabCountCompleted');
+  var disputedEl = document.getElementById('tabCountDisputed');
+  if (activeEl) activeEl.textContent = String(activeCount);
+  if (awaitingEl) awaitingEl.textContent = String(awaitingCount);
+  if (completedEl) completedEl.textContent = String(completedCount);
+  if (disputedEl) disputedEl.textContent = String(disputedCount);
+
+  if (hireSubtitle) {
+    hireSubtitle.textContent = hiresState.bookings.length
+      ? hiresState.bookings.length + ' live ' + (hiresState.bookings.length === 1 ? 'hire' : 'hires') + ' tracked for your client account'
+      : 'Active contracts, job progress and payment escrow';
+  }
+
+  if (!hiresState.bookings.length) {
+    hiresState.filter = 'active';
+  } else if (!bookingMatchesAnyCurrentFilter()) {
+    if (activeCount) hiresState.filter = 'active';
+    else if (awaitingCount) hiresState.filter = 'awaiting_payment';
+    else if (completedCount) hiresState.filter = 'completed';
+    else if (disputedCount) hiresState.filter = 'disputed';
+  }
+
+  Array.prototype.forEach.call(hireTabs ? hireTabs.querySelectorAll('.htab') : [], function (tab) {
+    tab.classList.toggle('active', tab.getAttribute('data-filter') === hiresState.filter);
+  });
+}
+
+function bookingMatchesAnyCurrentFilter() {
+  return hiresState.bookings.some(function (booking) {
+    return bookingMatchesFilter(booking, hiresState.filter);
+  });
+}
+
+function renderTimeline(booking) {
+  var state = timelineState(booking);
+  return '<div class="timeline">'
+    + '<div class="tl-step done"><div class="tl-dot done">✓</div><div class="tl-label">Hired</div></div>'
+    + '<div class="tl-step ' + (state.escrow ? 'done' : 'active') + '"><div class="tl-dot ' + (state.escrow ? 'done' : 'active') + '">' + (state.escrow ? '✓' : '●') + '</div><div class="tl-label">Escrow</div></div>'
+    + '<div class="tl-step ' + (state.started ? 'done' : (state.escrow ? 'active' : '')) + '"><div class="tl-dot ' + (state.started ? 'done' : (state.escrow ? 'active' : 'pending')) + '">' + (state.started ? '✓' : (state.escrow ? '●' : '')) + '</div><div class="tl-label">Work</div></div>'
+    + '<div class="tl-step ' + (state.completed ? 'done' : '') + '"><div class="tl-dot ' + (state.completed ? 'done' : 'pending') + '">' + (state.completed ? '✓' : '') + '</div><div class="tl-label">Complete</div></div>'
+    + '</div>';
+}
+
+function renderBookingCard(booking) {
+  var job = firstRecord(booking.job) || {};
+  var worker = firstRecord(booking.fundi_profile) || {};
+  var fundiDetails = firstRecord(booking.fundi_details) || {};
+  var meta = bookingStatusMeta(booking);
+  var escrow = escrowMeta(booking);
+  var workerName = worker.full_name || 'Hired fundi';
+  var trade = hireHelpers.formatTrade ? hireHelpers.formatTrade(fundiDetails.trade || job.trade) : (fundiDetails.trade || job.trade || 'Skilled Worker');
+  var location = locationLabel(job, worker);
+  var amount = hireHelpers.formatCurrency ? hireHelpers.formatCurrency(booking.agreed_amount || 0) : ('KES ' + Number(booking.agreed_amount || 0).toLocaleString());
+  var workerRating = Number(fundiDetails.rating_avg || 0);
+  var workerJobs = Number(fundiDetails.jobs_completed || 0);
+  var ref = booking.id ? String(booking.id).slice(0, 8).toUpperCase() : 'BOOKING';
+  var messageHref = hireHelpers.buildMessagesPath
+    ? hireHelpers.buildMessagesPath({
+        participantId: booking.fundi_id,
+        jobId: booking.job_id,
+        applicationId: booking.application_id,
+        bookingId: booking.id,
+      })
+    : 'messages.html';
+  var profileHref = hireHelpers.profilePath ? hireHelpers.profilePath('fundi', booking.fundi_id) : 'worker-profile.html';
+  var showComplete = ['confirmed', 'in_progress'].includes(normalizedBookingStatus(booking));
+  var completionDisabled = hiresState.busyBookingId === booking.id;
+  var payout = Math.max(Math.round(Number(booking.agreed_amount || 0) * 0.9), 0);
+  var fee = Math.max(Number(booking.agreed_amount || 0) - payout, 0);
+
+  return '<article class="contract-card" data-booking-id="' + escapeHtml(booking.id || '') + '">'
+    + '<div class="cc-header">'
+    + '<div class="cc-avatar">' + escapeHtml((hireHelpers.initials ? hireHelpers.initials(workerName) : 'KX')) + '</div>'
+    + '<div class="cc-worker-info">'
+    + '<div class="cc-worker-name">' + escapeHtml(workerName) + '</div>'
+    + '<div class="cc-trade">' + escapeHtml(trade) + '</div>'
+    + '<div class="cc-loc">📍 ' + escapeHtml(location) + ' · Started ' + escapeHtml(formatDate(booking.start_date || booking.created_at)) + '</div>'
+    + '</div>'
+    + '<div class="cc-status-block">'
+    + '<span class="cc-status ' + escapeHtml(meta.pillClass) + '">' + escapeHtml(meta.label) + '</span>'
+    + '<div class="cc-ref">Booking ' + escapeHtml(ref) + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="cc-body">'
+    + '<div class="cc-job-title">' + escapeHtml(job.title || 'Untitled job') + '</div>'
+    + '<div class="hire-meta-row"><span class="hire-stars">' + (workerRating ? '★'.repeat(Math.max(1, Math.min(5, Math.round(workerRating)))) : '☆') + '</span><span class="hire-rating-copy">' + escapeHtml(formatRating(workerRating)) + ' · ' + escapeHtml(formatJobsCompleted(workerJobs)) + '</span></div>'
+    + '<div class="hire-note">' + escapeHtml(meta.note) + '</div>'
+    + '<div class="cc-details">'
+    + '<div class="ccd"><div class="ccd-val">' + escapeHtml(amount) + '</div><div class="ccd-label">Agreed Amount</div></div>'
+    + '<div class="ccd"><div class="ccd-val">' + escapeHtml(hireHelpers.formatCurrency ? hireHelpers.formatCurrency(payout) : ('KES ' + payout.toLocaleString())) + '</div><div class="ccd-label">Net to Fundi</div></div>'
+    + '<div class="ccd"><div class="ccd-val">' + escapeHtml(hireHelpers.formatCurrency ? hireHelpers.formatCurrency(fee) : ('KES ' + fee.toLocaleString())) + '</div><div class="ccd-label">Platform Fee</div></div>'
+    + '<div class="ccd"><div class="ccd-val">' + escapeHtml(formatDateTime(booking.created_at)) + '</div><div class="ccd-label">Booked On</div></div>'
+    + '</div>'
+    + '<div class="escrow-bar">'
+    + '<div class="escrow-header"><span class="escrow-label">Escrow</span><span class="escrow-amount">' + escapeHtml(escrow.label) + '</span></div>'
+    + '<div class="escrow-track"><div class="escrow-fill" style="width:' + escapeHtml(String(escrow.progress)) + '%"></div></div>'
+    + '<div class="escrow-note">Receipt: ' + escapeHtml(booking.mpesa_receipt || 'Waiting for M-Pesa confirmation') + '</div>'
+    + '</div>'
+    + renderTimeline(booking)
+    + '<div class="cc-actions">'
+    + (showComplete
+      ? '<button class="cc-btn ccb-complete" type="button" data-action="complete" data-booking-id="' + escapeHtml(booking.id || '') + '"' + (completionDisabled ? ' disabled' : '') + '>' + escapeHtml(completionDisabled ? 'Updating…' : '✅ Mark Complete') + '</button>'
+      : '')
+    + '<a href="' + escapeHtml(messageHref) + '" class="cc-btn ccb-msg">💬 Message</a>'
+    + '<a href="' + escapeHtml(profileHref) + '" class="cc-btn ccb-review">👤 View Profile</a>'
+    + '<a href="' + escapeHtml(hireHelpers.buildPagePath ? hireHelpers.buildPagePath('job-applicants.html', { job: booking.job_id }) : 'job-applicants.html') + '" class="cc-btn ccb-rehire">📋 Job Applicants</a>'
+    + '</div>'
+    + '</div>'
+    + '</article>';
+}
+
+function renderBookings() {
+  if (!hireContainer) return;
+
+  renderTabs();
+
+  if (hiresState.loading) {
+    hireContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:#888;font-family:\'DM Sans\',sans-serif">Loading your hires…</div>';
+    return;
+  }
+
+  if (!hiresState.bookings.length) {
+    hireContainer.innerHTML = emptyState(
+      'No hires yet',
+      'You have not hired a fundi yet. Once you choose someone from your applicants, the live booking will appear here.',
+      'find-workers.html',
+      'Find Fundis'
+    );
+    return;
+  }
+
+  var filtered = hiresState.bookings.filter(function (booking) {
+    return bookingMatchesFilter(booking, hiresState.filter);
+  });
+
+  if (!filtered.length) {
+    var descriptions = {
+      active: 'There are no active hires right now.',
+      awaiting_payment: 'There are no hires currently waiting for escrow payment.',
+      completed: 'No completed hires have been recorded yet.',
+      disputed: 'No disputes are open on your bookings.',
+    };
+    hireContainer.innerHTML = emptyState(
+      'Nothing in this tab yet',
+      descriptions[hiresState.filter] || 'No hires match the current filter.',
+      hiresState.filter === 'completed' ? 'my-jobs.html' : 'job-applicants.html',
+      hiresState.filter === 'completed' ? 'View My Jobs' : 'Review Applicants'
+    );
+    return;
+  }
+
+  hireContainer.innerHTML = filtered.map(renderBookingCard).join('');
+}
+
+async function refreshHires(options) {
+  options = options || {};
+  hiresState.loading = true;
+  renderBookings();
+  showHireNotice('Loading your hires…', 'info');
 
   try {
-    var data = await helpers.requestJson('/v1/bookings?role=client&status=active', { auth: true });
-    var bookings = Array.isArray(data) ? data : (data.bookings || data.results || []);
-
-    if (!bookings.length) {
-      container.innerHTML = '<p style="padding:2rem;text-align:center;color:#888;font-family:'DM Sans',sans-serif">You haven't hired anyone yet. <a href="find-workers.html" style="color:#F5A623;font-weight:700">Find a fundi →</a></p>';
-      return;
+    if (typeof hireHelpers.requestJson !== 'function') {
+      throw new Error('Shared frontend helpers are unavailable on this page.');
     }
+    if (hireHelpers.hydrateShell) {
+      await hireHelpers.hydrateShell({ silent: true });
+    }
+    var data = await hireHelpers.requestJson('/v1/bookings/?role=client', { auth: true });
+    hiresState.bookings = Array.isArray(data) ? data : [];
+    hiresState.loading = false;
+    renderBookings();
+    showHireNotice(
+      hiresState.bookings.length
+        ? 'Showing live bookings for your client account.'
+        : 'Your hires page is connected. Post a job and hire a fundi to see bookings here.',
+      hiresState.bookings.length ? 'success' : 'info'
+    );
 
-    container.innerHTML = bookings.map(function(b) {
-      var name = helpers.escapeHtml(b.worker_name || b.fundi_name || 'Fundi');
-      var job  = helpers.escapeHtml(b.job_title || 'Job');
-      var status = helpers.escapeHtml(b.status || 'active');
-      var amount = b.agreed_rate ? helpers.formatCurrency(b.agreed_rate) : '';
-      var statusColor = status === 'completed' ? '#1B6B3A' : status === 'disputed' ? '#B71C1C' : '#F5A623';
-      return '<div class="contract-card" style="padding:1.25rem">'
-        + '<div class="cc-worker-name">' + name + '</div>'
-        + '<div style="font-size:.9rem;color:#555;margin:.25rem 0">' + job + '</div>'
-        + (amount ? '<div style="font-size:.9rem;color:#555">' + amount + '</div>' : '')
-        + '<div style="margin-top:.5rem"><span style="background:' + statusColor + '20;color:' + statusColor + ';padding:.2rem .6rem;border-radius:999px;font-size:.8rem;font-weight:600">' + status.charAt(0).toUpperCase() + status.slice(1) + '</span></div>'
-        + '<div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap">'
-        + (b.worker_id ? '<a href="messages.html" class="cc-btn" style="font-size:.85rem;padding:.4rem .75rem">💬 Message</a>' : '')
-        + '</div>'
-        + '</div>';
-    }).join('');
-  } catch(e) {
-    container.innerHTML = '<div style="background:#FDECEA;color:#B71C1C;padding:1rem;border-radius:8px;font-family:'DM Sans',sans-serif">Could not load your hires. Please refresh or sign in again.</div>';
+    if (hireHelpers.hydrateDashboardState) {
+      hireHelpers.hydrateDashboardState({ force: Boolean(options.forceDashboard), silent: true }).catch(function () {});
+    }
+  } catch (error) {
+    hiresState.loading = false;
+    hiresState.bookings = [];
+    renderBookings();
+    showHireNotice(error && error.message ? error.message : 'Could not load your hires. Please refresh or sign in again.', 'error');
   }
-})();
+}
+
+async function markBookingComplete(bookingId) {
+  if (!bookingId || hiresState.busyBookingId) return;
+  var confirmed = window.confirm('Mark this hire as complete and trigger the escrow release flow?');
+  if (!confirmed) return;
+
+  hiresState.busyBookingId = bookingId;
+  renderBookings();
+  showHireNotice('Updating booking status…', 'info');
+
+  try {
+    await hireHelpers.requestJson('/v1/bookings/' + encodeURIComponent(bookingId) + '/complete', {
+      auth: true,
+      method: 'POST',
+    });
+    if (hireHelpers.clearDashboardStateCache) {
+      hireHelpers.clearDashboardStateCache();
+    }
+    hiresState.busyBookingId = null;
+    await refreshHires({ forceDashboard: true });
+    showHireNotice('Hire marked complete. Escrow release has been initiated.', 'success');
+  } catch (error) {
+    hiresState.busyBookingId = null;
+    renderBookings();
+    showHireNotice(error && error.message ? error.message : 'Could not mark this booking as complete.', 'error');
+  }
+}
+
+if (hireTabs) {
+  hireTabs.addEventListener('click', function (event) {
+    var tab = event.target.closest('.htab');
+    if (!tab) return;
+    var nextFilter = tab.getAttribute('data-filter') || 'active';
+    if (nextFilter === hiresState.filter) return;
+    hiresState.filter = nextFilter;
+    renderBookings();
+  });
+}
+
+if (hireContainer) {
+  hireContainer.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-action="complete"]');
+    if (!button) return;
+    event.preventDefault();
+    markBookingComplete(button.getAttribute('data-booking-id'));
+  });
+}
+
+refreshHires({ forceDashboard: true });
 </script>
 </body>
 </html>
