@@ -7,10 +7,14 @@
 <title>My Jobs — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin-bottom:1.25rem}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
 
 /* STATUS TABS */
-.status-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:2rem}
-.stab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem}
+.status-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:2rem;flex-wrap:wrap}
+.stab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;background:none;border-left:none;border-right:none;border-top:none}
 .stab:hover{color:var(--ink)}
 .stab.active{color:var(--ink);border-bottom-color:var(--ink)}
 .stab .tab-count{background:var(--cream);color:var(--muted);font-size:0.65rem;padding:0.1rem 0.45rem;border-radius:10px}
@@ -22,62 +26,81 @@
 .job-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.08);transform:translateY(-2px)}
 .job-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px}
 .job-card.open::before{background:var(--saffron)}
-.job-card.in_progress::before{background:var(--green)}
 .job-card.reviewing::before{background:var(--rust)}
+.job-card.active::before{background:var(--green)}
 .job-card.completed::before{background:var(--muted)}
-.job-card.expired::before{background:rgba(13,13,13,0.2)}
+.job-card.closed::before{background:rgba(13,13,13,0.18)}
+.job-card.expired::before{background:rgba(13,13,13,0.25)}
 .jc-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
-.jc-icon{width:44px;height:44px;border-radius:4px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.jc-icon{width:44px;height:44px;border-radius:4px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.35rem;flex-shrink:0}
 .jc-meta{flex:1;min-width:0}
 .jc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.25rem}
 .jc-sub{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}
 .jc-sub span{display:flex;align-items:center;gap:0.25rem}
-.jc-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem}
+.jc-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;flex-shrink:0}
 .status-badge{font-size:0.65rem;font-weight:700;padding:0.25rem 0.65rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em}
 .sb-open{background:rgba(245,166,35,0.15);color:#854F0B}
 .sb-active{background:rgba(27,107,58,0.1);color:var(--green)}
 .sb-review{background:rgba(192,57,43,0.1);color:var(--rust)}
 .sb-done{background:var(--cream);color:var(--muted)}
 .sb-exp{background:rgba(13,13,13,0.06);color:var(--muted)}
+.sb-closed{background:rgba(13,13,13,0.08);color:var(--steel)}
 .jc-budget{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;color:var(--ink)}
-.jc-stats{display:flex;gap:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
-.jc-stat{text-align:center}
+.jc-note{margin:0 0 1rem;padding:0.75rem 0.9rem;background:var(--cream);border-radius:4px;font-size:0.82rem;line-height:1.6;color:var(--steel)}
+.jc-stats{display:flex;gap:1.5rem;padding-top:1rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.jc-stat{text-align:center;min-width:84px}
 .jc-stat-val{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--ink)}
 .jc-stat-val.highlight{color:var(--rust)}
 .jc-stat-label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:0.1rem}
-.jc-actions{display:flex;gap:0.5rem;margin-left:auto;align-items:center}
+.jc-actions{display:flex;gap:0.5rem;margin-left:auto;align-items:center;flex-wrap:wrap}
 .jc-btn{padding:0.45rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;border-radius:2px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;transition:all 0.2s}
+.jc-btn:disabled{opacity:0.55;cursor:not-allowed}
 .jc-btn-primary{background:var(--ink);color:#F5F0E8;border:none}
-.jc-btn-primary:hover{background:var(--green)}
+.jc-btn-primary:hover:not(:disabled){background:var(--green)}
 .jc-btn-secondary{background:transparent;color:var(--ink);border:1px solid var(--border)}
-.jc-btn-secondary:hover{border-color:var(--ink)}
+.jc-btn-secondary:hover:not(:disabled){border-color:var(--ink)}
 .jc-btn-danger{background:transparent;color:var(--rust);border:1px solid rgba(192,57,43,0.2)}
-.jc-btn-danger:hover{background:var(--rust);color:white;border-color:var(--rust)}
-.hired-worker{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.85rem;background:var(--cream);border-radius:4px;font-size:0.82rem}
-.hw-avatar{width:28px;height:28px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;border:1px solid var(--border)}
-.hw-name{font-weight:600;color:var(--ink)}
-.hw-stars{color:var(--saffron);font-size:0.72rem}
+.jc-btn-danger:hover:not(:disabled){background:var(--rust);color:white;border-color:var(--rust)}
 
 /* EMPTY STATE */
-.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);background:white;border:1px dashed var(--border);border-radius:6px}
 .es-icon{font-size:3rem;margin-bottom:1rem;opacity:0.4}
 .es-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:0.5rem}
-.es-sub{font-size:0.875rem;margin-bottom:1.5rem}
+.es-sub{font-size:0.875rem;line-height:1.7;margin:0 auto 1.5rem;max-width:540px}
 
 /* POST BTN */
 .post-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.8rem 1.75rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer;text-decoration:none;transition:background 0.2s}
 .post-btn:hover{background:var(--green)}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:900px){.sidebar{display:none}}
+@media(max-width:900px){
+  .sidebar{display:none}
+  .jc-top{flex-wrap:wrap}
+  .jc-right{align-items:flex-start}
+  .jc-actions{margin-left:0}
+}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem('kazix_access_token')) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace('login.html?next=' + next);
+    return;
+  }
+  window.revealMyJobsPage = function () {
+    var gate = document.getElementById('auth-gate-style');
+    if (gate) gate.remove();
+  };
+})();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -96,208 +119,29 @@
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">KX</div><div><div class="sp-name">My account</div><div class="sp-role">Client account</div></div></div>
     </div>
   </aside>
 
   <main class="main">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;animation:slideUp 0.4s ease both">
-      <div><div class="page-title">My Jobs</div><div class="page-sub">All jobs you've posted on KaziX</div></div>
+    <div class="notice info" id="pageStatus" hidden></div>
+
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;animation:slideUp 0.4s ease both">
+      <div><div class="page-title">My Jobs</div><div class="page-sub">All jobs you’ve posted on KaziX, powered by your live account data</div></div>
       <a href="post-job.html" class="post-btn">➕ Post New Job</a>
     </div>
 
-    <!-- TABS -->
-    <div class="status-tabs">
-      <div class="stab active" onclick="filterJobs('all',this)">All Jobs <span class="tab-count">15</span></div>
-      <div class="stab" onclick="filterJobs('open',this)">Open <span class="tab-count">2</span></div>
-      <div class="stab" onclick="filterJobs('reviewing',this)">Reviewing <span class="tab-count">1</span></div>
-      <div class="stab" onclick="filterJobs('in_progress',this)">In Progress <span class="tab-count">1</span></div>
-      <div class="stab" onclick="filterJobs('completed',this)">Completed <span class="tab-count">10</span></div>
-      <div class="stab" onclick="filterJobs('expired',this)">Expired <span class="tab-count">1</span></div>
-    </div>
+    <div class="status-tabs" id="statusTabs"></div>
 
-    <!-- JOB CARDS -->
     <div class="jobs-list" id="jobsList">
-
-      <!-- Reviewing -->
-      <div class="job-card reviewing" data-status="reviewing" style="animation-delay:0.05s">
-        <div class="jc-top">
-          <div class="jc-icon">⚡</div>
-          <div class="jc-meta">
-            <div class="jc-title">Install CCTV cameras — Kilimani</div>
-            <div class="jc-sub">
-              <span>⚡ Electrician</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Posted 2 days ago</span>
-              <span>⏰ Expires in 1 day</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-review">Reviewing Applicants</span>
-            <div class="jc-budget">KES 3,000 – 7,000</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val highlight">5</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">2</div><div class="jc-stat-label">New Today</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">4.7★</div><div class="jc-stat-label">Avg Rating</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">KES 4,200</div><div class="jc-stat-label">Avg Bid</div></div>
-          <div class="jc-actions">
-            <a href="job-applicants.html" class="jc-btn jc-btn-primary">👥 Review Applicants (5)</a>
-            <button class="jc-btn jc-btn-secondary">✎ Edit</button>
-            <button class="jc-btn jc-btn-danger">✕ Close</button>
-          </div>
-        </div>
+      <div class="empty-state">
+        <div class="es-icon">📋</div>
+        <div class="es-title">Loading your jobs</div>
+        <div class="es-sub">Fetching the latest jobs from your KaziX account.</div>
       </div>
-
-      <!-- Open -->
-      <div class="job-card open" data-status="open" style="animation-delay:0.1s">
-        <div class="jc-top">
-          <div class="jc-icon">🚿</div>
-          <div class="jc-meta">
-            <div class="jc-title">Fix leaking pipe under kitchen sink</div>
-            <div class="jc-sub">
-              <span>🚿 Plumber</span>
-              <span>📍 Westlands, Nairobi</span>
-              <span>📅 Posted today</span>
-              <span>⏰ Expires in 3 days</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-open">Open</span>
-            <div class="jc-budget">KES 500 – 1,500</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">2</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">0</div><div class="jc-stat-label">New Today</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">4.8★</div><div class="jc-stat-label">Avg Rating</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">KES 900</div><div class="jc-stat-label">Avg Bid</div></div>
-          <div class="jc-actions">
-            <a href="job-applicants.html" class="jc-btn jc-btn-primary">👥 View Applicants</a>
-            <button class="jc-btn jc-btn-secondary">✎ Edit</button>
-            <button class="jc-btn jc-btn-danger">✕ Close</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- In progress -->
-      <div class="job-card in_progress" data-status="in_progress" style="animation-delay:0.15s">
-        <div class="jc-top">
-          <div class="jc-icon">🎨</div>
-          <div class="jc-meta">
-            <div class="jc-title">Paint bedroom + living room (3-bed house)</div>
-            <div class="jc-sub">
-              <span>🎨 Painter</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Started yesterday</span>
-              <span>⏱ Est. 2 more days</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-active">In Progress</span>
-            <div class="jc-budget">KES 3,200</div>
-          </div>
-        </div>
-        <div style="margin-top:0.75rem;margin-bottom:0.75rem">
-          <div class="hired-worker">
-            <div class="hw-avatar">🎨</div>
-            <div><div class="hw-name">Mary Akinyi</div></div>
-            <div class="hw-stars">★★★★★ 4.7</div>
-            <div style="margin-left:auto;font-size:0.72rem;color:var(--green);font-weight:600">● Active now</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">KES 3,200</div><div class="jc-stat-label">Escrow Held</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">Day 1/3</div><div class="jc-stat-label">Progress</div></div>
-          <div class="jc-actions">
-            <a href="messages.html" class="jc-btn jc-btn-secondary">💬 Message Mary</a>
-            <button class="jc-btn jc-btn-primary" onclick="this.textContent='Processing…';this.disabled=true;setTimeout(()=>{this.textContent='✅ Marked Complete';this.style.background='var(--green)'},1200)">✅ Mark Complete</button>
-            <a href="my-hires.html" class="jc-btn jc-btn-secondary">View Booking</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Completed -->
-      <div class="job-card completed" data-status="completed" style="animation-delay:0.2s">
-        <div class="jc-top">
-          <div class="jc-icon">🪚</div>
-          <div class="jc-meta">
-            <div class="jc-title">Repair wooden fence — backyard</div>
-            <div class="jc-sub">
-              <span>🪚 Carpenter</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Completed 3 days ago</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-done">Completed</span>
-            <div class="jc-budget">KES 3,500</div>
-          </div>
-        </div>
-        <div style="margin-top:0.75rem;margin-bottom:0.75rem">
-          <div class="hired-worker">
-            <div class="hw-avatar">🪚</div>
-            <div><div class="hw-name">Peter Odhiambo</div></div>
-            <div class="hw-stars">★★★★★ 4.8</div>
-            <div style="margin-left:auto;font-size:0.72rem;color:var(--green);font-weight:600">Paid · KES 3,500</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val">KES 3,500</div><div class="jc-stat-label">Paid out</div></div>
-          <div class="jc-stat"><div class="jc-stat-val">1 day</div><div class="jc-stat-label">Duration</div></div>
-          <div class="jc-actions">
-            <button class="jc-btn jc-btn-primary" style="background:var(--saffron);color:var(--ink)">⭐ Leave Review</button>
-            <button class="jc-btn jc-btn-secondary">🔁 Hire Again</button>
-            <a href="#" class="jc-btn jc-btn-secondary">View Receipt</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Expired -->
-      <div class="job-card expired" data-status="expired" style="animation-delay:0.25s">
-        <div class="jc-top">
-          <div class="jc-icon" style="opacity:0.5">🏠</div>
-          <div class="jc-meta">
-            <div class="jc-title" style="color:var(--muted)">Replace roof tiles — garage</div>
-            <div class="jc-sub">
-              <span>🏠 Roofer</span>
-              <span>📍 Kilimani, Nairobi</span>
-              <span>📅 Expired 1 week ago · No applications received</span>
-            </div>
-          </div>
-          <div class="jc-right">
-            <span class="status-badge sb-exp">Expired</span>
-            <div class="jc-budget" style="color:var(--muted)">KES 8,000 – 15,000</div>
-          </div>
-        </div>
-        <div class="jc-stats">
-          <div class="jc-stat"><div class="jc-stat-val" style="color:var(--muted)">0</div><div class="jc-stat-label">Applicants</div></div>
-          <div class="jc-actions">
-            <button class="jc-btn jc-btn-primary">🔁 Repost Job</button>
-            <button class="jc-btn jc-btn-secondary">✎ Edit & Repost</button>
-            <button class="jc-btn jc-btn-danger">🗑 Delete</button>
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /jobs-list -->
+    </div>
   </main>
 </div>
-
-<script>
-function filterJobs(status, el) {
-  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.job-card').forEach(card => {
-    if (status === 'all' || card.dataset.status === status) {
-      card.style.display = 'block';
-    } else {
-      card.style.display = 'none';
-    }
-  });
-}
-</script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
@@ -318,7 +162,470 @@ function filterJobs(status, el) {
   </div>
 </nav>
 
-
+<script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
+<script>
+const {
+  buildPagePath,
+  clearDashboardStateCache,
+  escapeHtml,
+  formatCurrency,
+  formatTrade,
+  getAccessToken,
+  getMyProfile,
+  hydrateDashboardState,
+  hydrateShell,
+  requestJson,
+} = window.KazixProfile;
+
+const state = {
+  jobs: [],
+  filter: 'all',
+};
+
+const JOB_TRADE_ICONS = {
+  plumber: '🚿',
+  electrician: '⚡',
+  mason: '🧱',
+  mama_fua: '🧺',
+  carpenter: '🪚',
+  painter: '🎨',
+  roofer: '🏠',
+  gardener: '🌿',
+  driver_mover: '🚚',
+  security: '🛡️',
+  other: '🛠️',
+};
+
+const FILTERS = [
+  { key: 'all', label: 'All Jobs' },
+  { key: 'open', label: 'Open' },
+  { key: 'reviewing', label: 'Reviewing' },
+  { key: 'active', label: 'In Progress' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'closed', label: 'Closed' },
+];
+
+function revealPage() {
+  if (typeof window.revealMyJobsPage === 'function') {
+    window.revealMyJobsPage();
+  }
+}
+
+function setStatus(message, tone) {
+  const el = document.getElementById('pageStatus');
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `notice ${tone || 'info'}`;
+  el.textContent = message;
+}
+
+function pluralize(value, singular, plural) {
+  return Number(value) === 1 ? singular : plural;
+}
+
+function tradeIcon(trade) {
+  return JOB_TRADE_ICONS[trade] || JOB_TRADE_ICONS.other;
+}
+
+function formatLocation(job) {
+  const parts = [job?.area, job?.county].filter(Boolean);
+  return parts.length ? parts.join(', ') : 'Location pending';
+}
+
+function budgetLabel(job) {
+  const min = Number(job?.budget_min || 0);
+  const max = Number(job?.budget_max || 0);
+  if (min > 0 && max > 0) return `${formatCurrency(min)} - ${formatCurrency(max)}`;
+  if (min > 0) return formatCurrency(min);
+  if (max > 0) return formatCurrency(max);
+  return 'Budget not set';
+}
+
+function relativeDate(value) {
+  if (!value) return 'Recently';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+
+  const diffHours = Math.round((Date.now() - date.getTime()) / (1000 * 60 * 60));
+  if (diffHours <= 1) return 'just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays === 1) return 'yesterday';
+  return `${diffDays} days ago`;
+}
+
+function isExpired(job) {
+  const normalized = String(job?.status || '').toLowerCase();
+  if (!['open', 'reviewing'].includes(normalized)) return false;
+  if (!job?.expires_at) return false;
+
+  const expiry = new Date(job.expires_at);
+  return !Number.isNaN(expiry.getTime()) && expiry.getTime() < Date.now();
+}
+
+function displayStatus(job) {
+  const normalized = String(job?.status || '').toLowerCase();
+  if (isExpired(job)) return 'expired';
+  if (normalized === 'cancelled') return 'closed';
+  if (normalized === 'active') return 'active';
+  if (normalized === 'completed') return 'completed';
+  if (normalized === 'reviewing') return 'reviewing';
+  return 'open';
+}
+
+function filterGroup(job) {
+  const status = displayStatus(job);
+  if (status === 'expired' || status === 'closed') return 'closed';
+  return status;
+}
+
+function statusBadge(status) {
+  if (status === 'reviewing') return { className: 'sb-review', label: 'Reviewing Applicants' };
+  if (status === 'active') return { className: 'sb-active', label: 'In Progress' };
+  if (status === 'completed') return { className: 'sb-done', label: 'Completed' };
+  if (status === 'expired') return { className: 'sb-exp', label: 'Expired' };
+  if (status === 'closed') return { className: 'sb-closed', label: 'Closed' };
+  return { className: 'sb-open', label: 'Open' };
+}
+
+function scheduleLabel(job) {
+  if (job?.preferred_date && job?.preferred_time) {
+    return `Preferred ${job.preferred_date} · ${job.preferred_time}`;
+  }
+  if (job?.preferred_date) {
+    return `Preferred ${job.preferred_date}`;
+  }
+  if (job?.expires_at && !isExpired(job)) {
+    const expiry = new Date(job.expires_at);
+    if (!Number.isNaN(expiry.getTime())) {
+      const diffHours = Math.round((expiry.getTime() - Date.now()) / (1000 * 60 * 60));
+      if (diffHours < 24) {
+        return `Closes in ${Math.max(diffHours, 1)} ${pluralize(Math.max(diffHours, 1), 'hour', 'hours')}`;
+      }
+      const diffDays = Math.round(diffHours / 24);
+      return `Closes in ${diffDays} ${pluralize(diffDays, 'day', 'days')}`;
+    }
+  }
+  if (isExpired(job)) {
+    return 'No longer accepting applications';
+  }
+  return `Posted ${relativeDate(job.created_at)}`;
+}
+
+function averageMetric(values) {
+  const safe = values.filter((value) => Number.isFinite(value) && value > 0);
+  if (!safe.length) return null;
+  return safe.reduce((sum, value) => sum + value, 0) / safe.length;
+}
+
+function computeApplicationsMeta(applications) {
+  if (!Array.isArray(applications)) {
+    return {
+      loaded: false,
+      count: null,
+      pending: null,
+      newToday: null,
+      avgBid: null,
+      avgRating: null,
+    };
+  }
+
+  const visible = applications.filter((application) => String(application?.status || '').toLowerCase() !== 'withdrawn');
+  const pending = visible.filter((application) => String(application?.status || '').toLowerCase() === 'pending').length;
+  const newToday = visible.filter((application) => {
+    const createdAt = new Date(application?.created_at || '');
+    if (Number.isNaN(createdAt.getTime())) return false;
+    return (Date.now() - createdAt.getTime()) <= (24 * 60 * 60 * 1000);
+  }).length;
+
+  const avgBid = averageMetric(visible.map((application) => Number(application?.bid_amount || 0)));
+  const avgRating = averageMetric(visible.map((application) => {
+    const fundiProfile = Array.isArray(application?.fundi_profiles) ? application.fundi_profiles[0] : application?.fundi_profiles;
+    return Number(fundiProfile?.rating_avg || 0);
+  }));
+
+  return {
+    loaded: true,
+    count: visible.length,
+    pending,
+    newToday,
+    avgBid,
+    avgRating,
+  };
+}
+
+async function enrichJobs(rawJobs) {
+  const results = await Promise.all(rawJobs.map(async (job) => {
+    try {
+      const applicationsPayload = await requestJson(`/v1/jobs/${encodeURIComponent(job.id)}/applications`, {
+        auth: true,
+        showError: false,
+      });
+      const meta = computeApplicationsMeta(applicationsPayload?.data || []);
+      return { ...job, applicationsMeta: meta };
+    } catch (_error) {
+      return { ...job, applicationsMeta: computeApplicationsMeta(null) };
+    }
+  }));
+
+  return results.map((job) => ({ ...job, displayStatus: displayStatus(job) }));
+}
+
+function renderTabs() {
+  const root = document.getElementById('statusTabs');
+  if (!root) return;
+
+  const counts = FILTERS.reduce((acc, filter) => {
+    if (filter.key === 'all') {
+      acc[filter.key] = state.jobs.length;
+      return acc;
+    }
+    acc[filter.key] = state.jobs.filter((job) => filterGroup(job) === filter.key).length;
+    return acc;
+  }, {});
+
+  root.innerHTML = FILTERS.map((filter) => `
+    <button class="stab ${state.filter === filter.key ? 'active' : ''}" type="button" data-filter="${escapeHtml(filter.key)}">
+      ${escapeHtml(filter.label)} <span class="tab-count">${escapeHtml(String(counts[filter.key] || 0))}</span>
+    </button>
+  `).join('');
+}
+
+function emptyState(title, message, actionHref, actionLabel) {
+  const action = actionHref && actionLabel
+    ? `<a href="${escapeHtml(actionHref)}" class="post-btn">${escapeHtml(actionLabel)}</a>`
+    : '';
+
+  return `
+    <div class="empty-state">
+      <div class="es-icon">📋</div>
+      <div class="es-title">${escapeHtml(title)}</div>
+      <div class="es-sub">${escapeHtml(message)}</div>
+      ${action}
+    </div>
+  `;
+}
+
+function noteForJob(job) {
+  const status = displayStatus(job);
+  if (status === 'active') {
+    return 'This job has an active booking. Live coordination, escrow, and completion tracking continue in My Hires.';
+  }
+  if (status === 'completed') {
+    return 'This job is complete. Historical payment and booking activity live in My Hires and Payments.';
+  }
+  if (status === 'expired' || status === 'closed') {
+    return 'This job is closed and no longer accepting new applications.';
+  }
+  if ((job.applicationsMeta?.count || 0) > 0) {
+    return `${job.applicationsMeta.pending || 0} ${pluralize(job.applicationsMeta.pending || 0, 'application is', 'applications are')} still pending your review.`;
+  }
+  return 'Your job post is live. As workers apply, this card will update with live applicant stats.';
+}
+
+function applicantsButtonLabel(job) {
+  const count = job.applicationsMeta?.count;
+  if (Number.isFinite(count) && count > 0) {
+    return `👥 Review Applicants (${count})`;
+  }
+  return '👥 View Applicants';
+}
+
+function canClose(job) {
+  const status = displayStatus(job);
+  return status === 'open' || status === 'reviewing';
+}
+
+function renderJobs() {
+  const root = document.getElementById('jobsList');
+  if (!root) return;
+
+  if (!state.jobs.length) {
+    root.innerHTML = emptyState(
+      'No jobs posted yet',
+      'Your posted jobs will appear here as soon as you publish one.',
+      'post-job.html',
+      '➕ Post New Job'
+    );
+    return;
+  }
+
+  const rows = state.filter === 'all'
+    ? state.jobs
+    : state.jobs.filter((job) => filterGroup(job) === state.filter);
+
+  if (!rows.length) {
+    root.innerHTML = emptyState(
+      'No jobs in this view',
+      `There are no live jobs in the ${FILTERS.find((filter) => filter.key === state.filter)?.label || 'selected'} tab right now.`,
+      'post-job.html',
+      '➕ Post New Job'
+    );
+    return;
+  }
+
+  root.innerHTML = rows.map((job, index) => {
+    const badge = statusBadge(displayStatus(job));
+    const apps = job.applicationsMeta || {};
+    const applicantCount = apps.loaded && Number.isFinite(apps.count) ? apps.count : '—';
+    const pendingCount = apps.loaded && Number.isFinite(apps.pending) ? apps.pending : '—';
+    const avgRating = apps.loaded && Number.isFinite(apps.avgRating) ? `${apps.avgRating.toFixed(1)}★` : '—';
+    const avgBid = apps.loaded && Number.isFinite(apps.avgBid) ? formatCurrency(Math.round(apps.avgBid)) : '—';
+    const reviewHref = buildPagePath('job-applicants.html', { job: job.id });
+
+    let actions = '';
+    if (displayStatus(job) === 'active' || displayStatus(job) === 'completed') {
+      actions += `<a href="my-hires.html" class="jc-btn jc-btn-primary">🤝 View Hires</a>`;
+      actions += `<a href="${escapeHtml(reviewHref)}" class="jc-btn jc-btn-secondary">${escapeHtml(applicantsButtonLabel(job))}</a>`;
+    } else {
+      actions += `<a href="${escapeHtml(reviewHref)}" class="jc-btn jc-btn-primary">${escapeHtml(applicantsButtonLabel(job))}</a>`;
+      if (displayStatus(job) === 'closed' || displayStatus(job) === 'expired') {
+        actions += `<a href="post-job.html" class="jc-btn jc-btn-secondary">➕ Post Similar Job</a>`;
+      }
+    }
+
+    if (canClose(job)) {
+      actions += `<button class="jc-btn jc-btn-danger" type="button" data-action="close" data-job-id="${escapeHtml(job.id)}">✕ Close Job</button>`;
+    }
+
+    return `
+      <div class="job-card ${escapeHtml(displayStatus(job))}" style="animation-delay:${0.05 + (index * 0.04)}s">
+        <div class="jc-top">
+          <div class="jc-icon">${escapeHtml(tradeIcon(job.trade))}</div>
+          <div class="jc-meta">
+            <div class="jc-title">${escapeHtml(job.title || 'Untitled job')}</div>
+            <div class="jc-sub">
+              <span>${escapeHtml(tradeIcon(job.trade))} ${escapeHtml(formatTrade(job.trade || 'other'))}</span>
+              <span>📍 ${escapeHtml(formatLocation(job))}</span>
+              <span>📅 Posted ${escapeHtml(relativeDate(job.created_at))}</span>
+              <span>⏰ ${escapeHtml(scheduleLabel(job))}</span>
+            </div>
+          </div>
+          <div class="jc-right">
+            <span class="status-badge ${escapeHtml(badge.className)}">${escapeHtml(badge.label)}</span>
+            <div class="jc-budget">${escapeHtml(budgetLabel(job))}</div>
+          </div>
+        </div>
+
+        <div class="jc-note">${escapeHtml(noteForJob(job))}</div>
+
+        <div class="jc-stats">
+          <div class="jc-stat"><div class="jc-stat-val highlight">${escapeHtml(String(applicantCount))}</div><div class="jc-stat-label">Applicants</div></div>
+          <div class="jc-stat"><div class="jc-stat-val">${escapeHtml(String(pendingCount))}</div><div class="jc-stat-label">Pending Review</div></div>
+          <div class="jc-stat"><div class="jc-stat-val">${escapeHtml(avgRating)}</div><div class="jc-stat-label">Avg Rating</div></div>
+          <div class="jc-stat"><div class="jc-stat-val">${escapeHtml(avgBid)}</div><div class="jc-stat-label">Avg Bid</div></div>
+          <div class="jc-actions">${actions}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function closeJob(jobId, button) {
+  const job = state.jobs.find((entry) => entry.id === jobId);
+  if (!job) return;
+
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Closing…';
+
+  try {
+    await requestJson(`/v1/jobs/${encodeURIComponent(jobId)}`, {
+      auth: true,
+      method: 'DELETE',
+      showError: false,
+    });
+
+    job.status = 'cancelled';
+    job.displayStatus = displayStatus(job);
+    renderTabs();
+    renderJobs();
+    clearDashboardStateCache();
+    hydrateDashboardState({ silent: true, force: true }).catch(function () {
+      /* noop */
+    });
+    setStatus(`Closed "${job.title || 'job'}".`, 'info');
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = originalLabel;
+    setStatus(error?.message || 'Could not close this job right now.', 'error');
+  }
+}
+
+function bindEvents() {
+  document.getElementById('statusTabs').addEventListener('click', function (event) {
+    const tab = event.target.closest('[data-filter]');
+    if (!tab) return;
+    state.filter = tab.dataset.filter;
+    renderTabs();
+    renderJobs();
+  });
+
+  document.getElementById('jobsList').addEventListener('click', function (event) {
+    const button = event.target.closest('button[data-action="close"]');
+    if (!button) return;
+    closeJob(button.dataset.jobId, button);
+  });
+}
+
+async function initMyJobsPage() {
+  if (!getAccessToken()) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`login.html?next=${next}`);
+    return;
+  }
+
+  bindEvents();
+
+  try {
+    const profileData = await getMyProfile();
+    const profile = profileData?.profile || null;
+
+    if (!profile || profile.role !== 'client') {
+      window.location.replace('worker-dashboard.html');
+      return;
+    }
+
+    await hydrateShell({ data: profileData, silent: false });
+
+    const jobsPayload = await requestJson('/v1/jobs/mine', {
+      auth: true,
+      showError: false,
+    });
+
+    const rawJobs = Array.isArray(jobsPayload?.data) ? jobsPayload.data : [];
+    state.jobs = await enrichJobs(rawJobs);
+    renderTabs();
+    renderJobs();
+
+    const failedStats = state.jobs.filter((job) => !job.applicationsMeta?.loaded).length;
+    if (failedStats > 0) {
+      setStatus(`Loaded your jobs, but applicant stats are still missing for ${failedStats} ${pluralize(failedStats, 'job', 'jobs')}.`, 'info');
+    } else {
+      setStatus('', 'info');
+    }
+  } catch (error) {
+    console.error('Failed to load my jobs page', error);
+    document.getElementById('jobsList').innerHTML = emptyState(
+      'We could not load your jobs',
+      error?.message || 'Try refreshing in a moment or signing in again so we can restore your real client job data.',
+      'client-dashboard.html',
+      'Back to Dashboard'
+    );
+    setStatus(error?.message || 'Could not load your jobs.', 'error');
+  } finally {
+    revealPage();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initMyJobsPage);
+</script>
 </body>
 </html>
