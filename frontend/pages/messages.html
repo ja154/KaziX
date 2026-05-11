@@ -9,41 +9,59 @@
 <style>
 body.app{height:100vh;overflow:hidden}
 
-/* MESSAGES LAYOUT */
-.msg-shell{display:flex;flex:1;overflow:hidden}
+/* LAYOUT */
+.msg-shell{display:flex;flex:1;overflow:hidden;min-height:0}
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin:0.9rem 1rem 0}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
 
 /* CONVERSATION LIST */
-.conv-list{width:320px;flex-shrink:0;background:white;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.conv-list{width:340px;flex-shrink:0;background:white;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .conv-header{padding:1.25rem 1.25rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0}
-.conv-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;margin-bottom:0.75rem}
+.conv-title-row{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.75rem}
+.conv-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem}
+.conv-mobile-toggle,.chat-back-btn{display:none;align-items:center;gap:0.35rem;padding:0.45rem 0.75rem;border:1px solid var(--border);background:white;border-radius:999px;color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer}
 .conv-search{width:100%;padding:0.6rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s}
 .conv-search:focus{border-color:var(--ink)}
 .conv-items{flex:1;overflow-y:auto}
-.conv-item{display:flex;align-items:flex-start;gap:0.85rem;padding:1rem 1.25rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative}
+.conv-empty{padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-size:0.78rem;color:var(--muted);line-height:1.65}
+.conv-item{display:flex;align-items:flex-start;gap:0.85rem;padding:1rem 1.25rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative;text-decoration:none;color:inherit}
 .conv-item:hover{background:var(--cream)}
 .conv-item.active{background:rgba(13,13,13,0.04)}
-.conv-item.unread{background:rgba(245,166,35,0.04)}
-.ci-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;border:1px solid var(--border);position:relative}
+.conv-item.unread{background:rgba(245,166,35,0.05)}
+.ci-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.92rem;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0;border:1px solid var(--border);position:relative}
 .ci-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid white}
 .ci-info{flex:1;min-width:0}
-.ci-name{font-weight:600;font-size:0.875rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:0.15rem}
-.ci-time{font-size:0.65rem;color:var(--muted);font-weight:400}
-.ci-job{font-size:0.68rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem}
+.ci-name{font-weight:600;font-size:0.875rem;display:flex;justify-content:space-between;align-items:center;gap:0.65rem;margin-bottom:0.15rem}
+.ci-name-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-time{font-size:0.65rem;color:var(--muted);font-weight:400;flex-shrink:0}
+.ci-job{font-size:0.68rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-preview{font-size:0.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ci-unread-badge{position:absolute;right:1rem;top:1rem;width:18px;height:18px;border-radius:50%;background:var(--saffron);color:var(--ink);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ci-preview.strong{color:var(--ink);font-weight:500}
+.ci-unread-badge{position:absolute;right:1rem;top:1rem;min-width:18px;height:18px;padding:0 0.28rem;border-radius:50px;background:var(--saffron);color:var(--ink);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
 
 /* CHAT AREA */
-.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:white}
+.chat-panel{display:flex;flex-direction:column;flex:1;min-height:0}
 .chat-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:white;display:flex;align-items:center;gap:1rem;flex-shrink:0}
-.chat-header-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid var(--border);position:relative}
+.chat-header-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-family:'Syne',sans-serif;font-weight:800;border:1px solid var(--border);position:relative;flex-shrink:0}
 .chat-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid white}
-.chat-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem}
-.chat-sub{font-size:0.72rem;color:var(--muted);margin-top:0.1rem}
-.chat-actions{margin-left:auto;display:flex;gap:0.5rem}
+.chat-header-main{min-width:0;flex:1}
+.chat-name{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-sub{font-size:0.72rem;color:var(--muted);margin-top:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-actions{margin-left:auto;display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end}
 .chat-action-btn{padding:0.4rem 0.85rem;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;font-size:0.72rem;transition:all 0.2s;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:0.3rem}
 .chat-action-btn:hover{background:var(--ink);color:white;border-color:var(--ink)}
 .chat-action-btn.primary{background:var(--ink);color:white;border-color:var(--ink)}
 .chat-action-btn.primary:hover{background:var(--green)}
+.chat-context{padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(13,13,13,0.02);font-size:0.78rem;color:var(--steel);line-height:1.6}
+.chat-context a{color:var(--rust);font-weight:600;text-decoration:none}
+.chat-placeholder{display:flex;flex:1;align-items:center;justify-content:center;padding:2rem;background:var(--cream)}
+.chat-placeholder-card{max-width:420px;text-align:center}
+.chat-placeholder-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:var(--ink);margin-bottom:0.4rem}
+.chat-placeholder-sub{font-size:0.88rem;line-height:1.7;color:var(--muted)}
+.chat-placeholder-action{display:inline-flex;margin-top:1rem;padding:0.7rem 1rem;background:var(--ink);color:#F5F0E8;text-decoration:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem}
 .chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;background:var(--cream)}
 
 /* DATE SEPARATOR */
@@ -55,252 +73,995 @@ body.app{height:100vh;overflow:hidden}
 /* MESSAGES */
 .msg-bubble{display:flex;gap:0.6rem;align-items:flex-end;max-width:72%}
 .msg-bubble.outgoing{flex-direction:row-reverse;margin-left:auto}
-.bubble-avatar{width:28px;height:28px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.8rem;flex-shrink:0;border:1px solid var(--border)}
+.bubble-avatar{width:28px;height:28px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0;border:1px solid var(--border)}
+.bubble-wrap{display:flex;flex-direction:column;gap:0.25rem;min-width:0}
 .bubble-content{background:white;border:1px solid var(--border);border-radius:12px;border-bottom-left-radius:3px;padding:0.75rem 1rem;font-size:0.875rem;line-height:1.55;color:var(--ink);max-width:100%;word-break:break-word}
 .msg-bubble.outgoing .bubble-content{background:var(--ink);color:#F5F0E8;border-color:var(--ink);border-bottom-right-radius:3px;border-bottom-left-radius:12px}
-.bubble-time{font-size:0.62rem;color:var(--muted);flex-shrink:0;padding-bottom:2px}
-.msg-bubble.outgoing .bubble-time{text-align:right}
-
-/* SYSTEM MESSAGE */
-.sys-msg{text-align:center;font-size:0.75rem;color:var(--muted);background:rgba(13,13,13,0.05);border-radius:20px;padding:0.4rem 1rem;margin:0 auto;max-width:80%}
-.sys-msg a{color:var(--rust);font-weight:600;text-decoration:none}
-
-/* JOB CARD IN CHAT */
-.chat-job-card{background:white;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;font-size:0.82rem;max-width:280px}
-.cjc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;margin-bottom:0.3rem}
-.cjc-sub{color:var(--muted);font-size:0.72rem}
-.cjc-btn{display:inline-block;margin-top:0.65rem;padding:0.4rem 1rem;background:var(--ink);color:white;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;border:none}
+.bubble-time{font-size:0.62rem;color:var(--muted);flex-shrink:0;padding-left:0.2rem}
+.msg-bubble.outgoing .bubble-time{text-align:right;padding-right:0.2rem}
+.empty-thread-note{padding:1.3rem 1rem;text-align:center;color:var(--muted);font-size:0.82rem;line-height:1.7}
 
 /* CHAT INPUT */
 .chat-input-area{padding:1rem 1.5rem;border-top:1px solid var(--border);background:white;flex-shrink:0}
+.chat-input-extras{display:flex;gap:0.5rem;margin-bottom:0.6rem;flex-wrap:wrap}
+.context-pill{padding:0.32rem 0.8rem;border:1px solid var(--border);border-radius:20px;background:white;font-size:0.72rem;color:var(--muted)}
 .chat-input-wrap{display:flex;gap:0.75rem;align-items:flex-end}
 .chat-input-box{flex:1;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:none;outline:none;background:var(--cream);max-height:120px;line-height:1.5;transition:border-color 0.2s}
 .chat-input-box:focus{border-color:var(--ink)}
 .send-btn{width:42px;height:42px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;color:white;flex-shrink:0;transition:background 0.2s}
-.send-btn:hover{background:var(--green)}
-.chat-input-extras{display:flex;gap:0.5rem;margin-bottom:0.6rem}
-.extra-btn{padding:0.3rem 0.75rem;border:1px solid var(--border);border-radius:20px;background:white;font-size:0.72rem;cursor:pointer;transition:all 0.2s;color:var(--muted)}
-.extra-btn:hover{border-color:var(--ink);color:var(--ink)}
+.send-btn:hover:not(:disabled){background:var(--green)}
+.send-btn:disabled{opacity:0.55;cursor:not-allowed}
+
+/* SHARED */
+.sidebar-placeholder{padding:1.2rem;color:var(--muted);font-size:0.82rem}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:900px){.sidebar{display:none}.conv-list{width:280px}}
+
+@media(max-width:900px){
+  .sidebar{display:none}
+  .msg-shell{display:block}
+  .conv-list,.chat-area{width:100%;height:calc(100vh - 72px - 82px)}
+  .chat-area{display:none}
+  .msg-shell.thread-open .conv-list{display:none}
+  .msg-shell.thread-open .chat-area{display:flex}
+  .conv-mobile-toggle,.chat-back-btn{display:inline-flex}
+  .chat-header{padding:0.9rem 1rem;flex-wrap:wrap}
+  .chat-actions{width:100%;margin-left:0}
+  .chat-context{padding:0.8rem 1rem}
+  .chat-messages{padding:1rem}
+  .chat-input-area{padding:0.9rem 1rem}
+  .msg-bubble{max-width:88%}
+}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem('kazix_access_token')) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace('login.html?next=' + next);
+    return;
+  }
+  window.revealMessagesPage = function () {
+    var gate = document.getElementById('auth-gate-style');
+    if (gate) gate.remove();
+  };
+})();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-section">Main</div>
-    <a class="nav-item" href="client-dashboard.html"><span class="ni-icon">📊</span>Dashboard</a>
-    <a class="nav-item" href="my-jobs.html"><span class="ni-icon">📋</span>My Jobs</a>
-    <a class="nav-item" href="job-applicants.html"><span class="ni-icon">👥</span>Applications</a>
-    <a class="nav-item" href="my-hires.html"><span class="ni-icon">🤝</span>My Hires</a>
-    <div class="sidebar-section">Discover</div>
-    <a class="nav-item" href="find-workers.html"><span class="ni-icon">🔍</span>Find Fundis</a>
-    <a class="nav-item" href="saved-workers.html"><span class="ni-icon">❤️</span>Saved Fundis</a>
-    <a class="nav-item" href="post-job.html"><span class="ni-icon">➕</span>Post a Job</a>
-    <div class="sidebar-section">Account</div>
-    <a class="nav-item active" href="messages.html"><span class="ni-icon">💬</span>Messages</a>
-    <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
-    <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
-    <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
-    </div>
+  <aside class="sidebar" id="roleSidebar">
+    <div class="sidebar-placeholder">Loading navigation…</div>
   </aside>
 
-  <div class="msg-shell">
-    <!-- CONVERSATION LIST -->
+  <div class="msg-shell" id="messageShell">
     <div class="conv-list">
       <div class="conv-header">
-        <div class="conv-title">Messages</div>
-        <input class="conv-search" type="text" placeholder="Search conversations…">
+        <div class="conv-title-row">
+          <div class="conv-title">Messages</div>
+          <button class="conv-mobile-toggle" id="conversationToggle" type="button">Threads</button>
+        </div>
+        <input class="conv-search" id="conversationSearch" type="text" placeholder="Search conversations…">
       </div>
-      <div class="conv-items">
-        <div class="conv-item unread active" onclick="selectConv('james')">
-          <div class="ci-avatar">🔧<div class="ci-online"></div></div>
-          <div class="ci-info">
-            <div class="ci-name">James Kamau <span class="ci-time">2 min</span></div>
-            <div class="ci-job">Plumber · Job #KX-0187</div>
-            <div class="ci-preview" style="color:var(--ink);font-weight:500">Nimewasili Westlands, niko njiani…</div>
-          </div>
-          <div class="ci-unread-badge">1</div>
-        </div>
-        <div class="conv-item unread" onclick="selectConv('mary')">
-          <div class="ci-avatar">🎨<div class="ci-online"></div></div>
-          <div class="ci-info">
-            <div class="ci-name">Mary Akinyi <span class="ci-time">1 hr</span></div>
-            <div class="ci-job">Painter · Job #KX-0192</div>
-            <div class="ci-preview" style="color:var(--ink);font-weight:500">Nimekamilisha chumba cha kwanza…</div>
-          </div>
-          <div class="ci-unread-badge">1</div>
-        </div>
-        <div class="conv-item" onclick="selectConv('faith')">
-          <div class="ci-avatar">⚡</div>
-          <div class="ci-info">
-            <div class="ci-name">Faith Njeri <span class="ci-time">Yesterday</span></div>
-            <div class="ci-job">Electrician · Job #KX-0198</div>
-            <div class="ci-preview">I can come Thursday morning…</div>
-          </div>
-        </div>
-        <div class="conv-item" onclick="selectConv('peter')">
-          <div class="ci-avatar">🪚</div>
-          <div class="ci-info">
-            <div class="ci-name">Peter Odhiambo <span class="ci-time">3 days</span></div>
-            <div class="ci-job">Carpenter · Job #KX-0181</div>
-            <div class="ci-preview">Thank you for the review! Any…</div>
-          </div>
-        </div>
+      <div class="conv-empty" id="threadHint" hidden></div>
+      <div class="conv-items" id="threadList">
+        <div class="conv-empty">Loading your conversations…</div>
       </div>
     </div>
 
-    <!-- CHAT AREA -->
     <div class="chat-area">
-      <div class="chat-header">
-        <div class="chat-header-avatar">🔧<div class="chat-online"></div></div>
-        <div>
-          <div class="chat-name">James Kamau</div>
-          <div class="chat-sub">Master Plumber · ● Online now · Nairobi</div>
-        </div>
-        <div class="chat-actions">
-          <a href="worker-profile.html" class="chat-action-btn">👤 View Profile</a>
-          <a href="my-jobs.html" class="chat-action-btn">📋 Job #KX-0187</a>
-          <a href="job-applicants.html" class="chat-action-btn primary">✅ Hire James</a>
+      <div class="notice info" id="messageStatus" hidden></div>
+
+      <div class="chat-placeholder" id="chatPlaceholder">
+        <div class="chat-placeholder-card">
+          <div class="chat-placeholder-title">Loading conversations</div>
+          <div class="chat-placeholder-sub">We’re fetching your real threads and replacing the sample chat with your live KaziX messages.</div>
         </div>
       </div>
 
-      <div class="chat-messages" id="chatMessages">
-        <!-- System: booking created -->
-        <div class="sys-msg">James applied to your job · <a href="job-applicants.html">View application →</a></div>
-
-        <div class="date-sep">Today</div>
-
-        <!-- James messages -->
-        <div class="msg-bubble">
-          <div class="bubble-avatar">🔧</div>
-          <div>
-            <div class="bubble-content">Habari Alex! Nimeona kazi yako ya kutengeneza bomba. Ninaweza kuja leo asubuhi au kesho. Nimefanya kazi kama hii mara nyingi Westlands.</div>
-            <div class="bubble-time">9:14 AM</div>
+      <div class="chat-panel" id="chatPanel" hidden>
+        <div class="chat-header">
+          <button class="chat-back-btn" id="mobileBackBtn" type="button">← Threads</button>
+          <div class="chat-header-avatar" id="chatAvatar">KX</div>
+          <div class="chat-header-main">
+            <div class="chat-name" id="chatName">Conversation</div>
+            <div class="chat-sub" id="chatSub">Loading participant details…</div>
           </div>
+          <div class="chat-actions" id="chatActions"></div>
         </div>
-
-        <!-- Alex response -->
-        <div class="msg-bubble outgoing">
-          <div class="bubble-avatar">🏠</div>
-          <div>
-            <div class="bubble-content">Asante James. Bomba liko chini ya sinki ya kitchen — linatoa maji mengi. Je, unaweza kuja leo mchana?</div>
-            <div class="bubble-time">9:22 AM</div>
+        <div class="chat-context" id="chatContext"></div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <form class="chat-input-area" id="messageForm">
+          <div class="chat-input-extras">
+            <span class="context-pill" id="inputContextLabel">Conversation context</span>
           </div>
-        </div>
-
-        <!-- Job card attachment -->
-        <div class="msg-bubble">
-          <div class="bubble-avatar">🔧</div>
-          <div>
-            <div class="chat-job-card">
-              <div class="cjc-title">Fix leaking pipe — Westlands</div>
-              <div class="cjc-sub">🚿 Plumber · KES 500–1,500 · My bid: KES 800</div>
-              <a href="my-applications.html" class="cjc-btn">View my application</a>
-            </div>
-            <div class="bubble-time">9:25 AM</div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input-box" id="messageInput" placeholder="Type a message…" rows="1"></textarea>
+            <button class="send-btn" id="sendBtn" type="submit">➤</button>
           </div>
-        </div>
-
-        <div class="msg-bubble">
-          <div class="bubble-avatar">🔧</div>
-          <div>
-            <div class="bubble-content">Ndiyo, ninaweza kuja saa 6 mchana — yaani saa sita. Nitatumia spare parts zangu. Bei yangu ni KES 800 kwa kazi hii yote.</div>
-            <div class="bubble-time">9:26 AM</div>
-          </div>
-        </div>
-
-        <div class="msg-bubble outgoing">
-          <div class="bubble-avatar">🏠</div>
-          <div>
-            <div class="bubble-content">Sawa James, nakusubiria. Address yangu ni Westlands Gardens, Block C, Apartment 12. Gate code: 4521.</div>
-            <div class="bubble-time">9:31 AM</div>
-          </div>
-        </div>
-
-        <div class="sys-msg">Alex sent James a booking request · KES 800 · <a href="my-hires.html">View booking →</a></div>
-
-        <!-- Latest unread -->
-        <div class="msg-bubble" style="animation:slideUp 0.3s ease both">
-          <div class="bubble-avatar">🔧</div>
-          <div>
-            <div class="bubble-content">Nimewasili Westlands, niko njiani kwako sasa. Nitafika dakika 5 — 10.</div>
-            <div class="bubble-time" style="color:var(--saffron);font-weight:600">Just now · Unread</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- INPUT -->
-      <div class="chat-input-area">
-        <div class="chat-input-extras">
-          <button class="extra-btn">📎 Attach photo</button>
-          <button class="extra-btn">📍 Share location</button>
-          <button class="extra-btn">📋 Share job</button>
-        </div>
-        <div class="chat-input-wrap">
-          <textarea class="chat-input-box" id="msgInput" placeholder="Type a message… / Andika ujumbe…" rows="1" onkeydown="handleKey(event)"></textarea>
-          <button class="send-btn" onclick="sendMessage()">➤</button>
-        </div>
+        </form>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-function sendMessage() {
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if (!text) return;
-  const msgs = document.getElementById('chatMessages');
-  const bubble = document.createElement('div');
-  bubble.className = 'msg-bubble outgoing';
-  bubble.style.animation = 'slideUp 0.25s ease both';
-  bubble.innerHTML = `<div class="bubble-avatar">🏠</div><div><div class="bubble-content">${text}</div><div class="bubble-time">Just now</div></div>`;
-  msgs.appendChild(bubble);
-  input.value = '';
-  msgs.scrollTop = msgs.scrollHeight;
-}
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
-function selectConv(name) {
-  document.querySelectorAll('.conv-item').forEach(c => c.classList.remove('active'));
-  event.currentTarget.classList.add('active');
-  event.currentTarget.classList.remove('unread');
-  event.currentTarget.querySelector('.ci-unread-badge')?.remove();
-}
-document.getElementById('chatMessages').scrollTop = 99999;
-</script>
-
 <nav class="mobile-nav" aria-label="Primary">
-  <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
-  <a class="mobile-nav-item" href="my-jobs.html"><span class="mn-icon">📋</span><span class="mn-label">Jobs</span></a>
-  <a class="mobile-nav-item" href="find-workers.html"><span class="mn-icon">🔍</span><span class="mn-label">Find</span></a>
-  <a class="mobile-nav-item active" href="messages.html"><span class="mn-icon">💬</span><span class="mn-label">Messages</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary1" href="client-dashboard.html"><span class="mn-icon" id="mobilePrimary1Icon">📊</span><span class="mn-label" id="mobilePrimary1Label">Dashboard</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary2" href="my-jobs.html"><span class="mn-icon" id="mobilePrimary2Icon">📋</span><span class="mn-label" id="mobilePrimary2Label">Jobs</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary3" href="find-workers.html"><span class="mn-icon" id="mobilePrimary3Icon">🔍</span><span class="mn-label" id="mobilePrimary3Label">Find</span></a>
+  <a class="mobile-nav-item active" id="mobilePrimary4" href="messages.html"><span class="mn-icon" id="mobilePrimary4Icon">💬</span><span class="mn-label" id="mobilePrimary4Label">Messages</span></a>
   <div class="mobile-nav-more">
     <button class="mobile-nav-item mobile-nav-more-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" aria-label="Open navigation menu">
       <span class="mn-icon">⋯</span><span class="mn-label">More</span>
     </button>
     <div class="mobile-nav-drawer" id="mobile-drawer" role="navigation" aria-label="Secondary pages" aria-hidden="true">
-      <a class="mobile-nav-drawer-item" href="client-profile.html">👤 Profile</a>
-      <a class="mobile-nav-drawer-item" href="notifications.html">🔔 Notifications</a>
-      <a class="mobile-nav-drawer-item" href="payments.html">💳 Payments</a>
-      <a class="mobile-nav-drawer-item" href="reviews.html">⭐ Reviews</a>
-      <a class="mobile-nav-drawer-item" href="saved-workers.html">❤️ Saved Fundis</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer1" href="client-profile.html">👤 Profile</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer2" href="notifications.html">🔔 Notifications</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer3" href="payments.html">💳 Payments</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer4" href="reviews.html">⭐ Reviews</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer5" href="saved-workers.html">❤️ Saved Fundis</a>
     </div>
   </div>
 </nav>
 
+<script src="../assets/js/profile-utils.js"></script>
+<script>
+const {
+  buildMessagesPath,
+  buildPagePath,
+  clearNotificationSummaryCache,
+  escapeHtml,
+  formatTrade,
+  getAccessToken,
+  getMyProfile,
+  hydrateNotificationSummary,
+  hydrateShell,
+  initials,
+  profilePath,
+  requestJson,
+} = window.KazixProfile;
 
+const ROLE_NAV = {
+  client: {
+    sidebar: [
+      {
+        title: 'Main',
+        links: [
+          { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
+          { href: 'my-jobs.html', icon: '📋', label: 'My Jobs' },
+          { href: 'job-applicants.html', icon: '👥', label: 'Applications' },
+          { href: 'my-hires.html', icon: '🤝', label: 'My Hires' },
+        ],
+      },
+      {
+        title: 'Discover',
+        links: [
+          { href: 'find-workers.html', icon: '🔍', label: 'Find Fundis' },
+          { href: 'saved-workers.html', icon: '❤️', label: 'Saved Fundis' },
+          { href: 'post-job.html', icon: '➕', label: 'Post a Job' },
+        ],
+      },
+      {
+        title: 'Account',
+        links: [
+          { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
+          { href: 'payments.html', icon: '💳', label: 'Payments' },
+          { href: 'client-profile.html', icon: '👤', label: 'My Profile' },
+        ],
+      },
+    ],
+    mobile: {
+      primary: [
+        { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
+        { href: 'my-jobs.html', icon: '📋', label: 'Jobs' },
+        { href: 'find-workers.html', icon: '🔍', label: 'Find' },
+        { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
+      ],
+      drawer: [
+        { href: 'client-profile.html', label: '👤 Profile' },
+        { href: 'notifications.html', label: '🔔 Notifications' },
+        { href: 'payments.html', label: '💳 Payments' },
+        { href: 'reviews.html', label: '⭐ Reviews' },
+        { href: 'saved-workers.html', label: '❤️ Saved Fundis' },
+      ],
+    },
+  },
+  fundi: {
+    sidebar: [
+      {
+        title: 'Work',
+        links: [
+          { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
+          { href: 'worker-jobs.html', icon: '🔍', label: 'Find Jobs' },
+          { href: 'my-applications.html', icon: '📋', label: 'My Applications' },
+          { href: 'worker-hires.html', icon: '🤝', label: 'Active Contracts' },
+        ],
+      },
+      {
+        title: 'Account',
+        links: [
+          { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
+          { href: 'worker-earnings.html', icon: '💳', label: 'Earnings' },
+          { href: 'worker-reviews.html', icon: '⭐', label: 'My Reviews' },
+          { href: 'worker-profile-edit.html', icon: '👤', label: 'My Profile' },
+        ],
+      },
+    ],
+    mobile: {
+      primary: [
+        { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
+        { href: 'worker-jobs.html', icon: '🔍', label: 'Find Jobs' },
+        { href: 'my-applications.html', icon: '📋', label: 'Applications' },
+        { href: 'messages.html', icon: '💬', label: 'Messages', active: true },
+      ],
+      drawer: [
+        { href: 'worker-hires.html', label: '🤝 Contracts' },
+        { href: 'worker-earnings.html', label: '💳 Earnings' },
+        { href: 'worker-reviews.html', label: '⭐ Reviews' },
+        { href: 'worker-profile-edit.html', label: '👤 Profile' },
+        { href: 'notifications.html', label: '🔔 Notifications' },
+      ],
+    },
+  },
+};
+
+const state = {
+  profile: null,
+  role: 'client',
+  threads: [],
+  activeThread: null,
+  activeMessages: [],
+  sending: false,
+  threadLoadError: null,
+};
+
+function revealPage() {
+  if (typeof window.revealMessagesPage === 'function') {
+    window.revealMessagesPage();
+  }
+}
+
+function setStatus(message, tone) {
+  const el = document.getElementById('messageStatus');
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `notice ${tone || 'info'}`;
+  el.textContent = message;
+}
+
+function getRoleConfig(role) {
+  return ROLE_NAV[role] || ROLE_NAV.client;
+}
+
+function renderSidebar(role) {
+  const config = getRoleConfig(role);
+  const root = document.getElementById('roleSidebar');
+  if (!root) return;
+
+  root.innerHTML = `
+    ${config.sidebar.map((section) => `
+      <div class="sidebar-section">${escapeHtml(section.title)}</div>
+      ${section.links.map((link) => `
+        <a class="nav-item ${link.active ? 'active' : ''}" href="${escapeHtml(link.href)}">
+          <span class="ni-icon">${escapeHtml(link.icon)}</span>${escapeHtml(link.label)}
+        </a>
+      `).join('')}
+    `).join('')}
+    <div class="sidebar-bottom">
+      <div class="sidebar-profile">
+        <div class="sp-avatar">KX</div>
+        <div>
+          <div class="sp-name">My account</div>
+          <div class="sp-role">Loading account…</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMobileNav(role) {
+  const config = getRoleConfig(role).mobile;
+
+  config.primary.forEach((item, index) => {
+    const slot = index + 1;
+    const link = document.getElementById(`mobilePrimary${slot}`);
+    const icon = document.getElementById(`mobilePrimary${slot}Icon`);
+    const label = document.getElementById(`mobilePrimary${slot}Label`);
+    if (!link || !icon || !label) return;
+
+    link.href = item.href;
+    link.classList.toggle('active', Boolean(item.active));
+    icon.textContent = item.icon;
+    label.textContent = item.label;
+  });
+
+  config.drawer.forEach((item, index) => {
+    const link = document.getElementById(`mobileDrawer${index + 1}`);
+    if (!link) return;
+    link.href = item.href;
+    link.textContent = item.label;
+  });
+}
+
+function currentUserId() {
+  return state.profile?.id || '';
+}
+
+function requestedContext() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    participant: (params.get('participant') || params.get('participant_id') || '').trim() || null,
+    job: (params.get('job') || params.get('job_id') || '').trim() || null,
+    application: (params.get('application') || params.get('application_id') || '').trim() || null,
+    booking: (params.get('booking') || params.get('booking_id') || '').trim() || null,
+  };
+}
+
+function threadMatchesRequest(thread, request) {
+  if (!thread || !request?.participant) return false;
+  if (thread.participant_id !== request.participant) return false;
+  if (request.booking) return thread.booking_id === request.booking;
+  if (request.application) return thread.application_id === request.application;
+  if (request.job) return thread.job_id === request.job;
+  return true;
+}
+
+function syncThreadUrl(thread) {
+  const url = new URL(window.location.href);
+  const params = url.searchParams;
+
+  params.set('participant', thread.participant_id || '');
+  if (thread.job_id) params.set('job', thread.job_id); else params.delete('job');
+  if (thread.application_id) params.set('application', thread.application_id); else params.delete('application');
+  if (thread.booking_id) params.set('booking', thread.booking_id); else params.delete('booking');
+
+  ['participant_id', 'job_id', 'application_id', 'booking_id'].forEach((key) => params.delete(key));
+  window.history.replaceState({}, '', url.toString());
+}
+
+function threadSignature(thread) {
+  if (!thread) return '';
+  return [
+    thread.participant_id || '',
+    thread.booking_id || '',
+    thread.application_id || '',
+    thread.job_id || '',
+  ].join(':');
+}
+
+function sortThreads(rows) {
+  rows.sort((left, right) => {
+    const a = new Date(left?.last_message_at || 0).getTime();
+    const b = new Date(right?.last_message_at || 0).getTime();
+    return b - a;
+  });
+}
+
+function upsertThread(thread) {
+  if (!thread?.participant_id) return;
+  const signature = threadSignature(thread);
+  const existingIndex = state.threads.findIndex((item) => threadSignature(item) === signature);
+  if (existingIndex >= 0) {
+    state.threads[existingIndex] = { ...state.threads[existingIndex], ...thread };
+  } else {
+    state.threads.unshift(thread);
+  }
+  sortThreads(state.threads);
+}
+
+function formatThreadTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const diffMinutes = Math.round((Date.now() - date.getTime()) / (1000 * 60));
+  if (diffMinutes < 1) return 'Now';
+  if (diffMinutes < 60) return `${diffMinutes}m`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function formatMessageTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+}
+
+function formatDateSeparator(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return 'Today';
+
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function messageBodyHtml(value) {
+  return escapeHtml(String(value || '')).replace(/\n/g, '<br>');
+}
+
+function threadPreview(thread) {
+  const preview = (thread?.latest_message_preview || '').trim();
+  if (preview) return preview;
+  if (thread?.booking_id) return 'Booking conversation ready to start.';
+  if (thread?.application_id) return 'Application conversation ready to start.';
+  return 'No messages yet.';
+}
+
+function threadMetaLine(thread) {
+  const roleMeta = thread?.participant_trade
+    ? formatTrade(thread.participant_trade)
+    : (thread?.participant_role === 'client' ? 'Client account' : 'Worker account');
+  const jobMeta = thread?.job_title || roleMeta || 'Conversation';
+  return thread?.job_title
+    ? `${roleMeta} · ${thread.job_title}`
+    : roleMeta;
+}
+
+function renderThreadHint(message) {
+  const hint = document.getElementById('threadHint');
+  if (!hint) return;
+  if (!message) {
+    hint.hidden = true;
+    hint.textContent = '';
+    return;
+  }
+  hint.hidden = false;
+  hint.textContent = message;
+}
+
+function renderThreadList() {
+  const list = document.getElementById('threadList');
+  if (!list) return;
+
+  const query = document.getElementById('conversationSearch').value.trim().toLowerCase();
+  const activeSignature = threadSignature(state.activeThread);
+  let rows = [...state.threads];
+
+  if (query) {
+    rows = rows.filter((thread) => {
+      const haystack = [
+        thread.participant_name,
+        thread.participant_trade ? formatTrade(thread.participant_trade) : '',
+        thread.job_title,
+        thread.latest_message_preview,
+        thread.participant_county,
+        thread.participant_area,
+      ].join(' ').toLowerCase();
+      return haystack.includes(query);
+    });
+  }
+
+  if (!state.threads.length) {
+    list.innerHTML = '<div class="conv-empty">No conversations yet. Threads will appear here once you message someone from an application, booking, or job context.</div>';
+    return;
+  }
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="conv-empty">No conversations match that search yet.</div>';
+    return;
+  }
+
+  list.innerHTML = rows.map((thread) => {
+    const unread = Number(thread?.unread_count || 0);
+    const initialsText = initials(thread?.participant_name || 'KX');
+    const preview = threadPreview(thread);
+    const isActive = activeSignature && activeSignature === threadSignature(thread);
+
+    return `
+      <a class="conv-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}" href="${escapeHtml(buildMessagesPath({
+        participantId: thread.participant_id,
+        jobId: thread.job_id,
+        applicationId: thread.application_id,
+        bookingId: thread.booking_id,
+      }))}" data-thread-signature="${escapeHtml(threadSignature(thread))}">
+        <div class="ci-avatar">${escapeHtml(initialsText)}${thread.participant_role === 'fundi' ? '<div class="ci-online"></div>' : ''}</div>
+        <div class="ci-info">
+          <div class="ci-name">
+            <span class="ci-name-label">${escapeHtml(thread.participant_name || 'KaziX user')}</span>
+            <span class="ci-time">${escapeHtml(formatThreadTime(thread.last_message_at))}</span>
+          </div>
+          <div class="ci-job">${escapeHtml(threadMetaLine(thread))}</div>
+          <div class="ci-preview ${unread > 0 ? 'strong' : ''}">${escapeHtml(preview)}</div>
+        </div>
+        ${unread > 0 ? `<div class="ci-unread-badge">${escapeHtml(String(unread > 99 ? '99+' : unread))}</div>` : ''}
+      </a>
+    `;
+  }).join('');
+}
+
+function setShellThreadOpen(isOpen) {
+  document.getElementById('messageShell').classList.toggle('thread-open', Boolean(isOpen));
+}
+
+function showChatPlaceholder(title, message, actionHref, actionLabel) {
+  const root = document.getElementById('chatPlaceholder');
+  const panel = document.getElementById('chatPanel');
+  panel.hidden = true;
+  root.hidden = false;
+  root.innerHTML = `
+    <div class="chat-placeholder-card">
+      <div class="chat-placeholder-title">${escapeHtml(title)}</div>
+      <div class="chat-placeholder-sub">${escapeHtml(message)}</div>
+      ${actionHref && actionLabel ? `<a class="chat-placeholder-action" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>` : ''}
+    </div>
+  `;
+}
+
+function contextLink(thread) {
+  if (!thread) return null;
+
+  if (state.role === 'client') {
+    if (thread.booking_id) return { href: 'my-hires.html', label: 'View Booking' };
+    if (thread.job_id) return { href: buildPagePath('job-applicants.html', { job: thread.job_id }), label: 'View Applicants' };
+    return { href: 'my-jobs.html', label: 'My Jobs' };
+  }
+
+  if (thread.booking_id) return { href: 'worker-hires.html', label: 'View Contract' };
+  if (thread.application_id) return { href: 'my-applications.html', label: 'My Application' };
+  return { href: 'worker-jobs.html', label: 'Find Jobs' };
+}
+
+function renderChatContext(thread) {
+  const root = document.getElementById('chatContext');
+  const context = contextLink(thread);
+
+  if (thread.booking_id) {
+    root.innerHTML = `
+      Booking conversation for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
+      ${thread.booking_start_date ? ` · starts ${escapeHtml(thread.booking_start_date)}` : ''}
+      ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
+    `;
+    return;
+  }
+
+  if (thread.application_id) {
+    root.innerHTML = `
+      Application chat for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
+      ${thread.application_status ? ` · ${escapeHtml(thread.application_status.replace(/_/g, ' '))}` : ''}
+      ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
+    `;
+    return;
+  }
+
+  root.innerHTML = `
+    Job conversation for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
+    ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
+  `;
+}
+
+function renderChatActions(thread) {
+  const root = document.getElementById('chatActions');
+  const profileHref = profilePath(thread.participant_role === 'client' ? 'client' : 'fundi', thread.participant_id);
+  const actions = [
+    { href: profileHref, label: '👤 View Profile', primary: false },
+  ];
+
+  const context = contextLink(thread);
+  if (context) {
+    actions.push({ href: context.href, label: `📋 ${context.label}`, primary: false });
+  }
+
+  if (
+    state.role === 'client'
+    && thread.job_id
+    && thread.application_id
+    && !thread.booking_id
+    && ['pending', 'shortlisted'].includes(String(thread.application_status || '').toLowerCase())
+  ) {
+    actions.push({
+      href: buildPagePath('job-applicants.html', { job: thread.job_id }),
+      label: '✅ Review & Hire',
+      primary: true,
+    });
+  }
+
+  root.innerHTML = actions.map((action) => `
+    <a href="${escapeHtml(action.href)}" class="chat-action-btn ${action.primary ? 'primary' : ''}">${escapeHtml(action.label)}</a>
+  `).join('');
+}
+
+function renderActiveThread() {
+  const thread = state.activeThread;
+  const panel = document.getElementById('chatPanel');
+  const placeholder = document.getElementById('chatPlaceholder');
+
+  if (!thread) {
+    panel.hidden = true;
+    placeholder.hidden = false;
+    setShellThreadOpen(false);
+    return;
+  }
+
+  panel.hidden = false;
+  placeholder.hidden = true;
+  setShellThreadOpen(true);
+  document.title = `${thread.participant_name || 'Messages'} — KaziX`;
+
+  const name = thread.participant_name || 'KaziX user';
+  const avatar = initials(name);
+  const location = [thread.participant_area, thread.participant_county].filter(Boolean).join(', ');
+  const trade = thread.participant_trade ? formatTrade(thread.participant_trade) : null;
+  const subParts = [];
+  if (trade) subParts.push(trade);
+  else subParts.push(thread.participant_role === 'client' ? 'Client account' : 'Worker account');
+  if (thread.participant_rating) subParts.push(`${Number(thread.participant_rating).toFixed(1)}★`);
+  if (location) subParts.push(location);
+
+  document.getElementById('chatAvatar').textContent = avatar;
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('chatSub').textContent = subParts.join(' · ');
+  document.getElementById('inputContextLabel').textContent = thread.job_title
+    ? `Context: ${thread.job_title}`
+    : 'Context: active conversation';
+
+  renderChatActions(thread);
+  renderChatContext(thread);
+
+  const messagesRoot = document.getElementById('chatMessages');
+  if (!state.activeMessages.length) {
+    messagesRoot.innerHTML = `
+      <div class="empty-thread-note">
+        No messages yet in this conversation. Send the first message to get things moving.
+      </div>
+    `;
+  } else {
+    let lastDateKey = '';
+    const viewerAvatar = initials(state.profile?.full_name || 'Me');
+    messagesRoot.innerHTML = state.activeMessages.map((message) => {
+      const date = new Date(message.created_at || '');
+      const dateKey = Number.isNaN(date.getTime()) ? '' : date.toDateString();
+      const needsSeparator = dateKey && dateKey !== lastDateKey;
+      lastDateKey = dateKey || lastDateKey;
+
+      const outgoing = message.sender_id === currentUserId();
+      const senderName = outgoing
+        ? (state.profile?.full_name || 'You')
+        : (thread.participant_name || 'KaziX user');
+      const bubbleAvatar = initials(senderName);
+
+      return `
+        ${needsSeparator ? `<div class="date-sep">${escapeHtml(formatDateSeparator(message.created_at))}</div>` : ''}
+        <div class="msg-bubble ${outgoing ? 'outgoing' : ''}">
+          <div class="bubble-avatar">${escapeHtml(outgoing ? viewerAvatar : bubbleAvatar)}</div>
+          <div class="bubble-wrap">
+            <div class="bubble-content">${messageBodyHtml(message.body)}</div>
+            <div class="bubble-time">${escapeHtml(formatMessageTime(message.created_at))}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderThreadList();
+  syncThreadUrl(thread);
+  clearNotificationSummaryCache();
+  hydrateNotificationSummary({ silent: true, force: true }).catch(function () {
+    /* noop */
+  });
+
+  window.requestAnimationFrame(function () {
+    messagesRoot.scrollTop = messagesRoot.scrollHeight;
+  });
+}
+
+function serializeThreadQuery(thread) {
+  const params = new URLSearchParams();
+  params.set('participant_id', thread.participant_id || '');
+  if (thread.job_id) params.set('job_id', thread.job_id);
+  if (thread.application_id) params.set('application_id', thread.application_id);
+  if (thread.booking_id) params.set('booking_id', thread.booking_id);
+  return params.toString();
+}
+
+async function loadThread(threadLike, options = {}) {
+  const seed = {
+    participant_id: threadLike?.participant_id || threadLike?.participant || null,
+    job_id: threadLike?.job_id || threadLike?.job || null,
+    application_id: threadLike?.application_id || threadLike?.application || null,
+    booking_id: threadLike?.booking_id || threadLike?.booking || null,
+  };
+
+  if (!seed.participant_id) {
+    return;
+  }
+
+  showChatPlaceholder('Loading conversation', 'We’re fetching the real message history for this thread.');
+
+  try {
+    const payload = await requestJson(`/v1/messages/thread?${serializeThreadQuery(seed)}`, {
+      auth: true,
+      showError: false,
+    });
+
+    state.activeThread = payload.thread || null;
+    state.activeMessages = Array.isArray(payload.messages) ? payload.messages : [];
+    if (state.activeThread) {
+      upsertThread(state.activeThread);
+      renderActiveThread();
+      if (!options.preserveStatus) {
+        setStatus('', 'info');
+      }
+    }
+  } catch (error) {
+    state.activeThread = null;
+    state.activeMessages = [];
+    renderThreadList();
+
+    const request = requestedContext();
+    if (request.participant && !request.job && !request.application && !request.booking) {
+      showChatPlaceholder(
+        'No existing conversation found',
+        'This link only points to a participant. Open Messages from a job application, booking, or existing thread so KaziX knows which conversation context to use.',
+        state.role === 'client' ? 'my-jobs.html' : 'my-applications.html',
+        state.role === 'client' ? 'Back to My Jobs' : 'Back to My Applications'
+      );
+      setStatus('This message link needs a job, application, or booking context before a new conversation can be opened.', 'info');
+      return;
+    }
+
+    showChatPlaceholder(
+      'Conversation unavailable',
+      error?.message || 'We could not load this conversation right now.',
+      null,
+      null
+    );
+    setStatus(error?.message || 'Could not load this conversation.', 'error');
+  }
+}
+
+async function loadThreads() {
+  try {
+    const payload = await requestJson('/v1/messages/threads', {
+      auth: true,
+      showError: false,
+    });
+    state.threads = Array.isArray(payload?.data) ? payload.data : [];
+    state.threadLoadError = null;
+    sortThreads(state.threads);
+    renderThreadList();
+    renderThreadHint('');
+  } catch (error) {
+    state.threads = [];
+    state.threadLoadError = error;
+    renderThreadList();
+    renderThreadHint(error?.message || 'Could not load your thread list right now.');
+  }
+}
+
+async function openInitialConversation() {
+  const request = requestedContext();
+
+  if (request.participant) {
+    const exactMatch = state.threads.find((thread) => threadMatchesRequest(thread, request));
+    const participantMatch = state.threads.find((thread) => thread.participant_id === request.participant);
+
+    if (exactMatch) {
+      await loadThread(exactMatch);
+      return;
+    }
+
+    if (request.job || request.application || request.booking) {
+      await loadThread(request);
+      return;
+    }
+
+    if (participantMatch) {
+      await loadThread(participantMatch);
+      return;
+    }
+
+    showChatPlaceholder(
+      'Choose a conversation',
+      'We did not find an existing conversation for that participant yet. Open Messages from a job application or booking to start a new context-aware thread.',
+      state.role === 'client' ? 'job-applicants.html' : 'my-applications.html',
+      state.role === 'client' ? 'Review Applications' : 'View Applications'
+    );
+    setShellThreadOpen(false);
+    return;
+  }
+
+  if (state.threadLoadError) {
+    showChatPlaceholder(
+      'Messages unavailable',
+      state.threadLoadError?.message || 'We could not load your thread list right now.',
+      state.role === 'fundi' ? 'worker-dashboard.html' : 'client-dashboard.html',
+      'Back to Dashboard'
+    );
+    setShellThreadOpen(false);
+    return;
+  }
+
+  if (state.threads.length) {
+    await loadThread(state.threads[0]);
+    return;
+  }
+
+  showChatPlaceholder(
+    'No conversations yet',
+    'Your real KaziX threads will appear here once you message someone from an application, booking, or job context.',
+    state.role === 'client' ? 'job-applicants.html' : 'my-applications.html',
+    state.role === 'client' ? 'Open Applications' : 'Open My Applications'
+  );
+  setShellThreadOpen(false);
+}
+
+async function refreshThreadsAfterSend() {
+  try {
+    const payload = await requestJson('/v1/messages/threads', {
+      auth: true,
+      showError: false,
+    });
+    state.threads = Array.isArray(payload?.data) ? payload.data : [];
+    sortThreads(state.threads);
+    renderThreadList();
+  } catch (_error) {
+    renderThreadList();
+  }
+}
+
+async function sendActiveMessage() {
+  if (!state.activeThread || state.sending) return;
+
+  const input = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  state.sending = true;
+  sendBtn.disabled = true;
+
+  try {
+    await requestJson('/v1/messages', {
+      auth: true,
+      method: 'POST',
+      body: {
+        participant_id: state.activeThread.participant_id,
+        body: text,
+        job_id: state.activeThread.job_id || undefined,
+        application_id: state.activeThread.application_id || undefined,
+        booking_id: state.activeThread.booking_id || undefined,
+      },
+      showError: false,
+    });
+
+    input.value = '';
+    autoSizeMessageInput();
+    await refreshThreadsAfterSend();
+
+    const refreshed = state.threads.find((thread) => threadSignature(thread) === threadSignature(state.activeThread))
+      || state.activeThread;
+    await loadThread(refreshed, { preserveStatus: true });
+  } catch (error) {
+    setStatus(error?.message || 'Could not send your message.', 'error');
+  } finally {
+    state.sending = false;
+    sendBtn.disabled = false;
+  }
+}
+
+function autoSizeMessageInput() {
+  const input = document.getElementById('messageInput');
+  if (!input) return;
+  input.style.height = 'auto';
+  input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+}
+
+function bindEvents() {
+  document.getElementById('conversationSearch').addEventListener('input', renderThreadList);
+
+  document.getElementById('threadList').addEventListener('click', function (event) {
+    const link = event.target.closest('.conv-item');
+    if (!link) return;
+    event.preventDefault();
+
+    const signature = link.dataset.threadSignature;
+    const thread = state.threads.find((item) => threadSignature(item) === signature);
+    if (!thread) return;
+
+    loadThread(thread);
+  });
+
+  document.getElementById('messageForm').addEventListener('submit', function (event) {
+    event.preventDefault();
+    sendActiveMessage();
+  });
+
+  document.getElementById('messageInput').addEventListener('input', autoSizeMessageInput);
+  document.getElementById('messageInput').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendActiveMessage();
+    }
+  });
+
+  document.getElementById('mobileBackBtn').addEventListener('click', function () {
+    state.activeThread = null;
+    state.activeMessages = [];
+    setShellThreadOpen(false);
+    showChatPlaceholder(
+      'Choose a conversation',
+      'Pick a thread from the list to continue messaging.',
+      null,
+      null
+    );
+    renderThreadList();
+  });
+
+  document.getElementById('conversationToggle').addEventListener('click', function () {
+    setShellThreadOpen(false);
+  });
+}
+
+async function initMessagesPage() {
+  if (!getAccessToken()) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`login.html?next=${next}`);
+    return;
+  }
+
+  bindEvents();
+
+  try {
+    const profileData = await getMyProfile();
+    const profile = profileData?.profile || null;
+
+    if (!profile) {
+      throw new Error('Please sign in to access your messages.');
+    }
+
+    state.profile = profile;
+    state.role = profile.role === 'fundi' ? 'fundi' : 'client';
+
+    renderSidebar(state.role);
+    renderMobileNav(state.role);
+    await hydrateShell({ data: profileData, silent: false });
+
+    await loadThreads();
+    await openInitialConversation();
+    setStatus('', 'info');
+  } catch (error) {
+    console.error('Failed to initialize messages page', error);
+    renderThreadHint(error?.message || 'Could not load your threads.');
+    showChatPlaceholder(
+      'Messages unavailable',
+      error?.message || 'We could not load your live messages right now.',
+      state.role === 'fundi' ? 'worker-dashboard.html' : 'client-dashboard.html',
+      'Back to Dashboard'
+    );
+    setStatus(error?.message || 'Could not load your messages.', 'error');
+  } finally {
+    revealPage();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initMessagesPage);
+</script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>
