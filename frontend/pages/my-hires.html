@@ -191,6 +191,7 @@ var hiresState = {
   filter: 'active',
   loading: true,
   busyBookingId: null,
+  source: 'api',
 };
 
 var hireHelpers = window.KazixProfile || {};
@@ -381,6 +382,90 @@ function emptyState(title, description, href, cta) {
     + '</div>';
 }
 
+function normalizeDashboardBooking(item) {
+  return {
+    id: item && item.id || null,
+    job_id: item && item.job_id || null,
+    application_id: null,
+    client_id: null,
+    fundi_id: null,
+    agreed_amount: item && item.agreed_amount || 0,
+    start_date: item && item.start_date || null,
+    status: item && item.status || null,
+    escrow_status: item && item.escrow_status || null,
+    mpesa_receipt: item && item.mpesa_receipt || null,
+    created_at: item && item.created_at || null,
+    updated_at: item && item.updated_at || null,
+    escrow_held_at: item && item.escrow_held_at || null,
+    escrow_released_at: item && item.escrow_released_at || null,
+    job: {
+      id: item && item.job_id || null,
+      title: item && item.title || 'Untitled job',
+      trade: item && item.trade || null,
+      county: item && item.county || null,
+      area: item && item.area || null,
+      status: null,
+      created_at: item && item.created_at || null,
+      updated_at: item && item.updated_at || null,
+    },
+    fundi_profile: null,
+    fundi_details: null,
+    transactions: [],
+  };
+}
+
+async function enrichBookingsFromThreads(bookings) {
+  if (!Array.isArray(bookings) || !bookings.length) return bookings;
+
+  try {
+    var response = await hireHelpers.requestJson('/v1/messages/threads', {
+      auth: true,
+      showError: false,
+    });
+    var threads = Array.isArray(response && response.data) ? response.data : [];
+    if (!threads.length) return bookings;
+
+    var threadsByBooking = {};
+    var threadsByJob = {};
+    threads.forEach(function (thread) {
+      if (thread && thread.booking_id && !threadsByBooking[thread.booking_id]) {
+        threadsByBooking[thread.booking_id] = thread;
+      }
+      if (thread && thread.job_id && !threadsByJob[thread.job_id]) {
+        threadsByJob[thread.job_id] = thread;
+      }
+    });
+
+    return bookings.map(function (booking) {
+      var thread = threadsByBooking[booking.id] || threadsByJob[booking.job_id];
+      if (!thread) return booking;
+
+      return Object.assign({}, booking, {
+        application_id: booking.application_id || thread.application_id || null,
+        fundi_id: booking.fundi_id || thread.participant_id || null,
+        fundi_profile: booking.fundi_profile || {
+          id: thread.participant_id || null,
+          full_name: thread.participant_name || 'Hired fundi',
+          phone: thread.participant_phone || null,
+          avatar_url: thread.participant_avatar_url || null,
+          county: thread.participant_county || null,
+          area: thread.participant_area || null,
+        },
+        fundi_details: booking.fundi_details || {
+          trade: thread.participant_trade || booking.job && booking.job.trade || null,
+          rating_avg: thread.participant_rating || null,
+          jobs_completed: null,
+          experience_years: null,
+          kyc_status: null,
+          is_available: null,
+        },
+      });
+    });
+  } catch (error) {
+    return bookings;
+  }
+}
+
 function renderTabs() {
   var activeCount = filterCount('active');
   var awaitingCount = filterCount('awaiting_payment');
@@ -398,7 +483,7 @@ function renderTabs() {
 
   if (hireSubtitle) {
     hireSubtitle.textContent = hiresState.bookings.length
-      ? hiresState.bookings.length + ' live ' + (hiresState.bookings.length === 1 ? 'hire' : 'hires') + ' tracked for your client account'
+      ? hiresState.bookings.length + ' ' + (hiresState.source === 'dashboard' ? 'recent ' : 'live ') + (hiresState.bookings.length === 1 ? 'hire' : 'hires') + ' tracked for your client account'
       : 'Active contracts, job progress and payment escrow';
   }
 
@@ -556,13 +641,36 @@ async function refreshHires(options) {
     if (hireHelpers.hydrateShell) {
       await hireHelpers.hydrateShell({ silent: true });
     }
-    var data = await hireHelpers.requestJson('/v1/bookings/?role=client', { auth: true });
-    hiresState.bookings = Array.isArray(data) ? data : [];
+    var data;
+    try {
+      data = await hireHelpers.requestJson('/v1/bookings?role=client', {
+        auth: true,
+        showError: false,
+      });
+      hiresState.bookings = Array.isArray(data) ? data : [];
+      hiresState.source = 'api';
+    } catch (error) {
+      if (error && error.status !== 404) {
+        throw error;
+      }
+
+      var dashboardState = typeof hireHelpers.getDashboardState === 'function'
+        ? await hireHelpers.getDashboardState({ force: Boolean(options.forceDashboard), silent: true })
+        : await hireHelpers.requestJson('/v1/dashboard/state', { auth: true, showError: false });
+      var recentHires = Array.isArray(dashboardState && dashboardState.client && dashboardState.client.recent_hires)
+        ? dashboardState.client.recent_hires
+        : [];
+      hiresState.bookings = await enrichBookingsFromThreads(recentHires.map(normalizeDashboardBooking));
+      hiresState.source = 'dashboard';
+    }
+
     hiresState.loading = false;
     renderBookings();
     showHireNotice(
       hiresState.bookings.length
-        ? 'Showing live bookings for your client account.'
+        ? (hiresState.source === 'dashboard'
+            ? 'Showing your recent live hires from dashboard data while the full bookings endpoint rolls out.'
+            : 'Showing live bookings for your client account.')
         : 'Your hires page is connected. Post a job and hire a fundi to see bookings here.',
       hiresState.bookings.length ? 'success' : 'info'
     );
