@@ -102,7 +102,7 @@ footer{background:var(--ink);color:var(--cream);padding:3rem 5% 2rem;display:gri
       </div>
     </div>
     <div class="hero-actions">
-      <a class="hero-btn primary" href="login.html">Sign in to work with this employer</a>
+      <a class="hero-btn primary" href="login.html" id="heroPrimaryAction">Sign in to work with this employer</a>
       <a class="hero-btn secondary" href="worker-jobs.html">Browse jobs</a>
     </div>
   </div>
@@ -132,7 +132,7 @@ footer{background:var(--ink);color:var(--cream);padding:3rem 5% 2rem;display:gri
     <div class="sidebar-title">Hiring Through KaziX</div>
     <div class="sidebar-copy">Workers see this public employer profile before they accept a job, continue a chat, or move into a booking flow.</div>
     <div class="cta-stack">
-      <a class="sidebar-btn primary" href="login.html">Sign in to continue</a>
+      <a class="sidebar-btn primary" href="login.html" id="sidebarPrimaryAction">Sign in to continue</a>
       <a class="sidebar-btn secondary" href="worker-jobs.html">View open jobs</a>
     </div>
   </aside>
@@ -156,18 +156,23 @@ footer{background:var(--ink);color:var(--cream);padding:3rem 5% 2rem;display:gri
 <script src="../assets/js/profile-utils.js"></script>
 <script>
 const {
+  buildMessagesPath,
   formatLanguage,
   formatLocation,
   formatMemberSince,
+  getAccessToken,
+  getMyProfile,
   getProfileIdFromQuery,
   initials,
   requestJson,
+  roleHomePath,
   setHtml,
   setText,
 } = window.KazixProfile;
 
 async function loadClientProfile() {
   const profileId = getProfileIdFromQuery();
+  const signedIn = Boolean(getAccessToken());
   if (!profileId) {
     document.getElementById('pageNotice').textContent = 'Open a public employer profile from a KaziX job or chat to view it here.';
     return;
@@ -181,6 +186,13 @@ async function loadClientProfile() {
       return;
     }
     renderProfile(profile);
+
+    const viewerProfile = await resolveViewerProfile({ signedIn, loadedProfile: profile });
+    syncViewerActions({
+      signedIn,
+      viewedProfile: profile,
+      viewerProfile,
+    });
   } catch (err) {
     document.getElementById('pageNotice').textContent = err.message || 'Failed to load employer profile.';
   }
@@ -212,6 +224,78 @@ function renderProfile(profile) {
   }
   badges.push(`<span class="badge soft">${window.KazixProfile.escapeHtml(language)}</span>`);
   setHtml('#badgeRow', badges.join(''));
+}
+
+async function resolveViewerProfile({ signedIn, loadedProfile }) {
+  const cachedViewer = window.KaziXUser;
+  if (cachedViewer && typeof cachedViewer === 'object' && cachedViewer.id) {
+    return cachedViewer;
+  }
+
+  if (!signedIn || typeof getMyProfile !== 'function') {
+    return null;
+  }
+
+  try {
+    const data = await getMyProfile();
+    const viewerProfile = data?.profile || data || null;
+    if (viewerProfile?.id === loadedProfile?.id) {
+      return {
+        ...viewerProfile,
+        role: viewerProfile.role || loadedProfile.role,
+      };
+    }
+    return viewerProfile;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function syncViewerActions({ signedIn, viewedProfile, viewerProfile }) {
+  if (!signedIn) {
+    return;
+  }
+
+  const viewerRole = normalizeRole(viewerProfile?.role || localStorage.getItem('kazix_role'));
+  const isWorkerViewer = viewerRole === 'worker' || viewerRole === 'fundi';
+  const isOwnProfile = Boolean(
+    viewerProfile?.id
+    && viewedProfile?.id
+    && viewerProfile.id === viewedProfile.id
+    && viewerRole === 'client'
+  );
+
+  let label = 'Open My Account';
+  let href = roleHomePath(normalizeHomeRole(viewerRole));
+
+  if (isOwnProfile) {
+    label = 'Edit My Profile';
+    href = 'client-profile.html';
+  } else if (isWorkerViewer) {
+    label = 'Continue to Messages';
+    href = buildMessagesPath({ participantId: viewedProfile?.id });
+  }
+
+  setAction('heroPrimaryAction', label, href);
+  setAction('sidebarPrimaryAction', label, href);
+}
+
+function setAction(id, label, href) {
+  const link = document.getElementById(id);
+  if (!link) {
+    return;
+  }
+
+  link.textContent = label;
+  link.href = href || 'login.html';
+}
+
+function normalizeRole(role) {
+  return String(role || '').trim().toLowerCase();
+}
+
+function normalizeHomeRole(role) {
+  return role === 'worker' ? 'fundi' : role;
 }
 
 document.addEventListener('DOMContentLoaded', loadClientProfile);
