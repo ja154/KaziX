@@ -4,17 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Applicants — Install CCTV · KaziX</title>
+<title>Applications — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
+.main{max-width:1180px}
+.page-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.breadcrumb{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem}
+.breadcrumb a{color:var(--muted);text-decoration:none}
+.breadcrumb a:hover{color:var(--ink)}
+.job-switcher{display:flex;align-items:center;gap:0.65rem}
+.switcher-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin-bottom:1.25rem}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
+
 /* JOB SUMMARY BANNER */
-.job-banner{background:var(--ink);color:#F5F0E8;border-radius:6px;padding:1.5rem 2rem;margin-bottom:2rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden}
+.job-banner{background:var(--ink);color:#F5F0E8;border-radius:6px;padding:1.5rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;position:relative;overflow:hidden}
 .job-banner::after{content:'⚡';position:absolute;right:2rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.06}
 .jb-icon{width:50px;height:50px;border-radius:6px;background:rgba(245,166,35,0.2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
-.jb-info{flex:1}
+.jb-info{flex:1;min-width:0}
 .jb-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:0.3rem}
-.jb-sub{font-size:0.78rem;color:rgba(245,240,232,0.55);display:flex;gap:1rem;flex-wrap:wrap}
-.jb-stats{display:flex;gap:2rem}
+.jb-sub{font-size:0.78rem;color:rgba(245,240,232,0.62);display:flex;gap:1rem;flex-wrap:wrap}
+.jb-stats{display:flex;gap:2rem;flex-wrap:wrap}
 .jbs{text-align:center}
 .jbs-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;color:var(--saffron);display:block}
 .jbs-label{font-size:0.65rem;color:rgba(245,240,232,0.45);text-transform:uppercase;letter-spacing:0.06em}
@@ -22,7 +34,7 @@
 /* FILTER ROW */
 .filter-row{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
 .filter-select{padding:0.5rem 0.85rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;cursor:pointer}
-.filter-search{padding:0.5rem 0.85rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;flex:1;min-width:180px}
+.filter-search{padding:0.5rem 0.85rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;flex:1;min-width:220px}
 .filter-search:focus{border-color:var(--ink)}
 .app-count{font-size:0.82rem;color:var(--muted);margin-left:auto}
 .app-count strong{color:var(--ink);font-family:'Syne',sans-serif}
@@ -31,24 +43,34 @@
 .applicants-list{display:flex;flex-direction:column;gap:1rem}
 .applicant-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;transition:all 0.2s;animation:slideUp 0.4s ease both;position:relative}
 .applicant-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.08)}
-.applicant-card.shortlisted{border-color:var(--saffron);background:rgba(245,166,35,0.02)}
-.applicant-card.shortlisted::before{content:'Shortlisted';position:absolute;top:0;right:1.5rem;background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:0 0 4px 4px;text-transform:uppercase;letter-spacing:0.05em}
+.applicant-card.status-shortlisted{border-color:var(--saffron);background:rgba(245,166,35,0.02)}
+.applicant-card.status-hired{border-color:rgba(27,107,58,0.25);background:rgba(27,107,58,0.03)}
+.applicant-card.status-rejected{background:rgba(13,13,13,0.02);opacity:0.88}
+.applicant-card.status-shortlisted::before,.applicant-card.status-hired::before,.applicant-card.status-rejected::before{position:absolute;top:0;right:1.5rem;font-size:0.62rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:0 0 4px 4px;text-transform:uppercase;letter-spacing:0.05em}
+.applicant-card.status-shortlisted::before{content:'Shortlisted';background:var(--saffron);color:var(--ink)}
+.applicant-card.status-hired::before{content:'Hired';background:var(--green);color:white}
+.applicant-card.status-rejected::before{content:'Rejected';background:var(--cream);color:var(--muted)}
 .ac-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
-.ac-avatar{width:54px;height:54px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:2px solid var(--border);position:relative}
+.ac-avatar{width:54px;height:54px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0;border:2px solid var(--border);position:relative}
 .ac-verified{position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--green);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:white}
-.ac-info{flex:1}
-.ac-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.15rem}
+.ac-info{flex:1;min-width:0}
+.ac-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.15rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
 .ac-trade{font-size:0.75rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem}
 .ac-loc{font-size:0.78rem;color:var(--muted)}
-.ac-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem}
+.ac-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0}
+.ac-status{font-size:0.64rem;font-weight:700;padding:0.25rem 0.55rem;border-radius:999px;text-transform:uppercase;letter-spacing:0.06em}
+.ac-status.pending{background:rgba(13,13,13,0.08);color:var(--ink)}
+.ac-status.shortlisted{background:rgba(245,166,35,0.18);color:#854F0B}
+.ac-status.hired{background:rgba(27,107,58,0.14);color:var(--green)}
+.ac-status.rejected{background:var(--cream);color:var(--muted)}
 .ac-bid{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--ink)}
 .ac-bid-label{font-size:0.68rem;color:var(--muted);text-align:right}
 .ac-rating{display:flex;align-items:center;gap:0.35rem;font-size:0.78rem}
 .ac-stars{color:var(--saffron)}
 .ac-score{font-weight:700}
 .ac-jobs{color:var(--muted)}
-.ac-stats{display:flex;gap:1.5rem;margin-bottom:1rem;padding:0.85rem;background:var(--cream);border-radius:4px}
-.acs{text-align:center}
+.ac-stats{display:flex;gap:1.5rem;margin-bottom:1rem;padding:0.85rem;background:var(--cream);border-radius:4px;flex-wrap:wrap}
+.acs{text-align:center;min-width:78px}
 .acs-val{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;color:var(--ink)}
 .acs-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:0.1rem}
 .ac-cover{font-size:0.875rem;line-height:1.65;color:var(--steel);margin-bottom:1rem;padding-left:0.85rem;border-left:3px solid var(--border)}
@@ -56,17 +78,27 @@
 .skill-chip{background:var(--cream);font-size:0.72rem;font-weight:500;padding:0.2rem 0.6rem;border-radius:2px;color:var(--steel)}
 .ac-actions{display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap}
 .ac-btn{padding:0.5rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem}
+.ac-btn:disabled{opacity:0.55;cursor:not-allowed}
 .ac-btn-hire{background:var(--green);color:white;border:none}
-.ac-btn-hire:hover{background:#0F4F2A}
+.ac-btn-hire:hover:not(:disabled){background:#0F4F2A}
 .ac-btn-msg{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
 .ac-btn-msg:hover{background:var(--ink);color:white}
 .ac-btn-view{background:transparent;color:var(--muted);border:1px solid var(--border)}
 .ac-btn-view:hover{border-color:var(--ink);color:var(--ink)}
 .ac-btn-short{background:transparent;color:var(--saffron);border:1px solid rgba(245,166,35,0.4)}
-.ac-btn-short:hover{background:rgba(245,166,35,0.1)}
-.ac-btn-reject{background:transparent;color:var(--muted);border:none;font-size:0.75rem;margin-left:auto}
-.ac-btn-reject:hover{color:var(--rust)}
-.new-badge{background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:2px;text-transform:uppercase;margin-left:0.5rem}
+.ac-btn-short:hover:not(:disabled){background:rgba(245,166,35,0.1)}
+.ac-btn-muted{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.ac-btn-muted:hover:not(:disabled){border-color:var(--ink);color:var(--ink)}
+.ac-btn-reject{background:transparent;color:var(--rust);border:1px solid rgba(192,57,43,0.16);margin-left:auto}
+.ac-btn-reject:hover:not(:disabled){background:rgba(192,57,43,0.08)}
+.new-badge{background:var(--saffron);color:var(--ink);font-size:0.62rem;font-weight:700;padding:0.15rem 0.45rem;border-radius:2px;text-transform:uppercase}
+.ac-note{font-size:0.74rem;color:var(--muted);margin-top:-0.25rem}
+
+/* EMPTY STATE */
+.empty-state{background:white;border:1px dashed var(--border);border-radius:6px;padding:2.4rem 1.5rem;text-align:center;color:var(--muted)}
+.empty-state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:0.35rem}
+.empty-state-sub{font-size:0.84rem;line-height:1.65;max-width:520px;margin:0 auto 1rem}
+.empty-state-action{display:inline-flex;padding:0.7rem 1rem;background:var(--ink);color:#F5F0E8;text-decoration:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem}
 
 /* HIRE MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,13,13,0.6);z-index:1000;align-items:center;justify-content:center}
@@ -79,20 +111,49 @@
 .modal-input{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.875rem;background:var(--cream);color:var(--ink);outline:none}
 .modal-input:focus{border-color:var(--ink)}
 .mpesa-info{background:rgba(27,107,58,0.08);border:1px solid rgba(27,107,58,0.2);border-radius:4px;padding:0.85rem 1rem;font-size:0.78rem;color:var(--green);margin-bottom:1.25rem;display:flex;gap:0.5rem;line-height:1.5}
+.modal-feedback{font-size:0.78rem;line-height:1.5;margin-bottom:1rem;color:var(--muted)}
+.modal-feedback.error{color:var(--rust)}
 .modal-btns{display:flex;gap:0.75rem}
 .modal-confirm{flex:2;padding:0.85rem;background:var(--green);color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer}
+.modal-confirm:disabled{opacity:0.6;cursor:not-allowed}
 .modal-cancel{flex:1;padding:0.85rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.875rem;border:1.5px solid var(--border);border-radius:2px;cursor:pointer}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:900px){.sidebar{display:none}.job-banner{flex-direction:column}.jb-stats{justify-content:center}}
+@media(max-width:980px){
+  .sidebar{display:none}
+  .job-banner{flex-direction:column;align-items:flex-start}
+  .jb-stats{justify-content:flex-start}
+}
+@media(max-width:720px){
+  .ac-top{flex-wrap:wrap}
+  .ac-right{align-items:flex-start}
+  .ac-stats{gap:1rem}
+  .app-count{margin-left:0}
+  .job-switcher{width:100%}
+  .job-switcher select{width:100%}
+}
 </style>
+<style id="auth-gate-style">body{visibility:hidden}</style>
+<script>
+(function(){
+  if (!localStorage.getItem('kazix_access_token')) {
+    var next = encodeURIComponent(location.pathname + location.search);
+    location.replace('login.html?next=' + next);
+    return;
+  }
+  window.revealJobApplicantsPage = function () {
+    var gate = document.getElementById('auth-gate-style');
+    if (gate) gate.remove();
+  };
+})();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
     <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -111,190 +172,92 @@
     <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
     <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🏠</div><div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">KX</div><div><div class="sp-name">My account</div><div class="sp-role">Client account</div></div></div>
     </div>
   </aside>
 
   <main class="main">
-    <!-- BREADCRUMB -->
-    <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem">
-      <a href="my-jobs.html" style="color:var(--muted);text-decoration:none">My Jobs</a>
-      <span>›</span>
-      <span style="color:var(--ink);font-weight:500">Install CCTV cameras — Kilimani</span>
+    <div class="notice info" id="pageStatus" hidden></div>
+
+    <div class="page-top">
+      <div class="breadcrumb">
+        <a href="my-jobs.html">My Jobs</a>
+        <span>›</span>
+        <span id="selectedJobCrumb">Loading applications…</span>
+      </div>
+
+      <div class="job-switcher" id="jobSwitcherWrap" hidden>
+        <label class="switcher-label" for="jobSelector">Job</label>
+        <select class="filter-select" id="jobSelector" aria-label="Choose a job"></select>
+      </div>
     </div>
 
-    <!-- JOB BANNER -->
-    <div class="job-banner" style="animation:slideUp 0.4s ease both">
-      <div class="jb-icon">⚡</div>
+    <div class="job-banner" id="jobBanner" style="animation:slideUp 0.4s ease both">
+      <div class="jb-icon" id="jobBannerIcon">⚡</div>
       <div class="jb-info">
-        <div class="jb-title">Install CCTV cameras — Kilimani</div>
-        <div class="jb-sub">
-          <span>⚡ Electrician</span>
-          <span>📍 Kilimani, Nairobi</span>
-          <span>💰 KES 3,000 – 7,000</span>
-          <span>⏰ Closes in 1 day</span>
+        <div class="jb-title" id="jobBannerTitle">Loading applications…</div>
+        <div class="jb-sub" id="jobBannerMeta">
+          <span>Fetching your live job details…</span>
         </div>
       </div>
       <div class="jb-stats">
-        <div class="jbs"><span class="jbs-val">5</span><span class="jbs-label">Applied</span></div>
-        <div class="jbs"><span class="jbs-val">2</span><span class="jbs-label">New</span></div>
-        <div class="jbs"><span class="jbs-val">4.7★</span><span class="jbs-label">Avg Rating</span></div>
-        <div class="jbs"><span class="jbs-val">4,200</span><span class="jbs-label">Avg Bid</span></div>
+        <div class="jbs"><span class="jbs-val" id="jobStatApplied">0</span><span class="jbs-label">Applied</span></div>
+        <div class="jbs"><span class="jbs-val" id="jobStatNew">0</span><span class="jbs-label">New</span></div>
+        <div class="jbs"><span class="jbs-val" id="jobStatRating">—</span><span class="jbs-label">Avg Rating</span></div>
+        <div class="jbs"><span class="jbs-val" id="jobStatBid">—</span><span class="jbs-label">Avg Bid</span></div>
       </div>
     </div>
 
-    <!-- FILTER ROW -->
-    <div class="filter-row" style="animation:slideUp 0.4s 0.05s ease both">
-      <select class="filter-select"><option>All applicants</option><option>Shortlisted</option><option>New only</option><option>Verified only</option></select>
-      <select class="filter-select"><option>Sort: Highest rated</option><option>Sort: Lowest bid</option><option>Sort: Most jobs</option><option>Sort: Nearest</option></select>
-      <input class="filter-search" type="text" placeholder="Search applicants…">
-      <div class="app-count"><strong>5</strong> applicants · <strong>2</strong> shortlisted</div>
+    <div class="filter-row" id="controlsRow" style="animation:slideUp 0.4s 0.05s ease both">
+      <select class="filter-select" id="statusFilter" aria-label="Filter applicants">
+        <option value="all">All applicants</option>
+        <option value="pending">Pending review</option>
+        <option value="shortlisted">Shortlisted</option>
+        <option value="rejected">Rejected</option>
+        <option value="new">New only</option>
+        <option value="verified">Verified only</option>
+      </select>
+      <select class="filter-select" id="sortFilter" aria-label="Sort applicants">
+        <option value="rating">Sort: Highest rated</option>
+        <option value="bid">Sort: Lowest bid</option>
+        <option value="jobs">Sort: Most jobs</option>
+        <option value="recent">Sort: Most recent</option>
+      </select>
+      <input class="filter-search" id="searchFilter" type="text" placeholder="Search applicants…">
+      <div class="app-count" id="appCount">Loading applications…</div>
     </div>
 
-    <!-- APPLICANT CARDS -->
-    <div class="applicants-list">
-
-      <!-- Card 1 — Shortlisted -->
-      <div class="applicant-card shortlisted" style="animation-delay:0.1s">
-        <div class="ac-top">
-          <div class="ac-avatar">⚡<div class="ac-verified">✓</div></div>
-          <div class="ac-info">
-            <div class="ac-name">Faith Njeri <span class="new-badge">New</span></div>
-            <div class="ac-trade">Electrician · KPLC Licensed</div>
-            <div class="ac-loc">📍 Kasarani · 3.2 km away</div>
-            <div class="ac-rating"><span class="ac-stars">★★★★★</span><span class="ac-score">4.8</span><span class="ac-jobs">(89 jobs)</span></div>
-          </div>
-          <div class="ac-right">
-            <div class="ac-bid">KES 4,500</div>
-            <div class="ac-bid-label">Proposed rate</div>
-          </div>
-        </div>
-        <div class="ac-stats">
-          <div class="acs"><div class="acs-val">89</div><div class="acs-label">Jobs done</div></div>
-          <div class="acs"><div class="acs-val">4.8★</div><div class="acs-label">Rating</div></div>
-          <div class="acs"><div class="acs-val">98%</div><div class="acs-label">Completion</div></div>
-          <div class="acs"><div class="acs-val">< 1hr</div><div class="acs-label">Response</div></div>
-          <div class="acs"><div class="acs-val">5 yrs</div><div class="acs-label">Experience</div></div>
-        </div>
-        <div class="ac-cover">"I have installed over 30 CCTV systems in Nairobi — both residential and commercial. I work with Hikvision and Dahua equipment and can source materials or work with yours. Available Thursday."</div>
-        <div class="ac-skills">
-          <span class="skill-chip">CCTV Installation</span><span class="skill-chip">NVR Setup</span><span class="skill-chip">Cable concealment</span><span class="skill-chip">Solar</span><span class="skill-chip">KPLC wiring</span>
-        </div>
-        <div class="ac-actions">
-          <button class="ac-btn ac-btn-hire" onclick="openHireModal('Faith Njeri','4,500')">✅ Hire Faith — KES 4,500</button>
-          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
-          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
-          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
-        </div>
+    <div class="applicants-list" id="applicantsList">
+      <div class="empty-state">
+        <div class="empty-state-title">Loading applicants</div>
+        <div class="empty-state-sub">We’re fetching the live applications for your selected job.</div>
       </div>
-
-      <!-- Card 2 -->
-      <div class="applicant-card" style="animation-delay:0.15s">
-        <div class="ac-top">
-          <div class="ac-avatar">🔌<div class="ac-verified">✓</div></div>
-          <div class="ac-info">
-            <div class="ac-name">Samuel Otieno</div>
-            <div class="ac-trade">Electrician</div>
-            <div class="ac-loc">📍 South B · 4.8 km away</div>
-            <div class="ac-rating"><span class="ac-stars">★★★★</span>☆<span class="ac-score">4.5</span><span class="ac-jobs">(42 jobs)</span></div>
-          </div>
-          <div class="ac-right">
-            <div class="ac-bid">KES 3,800</div>
-            <div class="ac-bid-label">Proposed rate</div>
-          </div>
-        </div>
-        <div class="ac-stats">
-          <div class="acs"><div class="acs-val">42</div><div class="acs-label">Jobs done</div></div>
-          <div class="acs"><div class="acs-val">4.5★</div><div class="acs-label">Rating</div></div>
-          <div class="acs"><div class="acs-val">95%</div><div class="acs-label">Completion</div></div>
-          <div class="acs"><div class="acs-val">2–3hr</div><div class="acs-label">Response</div></div>
-          <div class="acs"><div class="acs-val">3 yrs</div><div class="acs-label">Experience</div></div>
-        </div>
-        <div class="ac-cover">"Experienced with CCTV and general electrical work. I can come any day this week and will cable-manage properly."</div>
-        <div class="ac-skills"><span class="skill-chip">CCTV</span><span class="skill-chip">Wiring</span><span class="skill-chip">General electrical</span></div>
-        <div class="ac-actions">
-          <button class="ac-btn ac-btn-hire" onclick="openHireModal('Samuel Otieno','3,800')">✅ Hire Samuel — KES 3,800</button>
-          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
-          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
-          <button class="ac-btn ac-btn-short" onclick="this.textContent='★ Shortlisted'">☆ Shortlist</button>
-          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
-        </div>
-      </div>
-
-      <!-- Card 3 — New -->
-      <div class="applicant-card" style="animation-delay:0.2s">
-        <div class="ac-top">
-          <div class="ac-avatar">⚡</div>
-          <div class="ac-info">
-            <div class="ac-name">David Mutua <span class="new-badge">New</span></div>
-            <div class="ac-trade">Senior Electrician</div>
-            <div class="ac-loc">📍 Karen · 9.1 km away</div>
-            <div class="ac-rating"><span class="ac-stars">★★★★★</span><span class="ac-score">5.0</span><span class="ac-jobs">(204 jobs)</span></div>
-          </div>
-          <div class="ac-right">
-            <div class="ac-bid">KES 6,000</div>
-            <div class="ac-bid-label">Proposed rate</div>
-          </div>
-        </div>
-        <div class="ac-stats">
-          <div class="acs"><div class="acs-val">204</div><div class="acs-label">Jobs done</div></div>
-          <div class="acs"><div class="acs-val">5.0★</div><div class="acs-label">Rating</div></div>
-          <div class="acs"><div class="acs-val">100%</div><div class="acs-label">Completion</div></div>
-          <div class="acs"><div class="acs-val">< 30m</div><div class="acs-label">Response</div></div>
-          <div class="acs"><div class="acs-val">12 yrs</div><div class="acs-label">Experience</div></div>
-        </div>
-        <div class="ac-cover">"Master electrician with perfect record. I supply all materials at cost + my labour. CCTV is my specialty — I've done 60+ installations this year alone."</div>
-        <div class="ac-skills"><span class="skill-chip">CCTV</span><span class="skill-chip">IP Cameras</span><span class="skill-chip">NVR/DVR</span><span class="skill-chip">Network cabling</span><span class="skill-chip">Solar</span></div>
-        <div class="ac-actions">
-          <button class="ac-btn ac-btn-hire" onclick="openHireModal('David Mutua','6,000')">✅ Hire David — KES 6,000</button>
-          <a href="messages.html" class="ac-btn ac-btn-msg">💬 Message</a>
-          <a href="worker-profile.html" class="ac-btn ac-btn-view">View Profile</a>
-          <button class="ac-btn ac-btn-short" onclick="this.textContent='★ Shortlisted'">☆ Shortlist</button>
-          <button class="ac-btn ac-btn-reject" onclick="this.closest('.applicant-card').style.opacity='0.4'">Decline ✕</button>
-        </div>
-      </div>
-
     </div>
   </main>
 </div>
 
-<!-- HIRE MODAL -->
-<div class="modal-overlay" id="hireModal">
+<div class="modal-overlay" id="hireModal" aria-hidden="true">
   <div class="modal">
-    <div class="modal-title">Hire <span id="hiree">Faith Njeri</span></div>
-    <div class="modal-sub">Confirm the agreed rate and we'll send an M-Pesa STK push to your phone to lock in the booking.</div>
-    <div class="modal-field">
-      <label class="modal-label">Agreed Rate (KES)</label>
-      <input class="modal-input" type="number" id="hireAmount" value="4500">
-    </div>
-    <div class="modal-field">
-      <label class="modal-label">Agreed Start Date</label>
-      <input class="modal-input" type="date">
-    </div>
-    <div class="mpesa-info">📱 <div>You'll receive an M-Pesa STK push on +254 712 345 678. Funds are held in escrow until you confirm the job is done.</div></div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="closeHireModal()">Cancel</button>
-      <button class="modal-confirm" onclick="confirmHire()">Confirm & Pay via M-Pesa →</button>
-    </div>
+    <form id="hireForm">
+      <div class="modal-title">Hire <span id="hiree">Worker</span></div>
+      <div class="modal-sub">Confirm the agreed rate and start date. Once you continue, we’ll create the booking and take you to your hires flow.</div>
+      <div class="modal-field">
+        <label class="modal-label" for="hireAmount">Agreed Rate (KES)</label>
+        <input class="modal-input" type="number" id="hireAmount" min="1" step="1" required>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="hireStartDate">Agreed Start Date</label>
+        <input class="modal-input" type="date" id="hireStartDate">
+      </div>
+      <div class="mpesa-info">📱 <div>The booking will move into your hires queue immediately after confirmation so you can continue with escrow-backed payment and coordination.</div></div>
+      <div class="modal-feedback" id="hireFeedback"></div>
+      <div class="modal-btns">
+        <button class="modal-cancel" type="button" id="hireCancelBtn">Cancel</button>
+        <button class="modal-confirm" type="submit" id="hireConfirmBtn">Confirm Hire</button>
+      </div>
+    </form>
   </div>
 </div>
-
-<script>
-function openHireModal(name, amount) {
-  document.getElementById('hiree').textContent = name;
-  document.getElementById('hireAmount').value = amount.replace(',','');
-  document.getElementById('hireModal').classList.add('open');
-}
-function closeHireModal() { document.getElementById('hireModal').classList.remove('open'); }
-function confirmHire() {
-  closeHireModal();
-  const banner = document.createElement('div');
-  banner.style.cssText = 'position:fixed;top:1.25rem;left:50%;transform:translateX(-50%);background:#1B6B3A;color:#fff;padding:.75rem 1.5rem;border-radius:4px;font-family:\'DM Sans\',sans-serif;font-size:.9rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
-  banner.textContent = '✅ M-Pesa STK push sent — check your phone to complete payment.';
-  document.body.appendChild(banner);
-  setTimeout(() => { banner.remove(); location.href = 'my-hires.html'; }, 2500);
-}
-</script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
@@ -315,7 +278,826 @@ function confirmHire() {
   </div>
 </nav>
 
-
+<script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
+<script>
+const {
+  buildMessagesPath,
+  clearDashboardStateCache,
+  escapeHtml,
+  formatCurrency,
+  formatTrade,
+  getAccessToken,
+  getDashboardState,
+  hydrateDashboardState,
+  hydrateShell,
+  profilePath,
+  requestJson,
+} = window.KazixProfile;
+
+const pageState = {
+  profile: null,
+  dashboard: null,
+  jobs: [],
+  jobsById: new Map(),
+  selectedJobId: null,
+  selectedJob: null,
+  applications: [],
+  hireApplication: null,
+  activeLoadToken: null,
+};
+
+const JOB_TRADE_ICONS = {
+  plumber: '🚿',
+  electrician: '⚡',
+  mason: '🧱',
+  mama_fua: '🧺',
+  carpenter: '🪚',
+  painter: '🎨',
+  roofer: '🏠',
+  gardener: '🌿',
+  driver_mover: '🚚',
+  security: '🛡️',
+  other: '🛠️',
+};
+
+function revealPage() {
+  if (typeof window.revealJobApplicantsPage === 'function') {
+    window.revealJobApplicantsPage();
+  }
+}
+
+function setStatus(message, tone) {
+  const el = document.getElementById('pageStatus');
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `notice ${tone || 'info'}`;
+  el.textContent = message;
+}
+
+function getNestedRecord(value) {
+  if (Array.isArray(value)) {
+    return value[0] || {};
+  }
+  return value || {};
+}
+
+function getQueryJobId() {
+  const params = new URLSearchParams(window.location.search);
+  const value = (params.get('job') || '').trim();
+  return value || null;
+}
+
+function updateJobQuery(jobId) {
+  const url = new URL(window.location.href);
+  if (jobId) {
+    url.searchParams.set('job', jobId);
+  } else {
+    url.searchParams.delete('job');
+  }
+  window.history.replaceState({}, '', url.toString());
+}
+
+function pluralize(value, singular, plural) {
+  return Number(value) === 1 ? singular : plural;
+}
+
+function tradeIcon(trade) {
+  return JOB_TRADE_ICONS[trade] || JOB_TRADE_ICONS.other;
+}
+
+function humanizeStatus(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return 'Pending';
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1).replace(/_/g, ' ');
+}
+
+function jobStatusLine(status) {
+  const normalized = String(status || '').trim().toLowerCase();
+  if (normalized === 'open') return 'Open for applications';
+  if (normalized === 'reviewing') return 'Reviewing applicants';
+  if (normalized === 'active') return 'Worker hired';
+  if (normalized === 'completed') return 'Completed';
+  if (normalized === 'cancelled') return 'Cancelled';
+  return humanizeStatus(status);
+}
+
+function formatBudgetRange(job) {
+  const min = Number(job?.budget_min || 0);
+  const max = Number(job?.budget_max || 0);
+  if (min > 0 && max > 0) return `${formatCurrency(min)} - ${formatCurrency(max)}`;
+  if (min > 0) return formatCurrency(min);
+  if (max > 0) return formatCurrency(max);
+  return 'Budget not set';
+}
+
+function formatLocation(value) {
+  const parts = [value?.area, value?.county].filter(Boolean);
+  return parts.length ? parts.join(', ') : 'Location pending';
+}
+
+function formatExpiry(job) {
+  if (!job?.expires_at) return jobStatusLine(job?.status);
+  const expiry = new Date(job.expires_at);
+  if (Number.isNaN(expiry.getTime())) return jobStatusLine(job?.status);
+
+  const diffMs = expiry.getTime() - Date.now();
+  if (diffMs <= 0) return 'Expired';
+
+  const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+  if (diffHours < 24) {
+    return `Closes in ${Math.max(diffHours, 1)} ${pluralize(Math.max(diffHours, 1), 'hour', 'hours')}`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `Closes in ${diffDays} ${pluralize(diffDays, 'day', 'days')}`;
+}
+
+function numericRating(application) {
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  const value = Number(fundiProfile?.rating_avg);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function numericBid(application) {
+  const bid = Number(application?.bid_amount);
+  if (Number.isFinite(bid) && bid > 0) return bid;
+
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  const rateMin = Number(fundiProfile?.rate_min);
+  const rateMax = Number(fundiProfile?.rate_max);
+  if (Number.isFinite(rateMin) && rateMin > 0 && Number.isFinite(rateMax) && rateMax > 0) {
+    return Math.round((rateMin + rateMax) / 2);
+  }
+  if (Number.isFinite(rateMin) && rateMin > 0) return rateMin;
+  if (Number.isFinite(rateMax) && rateMax > 0) return rateMax;
+  return 0;
+}
+
+function averageMetric(rows, getter) {
+  const values = rows
+    .map(getter)
+    .filter((value) => Number.isFinite(value) && value > 0);
+
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function isNewApplication(application) {
+  const createdAt = new Date(application?.created_at || '');
+  if (Number.isNaN(createdAt.getTime())) return false;
+  return (Date.now() - createdAt.getTime()) <= (24 * 60 * 60 * 1000);
+}
+
+function hasVerification(application) {
+  const profile = getNestedRecord(application?.profiles);
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  return Boolean(profile?.is_verified || String(fundiProfile?.kyc_status || '').toLowerCase() === 'approved');
+}
+
+function applicantDisplayName(application) {
+  const profile = getNestedRecord(application?.profiles);
+  return profile?.full_name || 'Unnamed worker';
+}
+
+function applicantTrade(application) {
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  return fundiProfile?.trade ? formatTrade(fundiProfile.trade) : 'Skilled Worker';
+}
+
+function applicantLocation(application) {
+  return formatLocation(getNestedRecord(application?.profiles));
+}
+
+function applicantJobsCompleted(application) {
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  const jobsDone = Number(fundiProfile?.jobs_completed || 0);
+  return Number.isFinite(jobsDone) ? jobsDone : 0;
+}
+
+function applicantExperience(application) {
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  const years = Number(fundiProfile?.experience_years || 0);
+  if (!Number.isFinite(years) || years <= 0) return 'Not set';
+  return `${years} ${pluralize(years, 'yr', 'yrs')}`;
+}
+
+function applicantBidLabel(application) {
+  const bid = Number(application?.bid_amount);
+  if (Number.isFinite(bid) && bid > 0) return formatCurrency(bid);
+
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  const rateMin = Number(fundiProfile?.rate_min || 0);
+  const rateMax = Number(fundiProfile?.rate_max || 0);
+  if (rateMin > 0 && rateMax > 0) return `${formatCurrency(rateMin)} - ${formatCurrency(rateMax)}`;
+  if (rateMin > 0) return formatCurrency(rateMin);
+  if (rateMax > 0) return formatCurrency(rateMax);
+  return 'Negotiable';
+}
+
+function applicantSkills(application) {
+  const fundiProfile = getNestedRecord(application?.fundi_profiles);
+  return Array.isArray(fundiProfile?.skills) ? fundiProfile.skills.filter(Boolean) : [];
+}
+
+function compactAppliedLabel(application) {
+  const createdAt = new Date(application?.created_at || '');
+  if (Number.isNaN(createdAt.getTime())) return 'Recently';
+
+  const diffHours = Math.max(0, Math.round((Date.now() - createdAt.getTime()) / (1000 * 60 * 60)));
+  if (diffHours < 1) return '<1h';
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function applicantProfileLink(application) {
+  return profilePath('fundi', application?.fundi_id);
+}
+
+function applicantMessageLink(application) {
+  return buildMessagesPath({
+    participantId: application?.fundi_id,
+    jobId: pageState.selectedJobId,
+    applicationId: application?.id,
+  });
+}
+
+function statusClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'shortlisted') return 'status-shortlisted';
+  if (normalized === 'hired') return 'status-hired';
+  if (normalized === 'rejected') return 'status-rejected';
+  return '';
+}
+
+function badgeStatusClass(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'shortlisted') return 'shortlisted';
+  if (normalized === 'hired') return 'hired';
+  if (normalized === 'rejected') return 'rejected';
+  return 'pending';
+}
+
+function starString(rating) {
+  const safeRating = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
+  return `${'★'.repeat(safeRating)}${'☆'.repeat(5 - safeRating)}`;
+}
+
+function currentSnapshotFor(jobId) {
+  const jobs = Array.isArray(pageState.dashboard?.recent_jobs) ? pageState.dashboard.recent_jobs : [];
+  return jobs.find((job) => job?.id === jobId) || null;
+}
+
+function chooseInitialJobId(requestedJobId) {
+  if (requestedJobId && pageState.jobsById.has(requestedJobId)) {
+    return requestedJobId;
+  }
+
+  const recentJobs = Array.isArray(pageState.dashboard?.recent_jobs) ? pageState.dashboard.recent_jobs : [];
+  const firstPending = recentJobs.find((job) => Number(job?.pending_application_count || 0) > 0 && pageState.jobsById.has(job.id));
+  if (firstPending) return firstPending.id;
+
+  const firstWithApplicants = recentJobs.find((job) => Number(job?.application_count || 0) > 0 && pageState.jobsById.has(job.id));
+  if (firstWithApplicants) return firstWithApplicants.id;
+
+  const preferred = pageState.jobs.find((job) => ['open', 'reviewing', 'active'].includes(String(job?.status || '').toLowerCase()));
+  return preferred?.id || pageState.jobs[0]?.id || null;
+}
+
+function setBannerVisibility(show) {
+  document.getElementById('jobBanner').style.display = show ? '' : 'none';
+  document.getElementById('controlsRow').style.display = show ? '' : 'none';
+}
+
+function renderJobSelector() {
+  const wrap = document.getElementById('jobSwitcherWrap');
+  const select = document.getElementById('jobSelector');
+  if (!wrap || !select) return;
+
+  if (pageState.jobs.length <= 1) {
+    wrap.hidden = true;
+    select.innerHTML = '';
+    return;
+  }
+
+  wrap.hidden = false;
+  select.innerHTML = pageState.jobs.map((job) => {
+    const snapshot = currentSnapshotFor(job.id);
+    const applicantCount = Number(snapshot?.application_count || 0);
+    const suffix = applicantCount > 0
+      ? ` · ${applicantCount} ${pluralize(applicantCount, 'applicant', 'applicants')}`
+      : '';
+    return `<option value="${escapeHtml(job.id)}">${escapeHtml(job.title || 'Untitled job')}${escapeHtml(suffix)}</option>`;
+  }).join('');
+
+  if (pageState.selectedJobId) {
+    select.value = pageState.selectedJobId;
+  }
+}
+
+function renderBanner() {
+  const job = pageState.selectedJob || {};
+  const applications = Array.isArray(pageState.applications) ? pageState.applications : [];
+  const avgRating = averageMetric(applications, numericRating);
+  const avgBid = averageMetric(applications, numericBid);
+  const shortlistedCount = applications.filter((app) => String(app?.status || '').toLowerCase() === 'shortlisted').length;
+  const newCount = applications.filter(isNewApplication).length;
+
+  document.title = `${job.title || 'Applications'} — KaziX`;
+  document.getElementById('selectedJobCrumb').textContent = job.title || 'Applications';
+  document.getElementById('jobBannerIcon').textContent = tradeIcon(job.trade);
+  document.getElementById('jobBannerTitle').textContent = job.title || 'Applications';
+  document.getElementById('jobStatApplied').textContent = String(applications.length);
+  document.getElementById('jobStatNew').textContent = String(newCount);
+  document.getElementById('jobStatRating').textContent = avgRating ? `${avgRating.toFixed(1)}★` : '—';
+  document.getElementById('jobStatBid').textContent = avgBid ? Math.round(avgBid).toLocaleString() : '—';
+
+  const meta = [
+    `${tradeIcon(job.trade)} ${formatTrade(job.trade || 'other')}`,
+    `📍 ${formatLocation(job)}`,
+    `💰 ${formatBudgetRange(job)}`,
+    `🟢 ${jobStatusLine(job.status)}`,
+  ];
+  if (job.expires_at) {
+    meta.push(`⏰ ${formatExpiry(job)}`);
+  }
+
+  document.getElementById('jobBannerMeta').innerHTML = meta.map((value) => `<span>${escapeHtml(value)}</span>`).join('');
+  document.getElementById('appCount').innerHTML = `<strong>${applications.length}</strong> ${pluralize(applications.length, 'applicant', 'applicants')} · <strong>${shortlistedCount}</strong> shortlisted`;
+
+  if (pageState.jobs.length > 1) {
+    const select = document.getElementById('jobSelector');
+    if (select) {
+      select.value = pageState.selectedJobId || '';
+    }
+  }
+}
+
+function filterApplications() {
+  const filterValue = document.getElementById('statusFilter').value;
+  const sortValue = document.getElementById('sortFilter').value;
+  const searchValue = document.getElementById('searchFilter').value.trim().toLowerCase();
+
+  let rows = [...pageState.applications];
+
+  if (filterValue === 'pending') {
+    rows = rows.filter((app) => String(app?.status || '').toLowerCase() === 'pending');
+  } else if (filterValue === 'shortlisted') {
+    rows = rows.filter((app) => String(app?.status || '').toLowerCase() === 'shortlisted');
+  } else if (filterValue === 'rejected') {
+    rows = rows.filter((app) => String(app?.status || '').toLowerCase() === 'rejected');
+  } else if (filterValue === 'new') {
+    rows = rows.filter(isNewApplication);
+  } else if (filterValue === 'verified') {
+    rows = rows.filter(hasVerification);
+  }
+
+  if (searchValue) {
+    rows = rows.filter((application) => {
+      const haystack = [
+        applicantDisplayName(application),
+        applicantTrade(application),
+        applicantLocation(application),
+        application?.cover_note || '',
+        ...applicantSkills(application),
+      ].join(' ').toLowerCase();
+
+      return haystack.includes(searchValue);
+    });
+  }
+
+  rows.sort((left, right) => {
+    if (sortValue === 'bid') {
+      return numericBid(left) - numericBid(right);
+    }
+    if (sortValue === 'jobs') {
+      return applicantJobsCompleted(right) - applicantJobsCompleted(left);
+    }
+    if (sortValue === 'recent') {
+      return new Date(right?.created_at || 0).getTime() - new Date(left?.created_at || 0).getTime();
+    }
+    return numericRating(right) - numericRating(left);
+  });
+
+  return rows;
+}
+
+function canManageApplications() {
+  const status = String(pageState.selectedJob?.status || '').toLowerCase();
+  return status === 'open' || status === 'reviewing';
+}
+
+function renderEmptyState(title, message, actionHref, actionLabel) {
+  const action = actionHref && actionLabel
+    ? `<a class="empty-state-action" href="${escapeHtml(actionHref)}">${escapeHtml(actionLabel)}</a>`
+    : '';
+
+  document.getElementById('applicantsList').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-title">${escapeHtml(title)}</div>
+      <div class="empty-state-sub">${escapeHtml(message)}</div>
+      ${action}
+    </div>
+  `;
+}
+
+function renderApplications() {
+  if (!pageState.selectedJob) {
+    setBannerVisibility(false);
+    renderEmptyState(
+      'No job selected',
+      'Choose one of your jobs to review its applicants.',
+      'my-jobs.html',
+      'Open My Jobs'
+    );
+    return;
+  }
+
+  setBannerVisibility(true);
+  renderBanner();
+
+  const rows = filterApplications();
+  const canManage = canManageApplications();
+
+  if (!pageState.applications.length) {
+    renderEmptyState(
+      'No applications yet',
+      'This job has not received any worker applications yet. As people apply, they will appear here automatically.',
+      'my-jobs.html',
+      'Back to My Jobs'
+    );
+    return;
+  }
+
+  if (!rows.length) {
+    renderEmptyState(
+      'No applicants match those filters',
+      'Try clearing your search or switching to a broader filter to see more applicants.',
+      null,
+      null
+    );
+    return;
+  }
+
+  const listHtml = rows.map((application, index) => {
+    const profile = getNestedRecord(application?.profiles);
+    const fundiProfile = getNestedRecord(application?.fundi_profiles);
+    const rating = numericRating(application);
+    const jobsDone = applicantJobsCompleted(application);
+    const skills = applicantSkills(application);
+    const status = String(application?.status || 'pending').toLowerCase();
+    const isActionable = canManage && status !== 'hired' && status !== 'withdrawn';
+    const messageHref = applicantMessageLink(application);
+    const profileHref = applicantProfileLink(application);
+    const verificationLabel = hasVerification(application) ? 'Verified' : 'Profile';
+    const note = application?.cover_note
+      ? application.cover_note
+      : 'No cover note was included with this application.';
+    const shortlistLabel = status === 'shortlisted' ? '↺ Move To Review' : '☆ Shortlist';
+    const shortlistAction = status === 'shortlisted' ? 'pending' : 'shortlisted';
+    const rejectLabel = status === 'rejected' ? '↺ Reopen' : 'Decline';
+    const rejectAction = status === 'rejected' ? 'pending' : 'rejected';
+
+    return `
+      <div class="applicant-card ${statusClass(status)}" style="animation-delay:${0.08 + (index * 0.04)}s">
+        <div class="ac-top">
+          <div class="ac-avatar">${escapeHtml((profile?.full_name || '?').trim().slice(0, 2).toUpperCase())}${hasVerification(application) ? '<div class="ac-verified">✓</div>' : ''}</div>
+          <div class="ac-info">
+            <div class="ac-name">
+              ${escapeHtml(applicantDisplayName(application))}
+              ${isNewApplication(application) ? '<span class="new-badge">New</span>' : ''}
+            </div>
+            <div class="ac-trade">${escapeHtml(applicantTrade(application))}${String(fundiProfile?.kyc_status || '').toLowerCase() === 'approved' ? ' · KYC approved' : ''}</div>
+            <div class="ac-loc">📍 ${escapeHtml(applicantLocation(application))}</div>
+            <div class="ac-rating">
+              <span class="ac-stars">${escapeHtml(starString(rating))}</span>
+              <span class="ac-score">${rating ? escapeHtml(rating.toFixed(1)) : 'New'}</span>
+              <span class="ac-jobs">(${escapeHtml(String(jobsDone))} ${escapeHtml(pluralize(jobsDone, 'job', 'jobs'))})</span>
+            </div>
+          </div>
+          <div class="ac-right">
+            <div class="ac-status ${badgeStatusClass(status)}">${escapeHtml(humanizeStatus(status))}</div>
+            <div class="ac-bid">${escapeHtml(applicantBidLabel(application))}</div>
+            <div class="ac-bid-label">Proposed rate</div>
+          </div>
+        </div>
+
+        <div class="ac-stats">
+          <div class="acs"><div class="acs-val">${escapeHtml(String(jobsDone))}</div><div class="acs-label">Jobs done</div></div>
+          <div class="acs"><div class="acs-val">${rating ? escapeHtml(`${rating.toFixed(1)}★`) : 'New'}</div><div class="acs-label">Rating</div></div>
+          <div class="acs"><div class="acs-val">${escapeHtml(applicantExperience(application))}</div><div class="acs-label">Experience</div></div>
+          <div class="acs"><div class="acs-val">${escapeHtml(verificationLabel)}</div><div class="acs-label">Verification</div></div>
+          <div class="acs"><div class="acs-val">${escapeHtml(compactAppliedLabel(application))}</div><div class="acs-label">Applied</div></div>
+        </div>
+
+        <div class="ac-cover">${escapeHtml(note)}</div>
+
+        <div class="ac-skills">
+          ${(skills.length ? skills : [applicantTrade(application)]).slice(0, 6).map((skill) => `<span class="skill-chip">${escapeHtml(skill)}</span>`).join('')}
+        </div>
+
+        ${!canManage ? `<div class="ac-note">This job is ${escapeHtml(jobStatusLine(pageState.selectedJob?.status).toLowerCase())}, so applicant actions are now read-only.</div>` : ''}
+
+        <div class="ac-actions">
+          ${status === 'hired'
+            ? '<a href="my-hires.html" class="ac-btn ac-btn-hire">✅ View Hire</a>'
+            : `<button class="ac-btn ac-btn-hire" data-action="hire" data-application-id="${escapeHtml(application.id || '')}" ${isActionable ? '' : 'disabled'}>✅ Hire ${escapeHtml(applicantDisplayName(application).split(' ')[0] || 'Worker')}</button>`
+          }
+          <a href="${escapeHtml(messageHref)}" class="ac-btn ac-btn-msg">💬 Message</a>
+          <a href="${escapeHtml(profileHref)}" class="ac-btn ac-btn-view">View Profile</a>
+          <button class="ac-btn ac-btn-short" data-action="status" data-next-status="${escapeHtml(shortlistAction)}" data-application-id="${escapeHtml(application.id || '')}" ${isActionable ? '' : 'disabled'}>${escapeHtml(shortlistLabel)}</button>
+          <button class="ac-btn ac-btn-reject" data-action="status" data-next-status="${escapeHtml(rejectAction)}" data-application-id="${escapeHtml(application.id || '')}" ${isActionable ? '' : 'disabled'}>${escapeHtml(rejectLabel)}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('applicantsList').innerHTML = listHtml;
+}
+
+function syncSelectedJob(jobId) {
+  pageState.selectedJobId = jobId;
+  pageState.selectedJob = pageState.jobsById.get(jobId) || null;
+  renderJobSelector();
+}
+
+async function refreshDashboardData() {
+  try {
+    clearDashboardStateCache();
+    const wrapper = await getDashboardState({ force: true, silent: true });
+    pageState.dashboard = wrapper?.client || null;
+    renderJobSelector();
+  } catch (_error) {
+    /* Best-effort refresh only. */
+  }
+
+  hydrateDashboardState({ silent: true, force: true }).catch(function () {
+    /* noop */
+  });
+}
+
+async function loadApplicationsForJob(jobId) {
+  syncSelectedJob(jobId);
+  updateJobQuery(jobId);
+  setBannerVisibility(true);
+  document.getElementById('selectedJobCrumb').textContent = pageState.selectedJob?.title || 'Loading applications…';
+  document.getElementById('applicantsList').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state-title">Loading applicants</div>
+      <div class="empty-state-sub">We’re fetching the live applications for this job right now.</div>
+    </div>
+  `;
+
+  const loadToken = `${jobId}:${Date.now()}`;
+  pageState.activeLoadToken = loadToken;
+
+  try {
+    const payload = await requestJson(`/v1/jobs/${encodeURIComponent(jobId)}/applications`, {
+      auth: true,
+      showError: false,
+    });
+
+    if (pageState.activeLoadToken !== loadToken) {
+      return;
+    }
+
+    pageState.applications = Array.isArray(payload?.data) ? payload.data : [];
+    renderApplications();
+    setStatus('', 'info');
+  } catch (error) {
+    if (pageState.activeLoadToken !== loadToken) {
+      return;
+    }
+
+    pageState.applications = [];
+    renderApplications();
+    setStatus(error?.message || 'Could not load the applications for this job.', 'error');
+  }
+}
+
+async function updateApplicationStatus(applicationId, nextStatus, button) {
+  const application = pageState.applications.find((entry) => entry?.id === applicationId);
+  if (!application) return;
+
+  const labelBefore = button ? button.textContent : null;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Updating…';
+  }
+
+  try {
+    const updated = await requestJson(`/v1/applications/${encodeURIComponent(applicationId)}/client`, {
+      auth: true,
+      method: 'PATCH',
+      body: { status: nextStatus },
+      showError: false,
+    });
+
+    application.status = updated?.status || nextStatus;
+    if (String(pageState.selectedJob?.status || '').toLowerCase() === 'open' && (nextStatus === 'shortlisted' || nextStatus === 'rejected')) {
+      pageState.selectedJob.status = 'reviewing';
+    }
+
+    renderApplications();
+    refreshDashboardData();
+    setStatus(`${applicantDisplayName(application)} is now ${humanizeStatus(application.status).toLowerCase()}.`, 'info');
+  } catch (error) {
+    if (button) {
+      button.disabled = false;
+      button.textContent = labelBefore;
+    }
+    setStatus(error?.message || 'Could not update this application.', 'error');
+  }
+}
+
+function openHireModal(applicationId) {
+  const application = pageState.applications.find((entry) => entry?.id === applicationId);
+  if (!application) return;
+
+  pageState.hireApplication = application;
+  document.getElementById('hiree').textContent = applicantDisplayName(application);
+  document.getElementById('hireAmount').value = String(Math.max(1, numericBid(application) || Number(pageState.selectedJob?.budget_min || 0) || 1));
+  document.getElementById('hireStartDate').value = pageState.selectedJob?.preferred_date || '';
+  document.getElementById('hireFeedback').textContent = '';
+  document.getElementById('hireFeedback').className = 'modal-feedback';
+  document.getElementById('hireConfirmBtn').disabled = false;
+  document.getElementById('hireModal').classList.add('open');
+  document.getElementById('hireModal').setAttribute('aria-hidden', 'false');
+}
+
+function closeHireModal() {
+  pageState.hireApplication = null;
+  document.getElementById('hireModal').classList.remove('open');
+  document.getElementById('hireModal').setAttribute('aria-hidden', 'true');
+}
+
+async function handleHireSubmit(event) {
+  event.preventDefault();
+  if (!pageState.hireApplication) return;
+
+  const feedback = document.getElementById('hireFeedback');
+  const button = document.getElementById('hireConfirmBtn');
+  const amount = Number(document.getElementById('hireAmount').value);
+  const startDate = document.getElementById('hireStartDate').value || null;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    feedback.textContent = 'Enter a valid agreed amount before continuing.';
+    feedback.className = 'modal-feedback error';
+    return;
+  }
+
+  feedback.textContent = '';
+  feedback.className = 'modal-feedback';
+  button.disabled = true;
+
+  try {
+    await requestJson('/v1/bookings/hire', {
+      auth: true,
+      method: 'POST',
+      body: {
+        application_id: pageState.hireApplication.id,
+        agreed_amount: amount,
+        start_date: startDate,
+      },
+      showError: false,
+    });
+
+    const workerName = applicantDisplayName(pageState.hireApplication);
+    closeHireModal();
+    setStatus(`${workerName} has been hired. Opening your hires queue…`, 'info');
+    refreshDashboardData();
+    window.setTimeout(function () {
+      window.location.href = 'my-hires.html';
+    }, 850);
+  } catch (error) {
+    feedback.textContent = error?.message || 'Could not complete the hire just now.';
+    feedback.className = 'modal-feedback error';
+    button.disabled = false;
+  }
+}
+
+function bindEvents() {
+  document.getElementById('jobSelector').addEventListener('change', function (event) {
+    const jobId = String(event.target.value || '').trim();
+    if (!jobId || jobId === pageState.selectedJobId) return;
+    loadApplicationsForJob(jobId);
+  });
+
+  document.getElementById('statusFilter').addEventListener('change', renderApplications);
+  document.getElementById('sortFilter').addEventListener('change', renderApplications);
+  document.getElementById('searchFilter').addEventListener('input', renderApplications);
+
+  document.getElementById('applicantsList').addEventListener('click', function (event) {
+    const actionButton = event.target.closest('button[data-action]');
+    if (!actionButton) return;
+
+    const applicationId = actionButton.dataset.applicationId;
+    if (!applicationId) return;
+
+    if (actionButton.dataset.action === 'hire') {
+      openHireModal(applicationId);
+      return;
+    }
+
+    if (actionButton.dataset.action === 'status') {
+      updateApplicationStatus(applicationId, actionButton.dataset.nextStatus, actionButton);
+    }
+  });
+
+  document.getElementById('hireForm').addEventListener('submit', handleHireSubmit);
+  document.getElementById('hireCancelBtn').addEventListener('click', closeHireModal);
+  document.getElementById('hireModal').addEventListener('click', function (event) {
+    if (event.target === event.currentTarget) {
+      closeHireModal();
+    }
+  });
+}
+
+function renderNoJobsState() {
+  setBannerVisibility(false);
+  document.getElementById('selectedJobCrumb').textContent = 'Applications';
+  document.getElementById('jobSwitcherWrap').hidden = true;
+  renderEmptyState(
+    'No client jobs yet',
+    'Post your first job and this applications page will start filling with real applicants instead of staying empty.',
+    'post-job.html',
+    'Post a Job'
+  );
+}
+
+async function initJobApplicantsPage() {
+  if (!getAccessToken()) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`login.html?next=${next}`);
+    return;
+  }
+
+  bindEvents();
+
+  try {
+    const shellData = await hydrateShell({ silent: false });
+    const profile = shellData?.profile || null;
+
+    if (!profile || profile.role !== 'client') {
+      window.location.replace('worker-dashboard.html');
+      return;
+    }
+
+    pageState.profile = profile;
+
+    const [dashboardWrapper, jobsPayload] = await Promise.all([
+      getDashboardState({ silent: true }).catch(() => null),
+      requestJson('/v1/jobs/mine', { auth: true, showError: false }),
+    ]);
+
+    pageState.dashboard = dashboardWrapper?.client || null;
+    pageState.jobs = Array.isArray(jobsPayload?.data) ? jobsPayload.data : [];
+    pageState.jobsById = new Map(pageState.jobs.filter((job) => job?.id).map((job) => [job.id, job]));
+
+    if (!pageState.jobs.length) {
+      renderNoJobsState();
+      return;
+    }
+
+    const requestedJobId = getQueryJobId();
+    const initialJobId = chooseInitialJobId(requestedJobId);
+    if (!initialJobId) {
+      renderNoJobsState();
+      return;
+    }
+
+    if (requestedJobId && requestedJobId !== initialJobId) {
+      setStatus('That job was not found in your account, so we opened your latest active applications instead.', 'info');
+    }
+
+    renderJobSelector();
+    await loadApplicationsForJob(initialJobId);
+  } catch (error) {
+    console.error('Failed to initialize job applicants page', error);
+    setStatus(error?.message || 'Could not load your applications right now.', 'error');
+    setBannerVisibility(false);
+    renderEmptyState(
+      'We could not load this page',
+      'Try refreshing in a moment. If the problem continues, sign in again so we can restore your client session.',
+      'client-dashboard.html',
+      'Back to Dashboard'
+    );
+  } finally {
+    revealPage();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initJobApplicantsPage);
+</script>
 </body>
 </html>

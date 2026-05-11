@@ -387,7 +387,9 @@ function renderClientActions(data) {
 
   if (data.applications.pending > 0) {
     actions.push({
-      href: 'job-applicants.html',
+      href: firstPendingJob?.id
+        ? window.KazixProfile.buildPagePath('job-applicants.html', { job: firstPendingJob.id })
+        : 'job-applicants.html',
       iconClass: 'ai-saffron',
       icon: '👥',
       title: `Review ${data.applications.pending} pending ${clientDashboardPlural(data.applications.pending, 'application', 'applications')}`,
