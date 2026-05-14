@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Find Workers — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -13,11 +13,11 @@
     --card-bg:#FFFFFF; --border:rgba(13,13,13,0.1);
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:var(--app-viewport-height)}
   body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35}
 
   /* NAV */
-  nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 5%;position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1.4rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
   .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.04em;color:var(--ink);text-decoration:none}
   .logo span{color:var(--saffron)}
   .nav-links{display:flex;gap:2rem;list-style:none}
@@ -33,13 +33,14 @@
   .page-header h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-0.04em;margin-bottom:0.5rem}
   .page-header p{color:rgba(245,240,232,0.55);font-size:0.95rem}
   .header-search{display:flex;max-width:640px;background:white;border-radius:4px;overflow:hidden;margin-top:2rem;box-shadow:0 4px 24px rgba(0,0,0,0.15)}
-  .header-search input{flex:1;padding:0.9rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;border:none;outline:none;color:var(--ink)}
+  .header-search input{flex:1;min-width:0;padding:0.9rem 1.25rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;border:none;outline:none;color:var(--ink)}
   .header-search select{padding:0.9rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.875rem;border:none;border-left:1px solid var(--border);outline:none;background:#f9f9f9;color:var(--ink);cursor:pointer}
   .header-search button{padding:0.9rem 1.5rem;background:var(--saffron);color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;cursor:pointer;transition:background 0.2s}
   .header-search button:hover{background:var(--rust);color:white}
 
   /* LAYOUT */
-  .search-layout{display:grid;grid-template-columns:280px 1fr;gap:2rem;padding:2.5rem 5%;align-items:start}
+  .search-layout{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:2rem;padding:2.5rem 5%;align-items:start}
+  .search-layout > main{min-width:0}
 
   /* FILTERS SIDEBAR */
   .filters{position:sticky;top:100px;background:white;border:1px solid var(--border);border-radius:4px;padding:1.5rem;animation:slideUp 0.5s ease both}
@@ -74,6 +75,7 @@
   .sort-row{display:flex;align-items:center;gap:0.75rem}
   .sort-label{font-size:0.82rem;color:var(--muted)}
   .sort-select{padding:0.45rem 0.75rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;cursor:pointer}
+  .filter-toggle{display:none;align-items:center;justify-content:center;min-height:44px;padding:0.65rem 1rem;border:1px solid var(--border);border-radius:2px;background:white;color:var(--ink);font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer}
   .view-toggle{display:flex;gap:4px}
   .view-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s}
   .view-btn.active{background:var(--ink);border-color:var(--ink);color:white}
@@ -146,9 +148,26 @@
 
   @media(max-width:900px){
     .search-layout{grid-template-columns:1fr}
+    .filter-toggle{display:inline-flex}
     .filters{position:static;display:none}
     .filters.mobile-open{display:block}
     footer{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:720px){
+    nav{flex-wrap:wrap;justify-content:center;gap:0.75rem;padding-top:1rem;padding-bottom:1rem}
+    .nav-links{width:100%;justify-content:center;flex-wrap:wrap}
+    .header-search{display:grid;grid-template-columns:1fr}
+    .header-search select{border-left:none;border-top:1px solid var(--border)}
+    .results-header{align-items:flex-start}
+    .workers-grid.list-view .pro-card{grid-template-columns:1fr;gap:1rem}
+    .workers-grid.list-view .pro-footer{align-items:flex-start;min-width:0;width:100%}
+    .footer-bottom{flex-direction:column;align-items:flex-start;gap:0.75rem}
+  }
+  @media(max-width:480px){
+    .sort-row{width:100%;flex-wrap:wrap}
+    .view-btn{width:44px;height:44px}
+    .pro-footer{flex-wrap:wrap;gap:0.75rem}
+    .hire-btn{width:100%;text-align:center}
   }
 </style>
 </head>
@@ -258,6 +277,7 @@
     <div class="results-header">
       <div class="results-count" id="resultsCount"><span>—</span> fundis found</div>
       <div class="sort-row">
+        <button class="filter-toggle" id="filterToggleBtn" type="button">Filters</button>
         <span class="sort-label">Sort by</span>
         <select class="sort-select">
           <option>All workers</option>
@@ -583,6 +603,8 @@
     const applyBtn   = document.querySelector('.apply-btn');
     const sortSelect = document.querySelector('.sort-select');
     const clearBtn   = document.querySelector('.filter-clear');
+    const filterToggle = document.getElementById('filterToggleBtn');
+    const filtersPanel = document.querySelector('.filters');
     const rangeMin   = document.querySelector('.range-min');
     const rangeMax   = document.querySelector('.range-max');
     const sliderTrack = document.querySelector('.slider-track');
@@ -590,8 +612,34 @@
 
     if (searchBtn)  searchBtn.addEventListener('click', runSearch);
     if (searchInput) searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') runSearch(); });
-    if (applyBtn)   applyBtn.addEventListener('click', runSearch);
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        runSearch();
+        if (filtersPanel && window.innerWidth <= 900) {
+          filtersPanel.classList.remove('mobile-open');
+          if (filterToggle) {
+            filterToggle.setAttribute('aria-expanded', 'false');
+            filterToggle.textContent = 'Filters';
+          }
+        }
+      });
+    }
     if (sortSelect) sortSelect.addEventListener('change', runSearch);
+
+    if (filterToggle && filtersPanel) {
+      const syncFilterToggle = () => {
+        const isOpen = filtersPanel.classList.contains('mobile-open');
+        filterToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        filterToggle.textContent = isOpen ? 'Hide Filters' : 'Filters';
+      };
+
+      filterToggle.addEventListener('click', () => {
+        filtersPanel.classList.toggle('mobile-open');
+        syncFilterToggle();
+      });
+
+      syncFilterToggle();
+    }
 
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {

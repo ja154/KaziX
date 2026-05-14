@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Dashboard — KaziX Pro</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -89,6 +89,20 @@
 .earn-sub{font-size:0.72rem;color:var(--muted)}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .avail-banner{flex-direction:column;align-items:flex-start;gap:1rem}
+  .avail-toggle-row{width:100%;justify-content:space-between}
+  .quick-actions{gap:0.6rem}
+  .qa-btn{width:100%;justify-content:center;min-height:44px}
+  .jr-meta{flex-wrap:wrap}
+  .job-row,.contract-row{flex-wrap:wrap}
+  .apply-btn{width:100%;min-height:44px}
+  .cr-amount{text-align:left;width:100%;padding-left:3rem}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr}
+  .card-head,.card-body{padding:1rem}
+}
 </style>
 <style id="auth-gate-style">body{visibility:hidden}</style>
 <script>

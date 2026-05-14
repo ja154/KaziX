@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Dashboard — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -96,6 +96,18 @@
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}}
+@media(max-width:720px){
+  .quick-actions{gap:0.6rem}
+  .qa-btn{width:100%;justify-content:center;min-height:44px}
+  .card-header{flex-wrap:wrap;gap:0.5rem}
+  .job-row{flex-wrap:wrap}
+  .job-apps{width:100%;padding-left:1.5rem;text-align:left}
+  .msg-name{flex-wrap:wrap;gap:0.5rem}
+}
+@media(max-width:480px){
+  .stats-row{grid-template-columns:1fr}
+  .card-header,.card-body{padding:1rem}
+}
 </style>
 <style id="auth-gate-style">body{visibility:hidden}</style>
 <script>

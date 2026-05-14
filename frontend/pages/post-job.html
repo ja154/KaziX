@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Post a Job — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -10,9 +10,9 @@
 <style>
   :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:var(--app-viewport-height)}
   body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35}
-  nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 5%;position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1.4rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
   .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.04em;color:var(--ink);text-decoration:none}
   .logo span{color:var(--saffron)}
   .nav-links{display:flex;gap:2rem;list-style:none}
@@ -40,7 +40,7 @@
   .step-node.active .step-text{color:var(--ink);font-weight:700}
 
   /* FORM LAYOUT */
-  .form-layout{display:grid;grid-template-columns:1fr 320px;gap:2rem;padding:0 5% 4rem;max-width:1100px;margin:0 auto}
+  .form-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:2rem;padding:0 5% 4rem;max-width:1100px;margin:0 auto}
 
   /* FORM CARD */
   .form-card{background:white;border:1px solid var(--border);border-radius:4px;padding:2rem;animation:slideUp 0.5s ease both}
@@ -98,6 +98,8 @@
   .hiw-step{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem;font-size:0.82rem}
   .hiw-icon{width:28px;height:28px;border-radius:50%;background:rgba(245,166,35,0.15);color:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0}
   .hiw-text{color:rgba(245,240,232,0.7)}
+  .review-summary-row{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+  .review-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
 
   /* SUCCESS STATE */
   .success-state{display:none;text-align:center;padding:3rem 2rem}
@@ -120,6 +122,16 @@
 
   @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
   @media(max-width:900px){.form-layout{grid-template-columns:1fr}.tips-card{position:static}.field-row{grid-template-columns:1fr}footer{grid-template-columns:1fr 1fr}}
+  @media(max-width:720px){
+    nav{flex-wrap:wrap;justify-content:center;gap:0.75rem;padding-top:1rem;padding-bottom:1rem}
+    .nav-links{width:100%;justify-content:center;flex-wrap:wrap}
+    .urgency-row{flex-direction:column}
+    .form-btns{flex-direction:column}
+    .review-meta-grid{grid-template-columns:1fr}
+    .review-summary-row{flex-wrap:wrap}
+    .footer-bottom{flex-direction:column;align-items:flex-start;gap:0.75rem}
+  }
+  @media(max-width:480px){.form-card{padding:1.5rem 1rem}}
 </style>
 <style id="auth-gate-style">body{visibility:hidden}</style>
 <script>
@@ -332,7 +344,7 @@
       <div id="postJobStatus" style="display:none;margin-bottom:1rem;padding:0.85rem 1rem;border-radius:4px;font-size:0.85rem;line-height:1.6"></div>
 
       <div style="border:1.5px solid var(--ink);border-radius:4px;padding:1.5rem;margin-bottom:1.5rem">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
+        <div class="review-summary-row">
           <div id="reviewTradeIcon" style="font-size:2rem">🛠️</div>
           <div>
             <div id="reviewTitle" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem">Your job title will appear here</div>
@@ -341,7 +353,7 @@
           <div style="margin-left:auto;background:var(--saffron);color:var(--ink);font-size:0.68rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em">Open</div>
         </div>
         <div id="reviewDescription" style="font-size:0.85rem;line-height:1.65;color:var(--steel);margin-bottom:1.25rem">Add a description in the previous steps and it will appear here.</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+        <div class="review-meta-grid">
           <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Location</div><div id="reviewLocation" style="font-size:0.875rem;margin-top:0.2rem">📍 Add a county and area</div></div>
           <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Budget</div><div id="reviewBudget" style="font-size:0.875rem;margin-top:0.2rem;font-weight:700">Add your budget</div></div>
           <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:700">Timing</div><div id="reviewTiming" style="font-size:0.875rem;margin-top:0.2rem">🗓️ Flexible</div></div>

@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Install CCTV cameras — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 
 <style>
 /* Public nav — identical to index.html */
-nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 6%;position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1.4rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));position:sticky;top:0;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100}
 .nav-links{display:flex;gap:2rem;list-style:none}
 .nav-links a{font-size:0.875rem;font-weight:500;color:var(--muted);text-decoration:none;transition:color 0.2s}
 .nav-links a:hover{color:var(--ink)}
@@ -17,12 +17,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .nav-cta:hover{background:var(--green)!important}
 
 /* Breadcrumb */
-.breadcrumb{padding:0.85rem 6%;font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;border-bottom:1px solid var(--border);background:white}
+.breadcrumb{padding:0.85rem 6%;font-size:0.82rem;color:var(--muted);display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;border-bottom:1px solid var(--border);background:white}
 .breadcrumb a{color:var(--muted);text-decoration:none}
 .breadcrumb a:hover{color:var(--ink)}
 
 /* Page layout */
-.job-layout{display:grid;grid-template-columns:1fr 320px;gap:2.5rem;padding:2.5rem 6% 4rem;max-width:1200px;margin:0 auto;align-items:start;animation:slideUp 0.4s ease both}
+.job-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:2.5rem;padding:2.5rem 6% 4rem;max-width:1200px;margin:0 auto;align-items:start;animation:slideUp 0.4s ease both}
 
 /* Job header dark card */
 .job-header{background:var(--ink);color:#F5F0E8;border-radius:6px;padding:2rem 2.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden}
@@ -96,7 +96,7 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6}
 .apply-success.show{display:block}
 
 @media(max-width:900px){.job-layout{grid-template-columns:1fr}.apply-card{position:static}.detail-grid{grid-template-columns:1fr}.footer{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.nav-links{display:none}.footer{grid-template-columns:1fr}}
+@media(max-width:720px){.nav-links{display:none}.job-header{padding:1.5rem}.cl-top{flex-wrap:wrap}.cl-stats{grid-template-columns:1fr}.footer{grid-template-columns:1fr}.footer-bottom{flex-direction:column;align-items:flex-start;gap:0.75rem}}
 </style>
 </head>
 <body>

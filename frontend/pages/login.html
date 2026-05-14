@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Sign In — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/error-components.css">
 <style>
+  :root{--auth-nav-height:73px}
   :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:100vh}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:var(--app-viewport-height)}
   body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35}
 
   /* NAV */
-  nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 5%;background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+  nav{display:flex;align-items:center;justify-content:space-between;min-height:var(--auth-nav-height);padding:1rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
   .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.04em;color:var(--ink);text-decoration:none}
   .logo span{color:var(--saffron)}
   .nav-register{font-size:0.875rem;color:var(--muted);text-decoration:none;transition:color 0.2s}
@@ -23,7 +24,7 @@
   .nav-register:hover strong{color:var(--green)}
 
   /* AUTH LAYOUT */
-  .auth-layout{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 73px)}
+  .auth-layout{display:grid;grid-template-columns:1fr 1fr;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}
 
   /* LEFT PANEL — decorative */
   .auth-left{background:var(--ink);color:var(--cream);padding:5rem;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
@@ -37,7 +38,7 @@
   .perk-icon{width:32px;height:32px;border-radius:50%;background:rgba(245,166,35,0.15);color:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
 
   /* RIGHT PANEL — form */
-  .auth-right{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3rem 2rem;background:white}
+  .auth-right{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3rem 2rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height));overflow-y:auto;background:white}
   .auth-form-wrap{width:100%;max-width:420px}
   .auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.04em;margin-bottom:0.4rem}
   .auth-sub{font-size:0.9rem;color:var(--muted);margin-bottom:2.5rem;line-height:1.5}
@@ -111,7 +112,17 @@
   @media(max-width:900px){
     .auth-layout{grid-template-columns:1fr}
     .auth-left{display:none}
-    .auth-right{padding:2rem 1.5rem;min-height:calc(100vh - 73px)}
+    .auth-right{padding:2rem 1.5rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}
+  }
+  @media(max-width:720px){
+    nav{flex-wrap:wrap;justify-content:center;gap:0.75rem;text-align:center}
+    .nav-register{width:100%}
+    .auth-right{padding:1.75rem 1rem}
+  }
+  @media(max-width:480px){
+    .role-toggle,.method-toggle{flex-direction:column}
+    .otp-inputs{gap:0.35rem}
+    .auth-title{font-size:1.55rem}
   }
 </style>
 </head>
