@@ -15,7 +15,7 @@
 .profile-cover::after{content:'PRO';position:absolute;right:-5%;bottom:-10%;font-family:'Syne',sans-serif;font-weight:800;font-size:80px;opacity:0.06;letter-spacing:-0.06em;color:#F5F0E8}
 .profile-cover-edit{position:absolute;top:0.6rem;right:0.6rem;background:rgba(245,240,232,0.15);border:none;border-radius:2px;padding:0.3rem 0.6rem;font-size:0.68rem;color:#F5F0E8;cursor:pointer;font-family:'Syne',sans-serif;font-weight:600}
 .profile-avatar-wrap{padding:0 1.5rem;margin-top:-32px;margin-bottom:0.75rem;position:relative}
-.p-avatar{width:64px;height:64px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.75rem;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12)}
+.p-avatar{width:64px;height:64px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1.75rem;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.12);background-size:cover;background-position:center;color:#fff}
 .p-avatar-edit{position:absolute;bottom:2px;left:58px;width:20px;height:20px;border-radius:50%;background:var(--ink);border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:0.55rem;cursor:pointer;color:white}
 .profile-info{padding:0 1.5rem 1.5rem}
 .p-name{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-0.03em;margin-bottom:0.15rem}
@@ -231,5 +231,34 @@
 
 
 <script src="../assets/js/mobile-nav.js"></script>
+<script src="../assets/js/profile-picture-handler.js"></script>
+<script>
+// Load and display profile picture
+async function loadWorkerProfile() {
+  try {
+    const response = await fetch('/v1/profiles/me', {
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('kazix_access_token') }
+    });
+    const profileData = await response.json();
+    const profile = profileData?.profile;
+    
+    if (profile && profile.avatar_url) {
+      const avatars = document.querySelectorAll('.p-avatar');
+      avatars.forEach(avatar => {
+        avatar.style.backgroundImage = `url('${profile.avatar_url}')`;
+        avatar.textContent = '';
+      });
+    }
+  } catch (error) {
+    console.error('Failed to load profile picture:', error);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', loadWorkerProfile);
+} else {
+  loadWorkerProfile();
+}
+</script>
 </body>
 </html>
