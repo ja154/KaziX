@@ -202,9 +202,9 @@ const {
   getAccessToken,
   getMyProfile,
   getProfileIdFromQuery,
-  initials,
   profilePath,
   requestJson,
+  setAvatarElement,
   setHtml,
   setText,
 } = window.KazixProfile;
@@ -273,7 +273,7 @@ function renderProfile(profile, fundiProfile, options = {}) {
   const radius = `${fundiProfile.service_radius_km || 0} km`;
 
   document.title = `${name} — ${trade} · KaziX`;
-  setText('#heroAvatar', initials(name));
+  setAvatarElement('#heroAvatar', { name, avatarUrl: profile.avatar_url });
   setText('#heroName', name);
   setText('#heroTrade', trade);
   setText('#heroLocation', `${location} · ${formatMemberSince(profile.created_at)}`);

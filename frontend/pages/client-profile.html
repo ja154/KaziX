@@ -309,8 +309,9 @@ const {
   getAccessToken,
   getDashboardState,
   getMyProfile,
-  initials,
+  hydrateShell,
   profilePath,
+  setAvatarElement,
   setHtml,
   setText,
 } = window.KazixProfile;
@@ -430,18 +431,9 @@ function renderHistory(clientState) {
 function renderProfile(profile, dashboardState) {
   const clientState = dashboardState?.client || {};
   const name = profile.full_name || 'My account';
-  const avatar = initials(name);
 
   document.title = `${name} — My Profile · KaziX`;
-  
-  // Set avatar - use image if available, else show initials
-  const avatarEl = document.getElementById('profileAvatar');
-  if (profile.avatar_url) {
-    avatarEl.style.backgroundImage = `url('${profile.avatar_url}')`;
-    avatarEl.textContent = '';
-  } else {
-    avatarEl.textContent = avatar;
-  }
+  setAvatarElement('#profileAvatar', { name, avatarUrl: profile.avatar_url });
   
   setText('#profileName', name);
   setText('#profileType', 'Client · Employer');
@@ -487,7 +479,7 @@ async function initClientProfile() {
     return;
   }
 
-  document.querySelectorAll('.profile-cover-edit, .p-avatar-edit, .edit-profile-btn, .sc-edit').forEach((el) => {
+  document.querySelectorAll('.profile-cover-edit, .edit-profile-btn, .sc-edit').forEach((el) => {
     el.style.display = 'none';
   });
   document.getElementById('aboutField').remove();
@@ -503,6 +495,7 @@ async function initClientProfile() {
       return;
     }
 
+    await hydrateShell({ data: profileData, silent: false });
     renderProfile(profileData.profile, dashboardState);
     setStatus('', 'info');
   } catch (error) {

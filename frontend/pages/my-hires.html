@@ -546,7 +546,14 @@ function renderBookingCard(booking) {
 
   return '<article class="contract-card" data-booking-id="' + escapeHtml(booking.id || '') + '">'
     + '<div class="cc-header">'
-    + '<div class="cc-avatar">' + escapeHtml((hireHelpers.initials ? hireHelpers.initials(workerName) : 'KX')) + '</div>'
+    + (hireHelpers.buildAvatarHtml
+      ? hireHelpers.buildAvatarHtml({
+          className: 'cc-avatar',
+          name: workerName,
+          fallbackText: hireHelpers.initials ? hireHelpers.initials(workerName) : 'KX',
+          avatarUrl: worker.avatar_url,
+        })
+      : '<div class="cc-avatar">' + escapeHtml((hireHelpers.initials ? hireHelpers.initials(workerName) : 'KX')) + '</div>')
     + '<div class="cc-worker-info">'
     + '<div class="cc-worker-name">' + escapeHtml(workerName) + '</div>'
     + '<div class="cc-trade">' + escapeHtml(trade) + '</div>'

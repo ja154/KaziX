@@ -475,6 +475,56 @@
     return parts.map((part) => part[0].toUpperCase()).join('');
   }
 
+  function avatarStyleValue(avatarUrl) {
+    if (!avatarUrl) return '';
+    return `url("${String(avatarUrl).replace(/"/g, '%22')}")`;
+  }
+
+  function setAvatarElement(target, options = {}) {
+    const el = typeof target === 'string' ? document.querySelector(target) : target;
+    if (!el) return;
+
+    const fallbackText = options.fallbackText ?? initials(options.name || el.textContent || 'KX');
+    const avatarUrl = options.avatarUrl ? String(options.avatarUrl).trim() : '';
+
+    if (avatarUrl) {
+      el.style.backgroundImage = avatarStyleValue(avatarUrl);
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat = 'no-repeat';
+      el.textContent = '';
+      return;
+    }
+
+    el.style.backgroundImage = '';
+    el.style.backgroundSize = '';
+    el.style.backgroundPosition = '';
+    el.style.backgroundRepeat = '';
+    el.textContent = fallbackText;
+  }
+
+  function setAvatarOnAll(selector, options = {}) {
+    document.querySelectorAll(selector).forEach((el) => {
+      setAvatarElement(el, options);
+    });
+  }
+
+  function buildAvatarHtml(options = {}) {
+    const className = options.className || 'user-avatar';
+    const fallbackText = options.fallbackText ?? initials(options.name || 'KX');
+    const avatarUrl = options.avatarUrl ? String(options.avatarUrl).trim() : '';
+    const extraHtml = options.extraHtml || '';
+    const style = avatarUrl
+      ? ` style="background-image:${escapeHtml(avatarStyleValue(avatarUrl))};background-size:cover;background-position:center;background-repeat:no-repeat;"`
+      : '';
+
+    return `<div class="${escapeHtml(className)}"${style}>${avatarUrl ? '' : escapeHtml(fallbackText)}${extraHtml}</div>`;
+  }
+
+  function invalidateProfileCache() {
+    myProfilePromise = null;
+  }
+
   function arrayToCsv(value) {
     return Array.isArray(value) ? value.join(', ') : '';
   }
@@ -907,13 +957,18 @@
       if (!profile.id) return null;
 
       const name = profile.full_name || profile.email || formatPhone(profile.phone) || 'My account';
-      const avatar = initials(name);
       const accountLabel = roleLabel(profile.role, fundiProfile);
       const accountHref = roleHomePath(profile.role);
 
-      setAllText('.topnav .user-avatar', avatar);
+      setAvatarOnAll('.topnav .user-avatar', {
+        name,
+        avatarUrl: profile.avatar_url,
+      });
       setAllText('.topnav .user-name', name);
-      setAllText('.sidebar-bottom .sp-avatar', avatar);
+      setAvatarOnAll('.sidebar-bottom .sp-avatar', {
+        name,
+        avatarUrl: profile.avatar_url,
+      });
       setAllText('.sidebar-bottom .sp-name', name);
       setAllText('.sidebar-bottom .sp-role', accountLabel);
       setDestination('.topnav .user-chip', accountHref);
@@ -966,6 +1021,7 @@
     hydrateDashboardState,
     hydrateNotificationSummary,
     hydrateShell,
+    invalidateProfileCache,
     initials,
     logout,
     profilePath,
@@ -978,7 +1034,10 @@
     clearNotificationSummaryCache,
     buildMessagesPath,
     buildPagePath,
+    buildAvatarHtml,
     setNavCount,
+    setAvatarElement,
+    setAvatarOnAll,
     setHtml,
     setText,
     show,

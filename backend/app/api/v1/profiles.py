@@ -469,16 +469,15 @@ async def get_public_profile(user_id: str):
 # ── Profile Picture Upload & Management ──────────────────────
 
 
-def _get_storage_client(session: CurrentSession):
+def _get_storage_client():
     """
-    Returns the Supabase storage client for the authenticated user.
-    Uses the user's access token for authenticated bucket operations.
+    Returns a server-side Supabase storage client.
+
+    Profile picture uploads are already authorized by the API route, so we use
+    the service-role client here to avoid depending on client-side storage RLS
+    policy wiring for authenticated uploads/deletes.
     """
-    from supabase import create_client
-    from app.core.config import get_settings
-    
-    settings = get_settings()
-    return create_client(settings.supabase_url, settings.supabase_key).storage
+    return get_admin_client().storage
 
 
 @router.post("/picture")
@@ -553,7 +552,7 @@ async def upload_profile_picture(
     
     # Upload to Supabase Storage
     try:
-        storage = _get_storage_client(session)
+        storage = _get_storage_client()
         
         # Delete old picture if it exists
         if old_storage_path:
@@ -655,7 +654,7 @@ async def delete_profile_picture(
     
     # Delete from storage
     try:
-        storage = _get_storage_client(session)
+        storage = _get_storage_client()
         storage.from_("profile-pictures").remove([storage_path])
         logger.info("Deleted profile picture from storage", user_id=user.user_id, path=storage_path)
     except Exception as exc:

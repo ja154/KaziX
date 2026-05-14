@@ -220,6 +220,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 <script src="../assets/js/profile-utils.js"></script>
 <script>
 const {
+  buildAvatarHtml,
   buildMessagesPath,
   buildPagePath,
   clearNotificationSummaryCache,
@@ -232,6 +233,7 @@ const {
   initials,
   profilePath,
   requestJson,
+  setAvatarElement,
 } = window.KazixProfile;
 
 const ROLE_NAV = {
@@ -586,7 +588,13 @@ function renderThreadList() {
         applicationId: thread.application_id,
         bookingId: thread.booking_id,
       }))}" data-thread-signature="${escapeHtml(threadSignature(thread))}">
-        <div class="ci-avatar">${escapeHtml(initialsText)}${thread.participant_role === 'fundi' ? '<div class="ci-online"></div>' : ''}</div>
+        ${buildAvatarHtml({
+          className: 'ci-avatar',
+          name: thread?.participant_name || 'KX',
+          fallbackText: initialsText,
+          avatarUrl: thread?.participant_avatar_url,
+          extraHtml: thread.participant_role === 'fundi' ? '<div class="ci-online"></div>' : '',
+        })}
         <div class="ci-info">
           <div class="ci-name">
             <span class="ci-name-label">${escapeHtml(thread.participant_name || 'KaziX user')}</span>
@@ -719,7 +727,11 @@ function renderActiveThread() {
   if (thread.participant_rating) subParts.push(`${Number(thread.participant_rating).toFixed(1)}★`);
   if (location) subParts.push(location);
 
-  document.getElementById('chatAvatar').textContent = avatar;
+  setAvatarElement('#chatAvatar', {
+    name,
+    avatarUrl: thread.participant_avatar_url,
+    fallbackText: avatar,
+  });
   document.getElementById('chatName').textContent = name;
   document.getElementById('chatSub').textContent = subParts.join(' · ');
   document.getElementById('inputContextLabel').textContent = thread.job_title
@@ -750,11 +762,19 @@ function renderActiveThread() {
         ? (state.profile?.full_name || 'You')
         : (thread.participant_name || 'KaziX user');
       const bubbleAvatar = initials(senderName);
+      const avatarUrl = outgoing
+        ? state.profile?.avatar_url
+        : thread.participant_avatar_url;
 
       return `
         ${needsSeparator ? `<div class="date-sep">${escapeHtml(formatDateSeparator(message.created_at))}</div>` : ''}
         <div class="msg-bubble ${outgoing ? 'outgoing' : ''}">
-          <div class="bubble-avatar">${escapeHtml(outgoing ? viewerAvatar : bubbleAvatar)}</div>
+          ${buildAvatarHtml({
+            className: 'bubble-avatar',
+            name: senderName,
+            fallbackText: outgoing ? viewerAvatar : bubbleAvatar,
+            avatarUrl,
+          })}
           <div class="bubble-wrap">
             <div class="bubble-content">${messageBodyHtml(message.body)}</div>
             <div class="bubble-time">${escapeHtml(formatMessageTime(message.created_at))}</div>

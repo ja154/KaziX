@@ -282,6 +282,7 @@
 <script src="../assets/js/mobile-nav.js"></script>
 <script>
 const {
+  buildAvatarHtml,
   buildMessagesPath,
   clearDashboardStateCache,
   escapeHtml,
@@ -771,7 +772,13 @@ function renderApplications() {
     return `
       <div class="applicant-card ${statusClass(status)}" style="animation-delay:${0.08 + (index * 0.04)}s">
         <div class="ac-top">
-          <div class="ac-avatar">${escapeHtml((profile?.full_name || '?').trim().slice(0, 2).toUpperCase())}${hasVerification(application) ? '<div class="ac-verified">✓</div>' : ''}</div>
+          ${buildAvatarHtml({
+            className: 'ac-avatar',
+            name: profile?.full_name || '?',
+            fallbackText: (profile?.full_name || '?').trim().slice(0, 2).toUpperCase(),
+            avatarUrl: profile?.avatar_url,
+            extraHtml: hasVerification(application) ? '<div class="ac-verified">✓</div>' : '',
+          })}
           <div class="ac-info">
             <div class="ac-name">
               ${escapeHtml(applicantDisplayName(application))}

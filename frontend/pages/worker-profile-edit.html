@@ -229,24 +229,32 @@
   </div>
 </nav>
 
-
+<script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
 <script src="../assets/js/profile-picture-handler.js"></script>
 <script>
-// Load and display profile picture
+const profileHelpers = window.KazixProfile || {};
+
 async function loadWorkerProfile() {
   try {
-    const response = await fetch('/v1/profiles/me', {
-      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('kazix_access_token') }
+    if (typeof profileHelpers.requestJson !== 'function') {
+      throw new Error('Shared profile helpers are unavailable on this page.');
+    }
+
+    const profileData = await profileHelpers.requestJson('/v1/profiles/me', {
+      auth: true,
+      showError: false,
     });
-    const profileData = await response.json();
     const profile = profileData?.profile;
-    
-    if (profile && profile.avatar_url) {
-      const avatars = document.querySelectorAll('.p-avatar');
-      avatars.forEach(avatar => {
-        avatar.style.backgroundImage = `url('${profile.avatar_url}')`;
-        avatar.textContent = '';
+
+    if (typeof profileHelpers.hydrateShell === 'function') {
+      await profileHelpers.hydrateShell({ data: profileData, silent: true });
+    }
+
+    if (profile && typeof profileHelpers.setAvatarOnAll === 'function') {
+      profileHelpers.setAvatarOnAll('.p-avatar', {
+        name: profile.full_name || 'My account',
+        avatarUrl: profile.avatar_url,
       });
     }
   } catch (error) {

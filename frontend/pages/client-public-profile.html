@@ -163,9 +163,9 @@ const {
   getAccessToken,
   getMyProfile,
   getProfileIdFromQuery,
-  initials,
   requestJson,
   roleHomePath,
+  setAvatarElement,
   setHtml,
   setText,
 } = window.KazixProfile;
@@ -205,7 +205,7 @@ function renderProfile(profile) {
   const language = formatLanguage(profile.preferred_language);
 
   document.title = `${name} — Employer Profile · KaziX`;
-  setText('#heroAvatar', initials(name));
+  setAvatarElement('#heroAvatar', { name, avatarUrl: profile.avatar_url });
   setText('#heroName', name);
   setText('#heroLocation', `${location} · ${memberSince}`);
   setText('#detailLocation', location);

@@ -398,9 +398,13 @@
       const skills   = (f.skills || []).map(s => `<span class="skill-chip">${esc(s)}</span>`).join('');
       const verified = f.is_verified ? `<span class="verified-badge">✓ Verified</span>` : '';
       const avail    = f.is_available ? `<span class="avail-dot"></span>` : '';
+      const avatarStyle = f.avatar_url
+        ? ` style="background-image:url(&quot;${esc(f.avatar_url)}&quot;);background-size:cover;background-position:center;background-repeat:no-repeat;"`
+        : '';
+      const avatarLabel = f.avatar_url ? '' : esc(f.trade_emoji);
       return `<div class="pro-card" style="animation-delay:${i * 0.04}s">
         <div class="pro-card-top">
-          <div class="pro-avatar">${esc(f.trade_emoji)}</div>
+          <div class="pro-avatar"${avatarStyle}>${avatarLabel}</div>
           <div class="pro-card-mid">
             <div class="pro-name">${esc(f.full_name)}</div>
             <div class="pro-trade">${esc(f.trade_label)}</div>
