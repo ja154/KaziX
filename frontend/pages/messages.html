@@ -564,7 +564,7 @@ function renderThreadList() {
   }
 
   if (!state.threads.length) {
-    list.innerHTML = '<div class="conv-empty">No conversations yet. Threads will appear here once you message someone from an application, booking, or job context.</div>';
+    list.innerHTML = '<div class="conv-empty">No conversations yet. Threads from your active applications and bookings will show up here automatically.</div>';
     return;
   }
 
@@ -910,7 +910,7 @@ async function openInitialConversation() {
 
   showChatPlaceholder(
     'No conversations yet',
-    'Your real KaziX threads will appear here once you message someone from an application, booking, or job context.',
+    'Your active application and booking threads will appear here automatically, and new messages will keep the conversation going in one place.',
     state.role === 'client' ? 'job-applicants.html' : 'my-applications.html',
     state.role === 'client' ? 'Open Applications' : 'Open My Applications'
   );

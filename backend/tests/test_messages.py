@@ -314,6 +314,87 @@ async def test_send_message_falls_back_to_job_context_when_application_hint_is_s
     assert notifications[0]["metadata"]["application_id"] == "app-1"
 
 
+@pytest.mark.asyncio
+async def test_list_message_threads_seeds_application_threads_without_messages(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "open", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [
+                {"id": "app-1", "job_id": "job-1", "fundi_id": "fundi-1", "status": "pending", "bid_amount": 800, "created_at": "2026-05-01T09:10:00Z"},
+            ],
+            "bookings": [],
+            "messages": [],
+        }
+    )
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+
+    result = await messages_module.list_message_threads(_override_user("fundi", "fundi-1"))
+
+    assert len(result["data"]) == 1
+    thread = result["data"][0]
+    assert thread["participant_id"] == "client-1"
+    assert thread["job_id"] == "job-1"
+    assert thread["application_id"] == "app-1"
+    assert thread["booking_id"] is None
+    assert thread["message_count"] == 0
+    assert thread["has_messages"] is False
+    assert thread["last_message_at"] == "2026-05-01T09:10:00Z"
+
+
+@pytest.mark.asyncio
+async def test_list_message_threads_upgrades_hired_application_to_booking_context(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "active", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [
+                {"id": "app-1", "job_id": "job-1", "fundi_id": "fundi-1", "status": "hired", "bid_amount": 800, "created_at": "2026-05-01T09:10:00Z"},
+            ],
+            "bookings": [
+                {
+                    "id": "booking-1",
+                    "job_id": "job-1",
+                    "application_id": "app-1",
+                    "client_id": "client-1",
+                    "fundi_id": "fundi-1",
+                    "status": "confirmed",
+                    "agreed_amount": 800,
+                    "start_date": "2026-05-02",
+                    "created_at": "2026-05-01T09:20:00Z",
+                }
+            ],
+            "messages": [],
+        }
+    )
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+
+    result = await messages_module.list_message_threads(_override_user("client", "client-1"))
+
+    assert len(result["data"]) == 1
+    thread = result["data"][0]
+    assert thread["participant_id"] == "fundi-1"
+    assert thread["job_id"] == "job-1"
+    assert thread["application_id"] == "app-1"
+    assert thread["booking_id"] == "booking-1"
+    assert thread["booking_status"] == "confirmed"
+    assert thread["message_count"] == 0
+    assert thread["has_messages"] is False
+    assert thread["last_message_at"] == "2026-05-01T09:20:00Z"
+
+
 def test_fetch_rows_returns_empty_list_when_supabase_returns_none() -> None:
     result = messages_module._fetch_rows(
         _NullResultAdminClient(),

@@ -107,6 +107,72 @@ def _message_preview(value: str | None) -> str:
     return f"{text[:117]}..."
 
 
+def _thread_seed_key(
+    participant_id: str,
+    *,
+    job_id: str | None = None,
+    application_id: str | None = None,
+    booking_id: str | None = None,
+) -> str:
+    thread_base = application_id or booking_id or job_id or participant_id
+    return f"{thread_base}:{participant_id}"
+
+
+def _remember_thread_seed(
+    grouped: dict[str, dict],
+    *,
+    participant_id: str | None,
+    job_id: str | None = None,
+    application_id: str | None = None,
+    booking_id: str | None = None,
+    last_message: dict | None = None,
+    unread_count: int = 0,
+    message_count: int = 0,
+) -> None:
+    if not participant_id:
+        return
+
+    key = _thread_seed_key(
+        participant_id,
+        job_id=job_id,
+        application_id=application_id,
+        booking_id=booking_id,
+    )
+    seed = grouped.setdefault(
+        key,
+        {
+            "participant_id": participant_id,
+            "last_message": None,
+            "unread_count": 0,
+            "message_count": 0,
+            "job_id": job_id,
+            "application_id": application_id,
+            "booking_id": booking_id,
+        },
+    )
+
+    if job_id and not seed.get("job_id"):
+        seed["job_id"] = job_id
+    if application_id and not seed.get("application_id"):
+        seed["application_id"] = application_id
+    if booking_id and not seed.get("booking_id"):
+        seed["booking_id"] = booking_id
+
+    seed["unread_count"] += unread_count
+    seed["message_count"] += message_count
+
+    current_last = seed.get("last_message") or {}
+    current_ts = str(current_last.get("created_at") or "")
+    candidate_ts = str((last_message or {}).get("created_at") or "")
+    if last_message and (not current_last or candidate_ts >= current_ts):
+        seed["last_message"] = last_message
+
+
+def _is_seedable_application_status(status: str | None) -> bool:
+    normalized = str(status or "").strip().lower()
+    return normalized not in {"rejected", "withdrawn"}
+
+
 def _message_query_filters(context: dict) -> dict[str, str | None]:
     application = context.get("application") or {}
     booking = context.get("booking") or {}
@@ -331,8 +397,8 @@ def _build_thread_summary(
     booking = context.get("booking") or {}
     latest_timestamp = (
         (last_message or {}).get("created_at")
-        or application.get("created_at")
         or booking.get("created_at")
+        or application.get("created_at")
         or job.get("created_at")
     )
 
@@ -389,21 +455,114 @@ async def list_message_threads(user: CurrentUser):
         grouped: dict[str, dict] = {}
         for row in rows:
             participant_id = row["recipient_id"] if row.get("sender_id") == user.user_id else row["sender_id"]
-            thread_base = row.get("application_id") or row.get("booking_id") or row.get("job_id") or row["id"]
-            key = f"{thread_base}:{participant_id}"
-            if key not in grouped:
-                grouped[key] = {
-                    "participant_id": participant_id,
-                    "last_message": row,
-                    "unread_count": 0,
-                    "message_count": 0,
-                    "job_id": row.get("job_id"),
-                    "application_id": row.get("application_id"),
-                    "booking_id": row.get("booking_id"),
-                }
-            grouped[key]["message_count"] += 1
-            if row.get("recipient_id") == user.user_id and not row.get("read_at"):
-                grouped[key]["unread_count"] += 1
+            _remember_thread_seed(
+                grouped,
+                participant_id=participant_id,
+                job_id=row.get("job_id"),
+                application_id=row.get("application_id"),
+                booking_id=row.get("booking_id"),
+                last_message=row,
+                unread_count=1 if row.get("recipient_id") == user.user_id and not row.get("read_at") else 0,
+                message_count=1,
+            )
+
+        if user.role == "client":
+            own_jobs = _fetch_rows(
+                admin,
+                "jobs",
+                "id, client_id, title, trade, county, area, status, created_at",
+                {"client_id": user.user_id},
+                desc=True,
+            )
+            for job in own_jobs:
+                job_id = job.get("id")
+                if job_id:
+                    job_cache[job_id] = job
+                    applications = _fetch_rows(
+                        admin,
+                        "applications",
+                        "id, job_id, fundi_id, status, bid_amount, created_at",
+                        {"job_id": job_id},
+                        desc=True,
+                    )
+                    for application in applications:
+                        application_id = application.get("id")
+                        if application_id:
+                            application_cache[application_id] = application
+                        if not _is_seedable_application_status(application.get("status")):
+                            continue
+                        _remember_thread_seed(
+                            grouped,
+                            participant_id=application.get("fundi_id"),
+                            job_id=job_id,
+                            application_id=application_id,
+                        )
+
+            bookings = _fetch_rows(
+                admin,
+                "bookings",
+                "id, job_id, application_id, client_id, fundi_id, status, agreed_amount, start_date, created_at",
+                {"client_id": user.user_id},
+                desc=True,
+            )
+            for booking in bookings:
+                booking_id = booking.get("id")
+                application_id = booking.get("application_id")
+                if booking_id:
+                    booking_cache[booking_id] = booking
+                if application_id:
+                    _get_application(admin, application_id, application_cache)
+                _remember_thread_seed(
+                    grouped,
+                    participant_id=booking.get("fundi_id"),
+                    job_id=booking.get("job_id"),
+                    application_id=application_id,
+                    booking_id=booking_id,
+                )
+        elif user.role == "fundi":
+            applications = _fetch_rows(
+                admin,
+                "applications",
+                "id, job_id, fundi_id, status, bid_amount, created_at",
+                {"fundi_id": user.user_id},
+                desc=True,
+            )
+            for application in applications:
+                application_id = application.get("id")
+                job_id = application.get("job_id")
+                if application_id:
+                    application_cache[application_id] = application
+                if not _is_seedable_application_status(application.get("status")):
+                    continue
+                job = _get_job(admin, job_id, job_cache) if job_id else None
+                _remember_thread_seed(
+                    grouped,
+                    participant_id=(job or {}).get("client_id"),
+                    job_id=job_id,
+                    application_id=application_id,
+                )
+
+            bookings = _fetch_rows(
+                admin,
+                "bookings",
+                "id, job_id, application_id, client_id, fundi_id, status, agreed_amount, start_date, created_at",
+                {"fundi_id": user.user_id},
+                desc=True,
+            )
+            for booking in bookings:
+                booking_id = booking.get("id")
+                application_id = booking.get("application_id")
+                if booking_id:
+                    booking_cache[booking_id] = booking
+                if application_id:
+                    _get_application(admin, application_id, application_cache)
+                _remember_thread_seed(
+                    grouped,
+                    participant_id=booking.get("client_id"),
+                    job_id=booking.get("job_id"),
+                    application_id=application_id,
+                    booking_id=booking_id,
+                )
 
         threads = []
         for seed in grouped.values():
