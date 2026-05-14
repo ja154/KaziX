@@ -72,9 +72,19 @@ const content = `// Generated from frontend/.env. Do not edit directly.
 (function () {
   const config = ${JSON.stringify(config, null, 2)};
   const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
+  const SAME_ORIGIN_PROXY_HOSTS = new Set([
+    'kazixfrontend.vercel.app',
+    'kazix.vercel.app',
+    'kazix.co.ke',
+    'www.kazix.co.ke',
+  ]);
 
   function isLocalHost(host) {
     return ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
+  }
+
+  function shouldUseSameOriginProxy(host) {
+    return SAME_ORIGIN_PROXY_HOSTS.has(host) || host.endsWith('.vercel.app') || host.endsWith('.kazix.co.ke');
   }
 
   function normalizeApiBase(candidate) {
@@ -97,6 +107,10 @@ const content = `// Generated from frontend/.env. Do not edit directly.
     const host = window.location.hostname;
     if (isLocalHost(host)) {
       return window.location.origin.replace(/\\/$/, '');
+    }
+
+    if (shouldUseSameOriginProxy(host)) {
+      return '';
     }
 
     return DEFAULT_REMOTE_API_BASE;

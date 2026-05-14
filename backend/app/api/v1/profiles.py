@@ -12,6 +12,7 @@ GET    /v1/profiles/{id}   → public profile card for one user
 """
 
 import uuid
+from urllib.parse import urlparse
 from typing import Literal
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
@@ -19,6 +20,7 @@ from postgrest.exceptions import APIError as PostgrestAPIError
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.deps import CurrentSession, CurrentUser
+from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.core.supabase import get_admin_client, get_anon_client, get_user_client
 from app.services.image_validation import ImageValidationError, validate_image_file
@@ -26,6 +28,8 @@ from app.services.profile_defaults import build_default_profile_row
 
 logger = get_logger(__name__)
 router = APIRouter()
+PROFILE_PICTURE_BUCKET = "profile-pictures"
+PROFILE_PICTURE_STORAGE_COLUMN = "profile_picture_storage_path"
 
 TRADE_EMOJIS = {
     "plumber": "🚿",
@@ -99,6 +103,117 @@ def _profile_update_http_error(exc: Exception) -> HTTPException:
             )
 
     return HTTPException(status_code=500, detail="Failed to save profile changes.")
+
+
+def _supabase_error_blob(exc: Exception) -> str:
+    return " ".join(
+        str(part or "")
+        for part in (
+            getattr(exc, "code", None),
+            getattr(exc, "message", None),
+            getattr(exc, "details", None),
+            getattr(exc, "hint", None),
+            str(exc),
+        )
+    ).lower()
+
+
+def _is_missing_profile_picture_storage_column(exc: Exception) -> bool:
+    error_blob = _supabase_error_blob(exc)
+    return PROFILE_PICTURE_STORAGE_COLUMN in error_blob and (
+        "column" in error_blob or "schema cache" in error_blob or "could not find" in error_blob
+    )
+
+
+def _extract_storage_path_from_avatar_url(
+    avatar_url: str | None,
+    *,
+    bucket_name: str = PROFILE_PICTURE_BUCKET,
+) -> str | None:
+    if not avatar_url:
+        return None
+
+    try:
+        parsed = urlparse(str(avatar_url))
+    except Exception:
+        return None
+
+    public_prefix = f"/storage/v1/object/public/{bucket_name}/"
+    if public_prefix not in parsed.path:
+        return None
+
+    return parsed.path.split(public_prefix, maxsplit=1)[1] or None
+
+
+def _load_profile_picture_refs(admin, user_id: str) -> tuple[str | None, str | None]:
+    """
+    Fetches the current avatar URL plus storage path.
+
+    Falls back to deriving the storage path from the public avatar URL so the
+    picture feature keeps working even if the latest migration is not deployed
+    yet and `profile_picture_storage_path` is unavailable.
+    """
+    avatar_url = None
+    storage_path = None
+
+    try:
+        result = (
+            admin.table("profiles")
+            .select(f"avatar_url, {PROFILE_PICTURE_STORAGE_COLUMN}")
+            .eq("id", user_id)
+            .single()
+            .execute()
+        )
+        current_profile = result.data or {}
+        avatar_url = current_profile.get("avatar_url")
+        storage_path = current_profile.get(PROFILE_PICTURE_STORAGE_COLUMN)
+    except Exception as exc:
+        if not _is_missing_profile_picture_storage_column(exc):
+            raise
+
+        logger.warning(
+            "Profile picture storage column missing; falling back to avatar URL only",
+            user_id=user_id,
+            error=str(exc),
+        )
+        result = (
+            admin.table("profiles")
+            .select("avatar_url")
+            .eq("id", user_id)
+            .single()
+            .execute()
+        )
+        current_profile = result.data or {}
+        avatar_url = current_profile.get("avatar_url")
+
+    return avatar_url, storage_path or _extract_storage_path_from_avatar_url(avatar_url)
+
+
+def _save_profile_picture_refs(
+    client,
+    user_id: str,
+    *,
+    avatar_url: str | None,
+    storage_path: str | None,
+) -> None:
+    payload = {
+        "avatar_url": avatar_url,
+        PROFILE_PICTURE_STORAGE_COLUMN: storage_path,
+    }
+    try:
+        client.table("profiles").update(payload).eq("id", user_id).execute()
+        return
+    except Exception as exc:
+        if not _is_missing_profile_picture_storage_column(exc):
+            raise
+
+        logger.warning(
+            "Profile picture storage column missing during update; saving avatar URL only",
+            user_id=user_id,
+            error=str(exc),
+        )
+
+    client.table("profiles").update({"avatar_url": avatar_url}).eq("id", user_id).execute()
 
 
 def _collect_profile_sections(
@@ -482,9 +597,9 @@ def _get_storage_client():
 
 @router.post("/picture")
 async def upload_profile_picture(
-    file: UploadFile,
     user: CurrentUser,
     session: CurrentSession,
+    file: UploadFile = File(...),
 ):
     """
     Upload or update user's profile picture.
@@ -531,21 +646,13 @@ async def upload_profile_picture(
     file_uuid = str(uuid.uuid4())
     file_ext = image_info.get("extension", "jpg")
     storage_path = f"{user.user_id}/{file_uuid}.{file_ext}"
-    bucket_name = "profile-pictures"
-    
+    bucket_name = PROFILE_PICTURE_BUCKET
+
     admin = get_admin_client()
-    
+
     # Get current profile to find old picture for cleanup
     try:
-        current_profile_result = (
-            admin.table("profiles")
-            .select("avatar_url, profile_picture_storage_path")
-            .eq("id", user.user_id)
-            .single()
-            .execute()
-        )
-        current_profile = current_profile_result.data or {}
-        old_storage_path = current_profile.get("profile_picture_storage_path")
+        _, old_storage_path = _load_profile_picture_refs(admin, user.user_id)
     except Exception as exc:
         logger.warning("Could not fetch current profile for cleanup", error=str(exc))
         old_storage_path = None
@@ -587,11 +694,13 @@ async def upload_profile_picture(
     # Update profile with new avatar_url
     client = get_user_client(session.access_token)
     try:
-        client.table("profiles").update({
-            "avatar_url": avatar_url,
-            "profile_picture_storage_path": storage_path,
-        }).eq("id", user.user_id).execute()
-        
+        _save_profile_picture_refs(
+            client,
+            user.user_id,
+            avatar_url=avatar_url,
+            storage_path=storage_path,
+        )
+
         logger.info("Updated profile avatar_url", user_id=user.user_id)
     except Exception as exc:
         logger.error("Failed to update profile with avatar_url", error=str(exc))
@@ -629,46 +738,40 @@ async def delete_profile_picture(
     
     # Fetch current profile to get storage path
     try:
-        current_profile_result = (
-            admin.table("profiles")
-            .select("avatar_url, profile_picture_storage_path")
-            .eq("id", user.user_id)
-            .single()
-            .execute()
-        )
-        current_profile = current_profile_result.data or {}
+        avatar_url, storage_path = _load_profile_picture_refs(admin, user.user_id)
     except Exception as exc:
         logger.warning("Could not fetch profile for picture deletion", error=str(exc))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch profile.",
         )
-    
-    storage_path = current_profile.get("profile_picture_storage_path")
-    
-    if not storage_path:
+
+    if not storage_path and not avatar_url:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No profile picture to delete.",
         )
-    
-    # Delete from storage
-    try:
-        storage = _get_storage_client()
-        storage.from_("profile-pictures").remove([storage_path])
-        logger.info("Deleted profile picture from storage", user_id=user.user_id, path=storage_path)
-    except Exception as exc:
-        logger.warning("Failed to delete picture from storage", error=str(exc))
-        # Continue with database cleanup even if storage deletion fails
+
+    # Delete from storage when we can resolve the object path.
+    if storage_path:
+        try:
+            storage = _get_storage_client()
+            storage.from_(PROFILE_PICTURE_BUCKET).remove([storage_path])
+            logger.info("Deleted profile picture from storage", user_id=user.user_id, path=storage_path)
+        except Exception as exc:
+            logger.warning("Failed to delete picture from storage", error=str(exc))
+            # Continue with database cleanup even if storage deletion fails
     
     # Clear from database
     client = get_user_client(session.access_token)
     try:
-        client.table("profiles").update({
-            "avatar_url": None,
-            "profile_picture_storage_path": None,
-        }).eq("id", user.user_id).execute()
-        
+        _save_profile_picture_refs(
+            client,
+            user.user_id,
+            avatar_url=None,
+            storage_path=None,
+        )
+
         logger.info("Cleared avatar_url from profile", user_id=user.user_id)
     except Exception as exc:
         logger.error("Failed to clear avatar_url from profile", error=str(exc))

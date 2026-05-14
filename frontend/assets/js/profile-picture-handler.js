@@ -3,9 +3,17 @@
     window.KazixProfilePicture = {};
   }
 
-  const API_BASE = (window.KazixProfile && window.KazixProfile.API_BASE)
-    || window.KAZIX_API_BASE
-    || 'https://kazix.onrender.com';
+  function resolveApiBase() {
+    if (window.KazixProfile && typeof window.KazixProfile.API_BASE === 'string') {
+      return window.KazixProfile.API_BASE;
+    }
+    if (typeof window.KAZIX_API_BASE === 'string') {
+      return window.KAZIX_API_BASE;
+    }
+    return 'https://kazix.onrender.com';
+  }
+
+  const API_BASE = resolveApiBase();
 
   class ProfilePictureHandler {
     constructor() {
@@ -419,7 +427,7 @@
               resolve(payload);
               return;
             }
-            reject(new Error(payload.detail || 'Upload failed. Please try again.'));
+            reject(new Error(payload.detail || payload.message || 'Upload failed. Please try again.'));
           });
 
           xhr.addEventListener('error', () => {
@@ -466,7 +474,7 @@
 
         const payload = this.safeJson(await response.text());
         if (!response.ok) {
-          throw new Error(payload.detail || 'Could not remove the profile picture.');
+          throw new Error(payload.detail || payload.message || 'Could not remove the profile picture.');
         }
 
         this.onDeleteSuccess(payload);

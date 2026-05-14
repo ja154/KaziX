@@ -31,13 +31,26 @@ class Settings(BaseSettings):
     )
     allowed_hosts: str = "localhost,127.0.0.1,*.onrender.com,kazix-api.onrender.com,api.kazix.co.ke"
 
+    @staticmethod
+    def _split_csv(raw_value: str) -> list[str]:
+        return [item.strip() for item in str(raw_value or "").split(",") if item.strip()]
+
     @property
     def cors_origins(self) -> list[str]:
-        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
+        origins: list[str] = []
+        seen: set[str] = set()
+
+        for origin in [*self._split_csv(self.allowed_origins), *self._split_csv(self.frontend_url)]:
+            if origin in seen:
+                continue
+            seen.add(origin)
+            origins.append(origin)
+
+        return origins
 
     @property
     def trusted_hosts(self) -> list[str]:
-        return [host.strip() for host in self.allowed_hosts.split(",") if host.strip()]
+        return self._split_csv(self.allowed_hosts)
 
     @property
     def is_production(self) -> bool:
