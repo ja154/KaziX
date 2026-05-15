@@ -216,6 +216,15 @@ def _save_profile_picture_refs(
     client.table("profiles").update({"avatar_url": avatar_url}).eq("id", user_id).execute()
 
 
+def _embedded_profile_row(payload: dict) -> dict:
+    profile = payload.get("profiles") or payload.get("profile") or {}
+    if isinstance(profile, list):
+        return profile[0] if profile else {}
+    if isinstance(profile, dict):
+        return profile
+    return {}
+
+
 def _collect_profile_sections(
     admin,
     user_id: str,
@@ -359,46 +368,53 @@ async def search_fundis(
     offset: int = Query(0, ge=0),
 ):
     """
-    Public fundi search. Two-query approach — no PostgREST embedding used.
-    No authentication required.
+    Public fundi search backed by one embedded PostgREST query.
+    No authentication required and response shape remains stable.
     """
     client = get_anon_client()
     try:
-        fq = client.table("fundi_profiles").select(
-            "id, trade, skills, rate_min, rate_max, "
-            "rating_avg, jobs_completed, is_available, kyc_status"
+        query = client.table("fundi_profiles").select(
+            "id, trade, skills, rate_min, rate_max, rating_avg, jobs_completed, "
+            "is_available, kyc_status, profiles!inner(full_name, avatar_url, county, area, is_verified)",
+            count="exact",
         )
+
         if trade:
-            fq = fq.ilike("trade", f"%{trade.lower().replace(' ', '_')}%")
+            query = query.ilike("trade", f"%{trade.lower().replace(' ', '_')}%")
         if min_rating is not None:
-            fq = fq.gte("rating_avg", min_rating)
+            query = query.gte("rating_avg", min_rating)
+        if min_rate is not None and min_rate > 0:
+            query = query.gte("rate_min", min_rate)
+        if max_rate is not None and max_rate >= 0:
+            query = query.lte("rate_min", max_rate)
         if verified_only:
-            fq = fq.eq("kyc_status", "approved")
+            query = query.eq("kyc_status", "approved")
         if available_only:
-            fq = fq.eq("is_available", True)
-
-        fundi_result = fq.limit(500).execute()
-        fundi_rows = fundi_result.data or []
-
-        if not fundi_rows:
-            return {"total": 0, "offset": offset, "limit": limit, "results": []}
-
-        fundi_ids = [row["id"] for row in fundi_rows]
-
-        pq = (
-            client.table("profiles")
-            .select("id, full_name, avatar_url, county, area, is_verified")
-            .in_("id", fundi_ids)
-        )
+            query = query.eq("is_available", True)
         if location:
-            pq = pq.ilike("county", f"%{location}%")
+            query = query.ilike("profiles.county", f"%{location}%")
 
-        profile_result = pq.execute()
-        profiles_by_id = {profile["id"]: profile for profile in (profile_result.data or [])}
+        order_field, order_desc = {
+            "rating": ("rating_avg", True),
+            "jobs": ("jobs_completed", True),
+            "rate_asc": ("rate_min", False),
+            "rate_desc": ("rate_min", True),
+        }.get(sort_by, ("rating_avg", True))
+
+        fundi_result = (
+            query
+            .order(order_field, desc=order_desc)
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
+        fundi_rows = fundi_result.data or []
+        total = getattr(fundi_result, "count", None)
+        if total is None:
+            total = len(fundi_rows)
 
         fundis = []
         for fundi_profile in fundi_rows:
-            profile = profiles_by_id.get(fundi_profile["id"])
+            profile = _embedded_profile_row(fundi_profile)
             if not profile:
                 continue
 
@@ -436,18 +452,7 @@ async def search_fundis(
                 }
             )
 
-        sort_key = {
-            "rating": lambda item: item["rating"],
-            "jobs": lambda item: item["jobs_completed"],
-            "rate_asc": lambda item: item["rate_min"],
-            "rate_desc": lambda item: item["rate_min"],
-        }.get(sort_by, lambda item: item["rating"])
-        fundis.sort(key=sort_key, reverse=(sort_by != "rate_asc"))
-
-        total = len(fundis)
-        page = fundis[offset: offset + limit]
-
-        return {"total": total, "offset": offset, "limit": limit, "results": page}
+        return {"total": total, "offset": offset, "limit": limit, "results": fundis}
 
     except HTTPException:
         raise

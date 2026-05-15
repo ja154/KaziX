@@ -1,4 +1,5 @@
 import re
+from copy import deepcopy
 from types import SimpleNamespace
 
 import httpx
@@ -72,6 +73,106 @@ class _FakeAuthLookupClient:
                 user=SimpleNamespace(id=user_id, email=email, phone=phone)
             )
         )
+
+
+class _FakeSearchResult:
+    def __init__(self, data, count: int) -> None:
+        self.data = data
+        self.count = count
+
+
+class _FakeSearchQuery:
+    def __init__(self, rows: list[dict]) -> None:
+        self.rows = rows
+        self._filters: list[tuple[str, str, object]] = []
+        self._order_field: str | None = None
+        self._order_desc = False
+        self._range: tuple[int, int] | None = None
+
+    def select(self, _columns: str, count: str | None = None):
+        return self
+
+    def ilike(self, field: str, pattern: str):
+        self._filters.append(("ilike", field, pattern))
+        return self
+
+    def eq(self, field: str, value: object):
+        self._filters.append(("eq", field, value))
+        return self
+
+    def gte(self, field: str, value: object):
+        self._filters.append(("gte", field, value))
+        return self
+
+    def lte(self, field: str, value: object):
+        self._filters.append(("lte", field, value))
+        return self
+
+    def order(self, field: str, desc: bool = False):
+        self._order_field = field
+        self._order_desc = desc
+        return self
+
+    def range(self, start: int, end: int):
+        self._range = (start, end)
+        return self
+
+    @staticmethod
+    def _field_value(row: dict, field: str):
+        value = row
+        for part in field.split("."):
+            if isinstance(value, list):
+                value = value[0] if value else None
+            if not isinstance(value, dict):
+                return None
+            value = value.get(part)
+        return value
+
+    def execute(self):
+        rows = [deepcopy(row) for row in self.rows]
+
+        for operation, field, expected in self._filters:
+            if operation == "ilike":
+                needle = str(expected).replace("%", "").lower()
+                rows = [
+                    row for row in rows
+                    if needle in str(self._field_value(row, field) or "").lower()
+                ]
+            elif operation == "eq":
+                rows = [row for row in rows if self._field_value(row, field) == expected]
+            elif operation == "gte":
+                rows = [
+                    row for row in rows
+                    if (self._field_value(row, field) or 0) >= expected
+                ]
+            elif operation == "lte":
+                rows = [
+                    row for row in rows
+                    if (self._field_value(row, field) or 0) <= expected
+                ]
+
+        total = len(rows)
+
+        if self._order_field:
+            rows.sort(
+                key=lambda row: self._field_value(row, self._order_field) or 0,
+                reverse=self._order_desc,
+            )
+
+        if self._range:
+            start, end = self._range
+            rows = rows[start:end + 1]
+
+        return _FakeSearchResult(rows, total)
+
+
+class _FakeSearchClient:
+    def __init__(self, rows: list[dict]) -> None:
+        self.rows = rows
+
+    def table(self, table_name: str):
+        assert table_name == "fundi_profiles"
+        return _FakeSearchQuery(self.rows)
 
 
 def _make_bearer_token(secret: str, user_id: str = "user-123") -> str:
@@ -280,3 +381,122 @@ async def test_get_public_profile_returns_wrapped_client_profile(monkeypatch) ->
     assert payload["profile"]["preferred_language"] == "en"
     assert payload["profile"]["created_at"] == "2026-04-24T10:00:00Z"
     assert payload["fundi_profile"] is None
+
+
+@pytest.mark.asyncio
+async def test_search_fundis_filters_sorts_and_paginates_embedded_profiles(monkeypatch) -> None:
+    fake_anon = _FakeSearchClient(
+        [
+            {
+                "id": "fundi-1",
+                "trade": "plumber",
+                "skills": ["Leak repair", "Install"],
+                "rate_min": 1200,
+                "rate_max": 1800,
+                "rating_avg": 4.6,
+                "jobs_completed": 8,
+                "is_available": True,
+                "kyc_status": "approved",
+                "profiles": {
+                    "full_name": "Alice Fundi",
+                    "avatar_url": "https://example.com/a.png",
+                    "county": "Nairobi",
+                    "area": "Westlands",
+                    "is_verified": False,
+                },
+            },
+            {
+                "id": "fundi-2",
+                "trade": "plumber",
+                "skills": ["Pipes", "Emergency callouts"],
+                "rate_min": 1400,
+                "rate_max": 2200,
+                "rating_avg": 4.9,
+                "jobs_completed": 14,
+                "is_available": True,
+                "kyc_status": "approved",
+                "profiles": {
+                    "full_name": "Brian Fundi",
+                    "avatar_url": None,
+                    "county": "Nairobi",
+                    "area": "Kilimani",
+                    "is_verified": True,
+                },
+            },
+            {
+                "id": "fundi-3",
+                "trade": "plumber",
+                "skills": ["Maintenance"],
+                "rate_min": 900,
+                "rate_max": 1400,
+                "rating_avg": 4.8,
+                "jobs_completed": 20,
+                "is_available": True,
+                "kyc_status": "approved",
+                "profiles": {
+                    "full_name": "Cheap Fundi",
+                    "avatar_url": None,
+                    "county": "Nairobi",
+                    "area": "South B",
+                    "is_verified": True,
+                },
+            },
+            {
+                "id": "fundi-4",
+                "trade": "electrician",
+                "skills": ["Wiring"],
+                "rate_min": 1500,
+                "rate_max": 2400,
+                "rating_avg": 4.7,
+                "jobs_completed": 11,
+                "is_available": True,
+                "kyc_status": "approved",
+                "profiles": {
+                    "full_name": "Eve Spark",
+                    "avatar_url": None,
+                    "county": "Nairobi",
+                    "area": "Lavington",
+                    "is_verified": True,
+                },
+            },
+        ]
+    )
+
+    monkeypatch.setattr(profiles_module, "get_anon_client", lambda: fake_anon)
+
+    first_page = await profiles_module.search_fundis(
+        trade="plumber",
+        location="nairobi",
+        min_rate=1000,
+        max_rate=1500,
+        min_rating=4.5,
+        verified_only=True,
+        available_only=True,
+        sort_by="jobs",
+        limit=1,
+        offset=0,
+    )
+
+    assert first_page["total"] == 2
+    assert first_page["offset"] == 0
+    assert first_page["limit"] == 1
+    assert [item["id"] for item in first_page["results"]] == ["fundi-2"]
+    assert first_page["results"][0]["trade_label"] == "Plumber"
+    assert first_page["results"][0]["skills"] == ["Pipes", "Emergency callouts"]
+    assert first_page["results"][0]["is_verified"] is True
+
+    second_page = await profiles_module.search_fundis(
+        trade="plumber",
+        location="nairobi",
+        min_rate=1000,
+        max_rate=1500,
+        min_rating=4.5,
+        verified_only=True,
+        available_only=True,
+        sort_by="jobs",
+        limit=1,
+        offset=1,
+    )
+
+    assert second_page["total"] == 2
+    assert [item["id"] for item in second_page["results"]] == ["fundi-1"]

@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,600&display=swap">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>My Profile — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -103,7 +106,6 @@
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.profile-layout{grid-template-columns:1fr}.profile-card{position:static}.info-grid,.pref-grid{grid-template-columns:1fr}}
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
 <script>
 (function(){
   if (!localStorage.getItem('kazix_access_token')) {
@@ -111,10 +113,6 @@
     location.replace('login.html?next=' + next);
     return;
   }
-  window.revealClientProfilePage = function () {
-    var gate = document.getElementById('auth-gate-style');
-    if (gate) gate.remove();
-  };
 })();
 </script>
 </head>
@@ -316,12 +314,6 @@ const {
   setText,
 } = window.KazixProfile;
 
-function revealClientProfile() {
-  if (typeof window.revealClientProfilePage === 'function') {
-    window.revealClientProfilePage();
-  }
-}
-
 function setStatus(message, tone) {
   const el = document.getElementById('profileStatus');
   if (!el) return;
@@ -501,8 +493,6 @@ async function initClientProfile() {
   } catch (error) {
     console.error('Failed to hydrate client profile', error);
     setStatus(error?.message || 'Failed to load your profile.', 'error');
-  } finally {
-    revealClientProfile();
   }
 }
 

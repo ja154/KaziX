@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght,300;0,400;0,500;1,300;1,600&display=swap">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Messages — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -119,7 +122,6 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
   .msg-bubble{max-width:100%}
 }
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
 <script>
 (function(){
   if (!localStorage.getItem('kazix_access_token')) {
@@ -127,10 +129,6 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
     location.replace('login.html?next=' + next);
     return;
   }
-  window.revealMessagesPage = function () {
-    var gate = document.getElementById('auth-gate-style');
-    if (gate) gate.remove();
-  };
 })();
 </script>
 </head>
@@ -329,12 +327,6 @@ const state = {
   sending: false,
   threadLoadError: null,
 };
-
-function revealPage() {
-  if (typeof window.revealMessagesPage === 'function') {
-    window.revealMessagesPage();
-  }
-}
 
 function setStatus(message, tone) {
   const el = document.getElementById('messageStatus');
@@ -1081,8 +1073,6 @@ async function initMessagesPage() {
       'Back to Dashboard'
     );
     setStatus(error?.message || 'Could not load your messages.', 'error');
-  } finally {
-    revealPage();
   }
 }
 

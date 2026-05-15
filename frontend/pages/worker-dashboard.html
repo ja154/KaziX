@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,600&display=swap">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Dashboard — KaziX Pro</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
@@ -104,7 +107,6 @@
   .card-head,.card-body{padding:1rem}
 }
 </style>
-<style id="auth-gate-style">body{visibility:hidden}</style>
 <script>
 (function(){
   if (!localStorage.getItem("kazix_access_token")) {
@@ -112,10 +114,6 @@
     location.replace("login.html?next=" + next);
     return;
   }
-  document.addEventListener("DOMContentLoaded", function(){
-    var s = document.getElementById("auth-gate-style");
-    if (s) s.remove();
-  });
 })();
 </script>
 </head>
@@ -453,12 +451,17 @@ function renderWorkerDashboard(data) {
 document.addEventListener('DOMContentLoaded', function () {
   window.KazixDashboard
     .hydrateDashboard({ expectedRole: 'fundi' })
-    .then(function () {
+    .then(function (context) {
       var locationEl = document.getElementById('availabilityLocation');
       if (!locationEl) return;
       workerAvailabilityLocation = locationEl.textContent || workerAvailabilityLocation;
       if (document.getElementById('availLabel').textContent === 'Available') {
         document.getElementById('availSub').textContent = 'Clients and job alerts can reach you · ' + workerAvailabilityLocation;
+      }
+      if (context && context.dashboardStatePromise) {
+        return context.dashboardStatePromise.then(function (state) {
+          return state || window.KazixProfile.getDashboardState({ silent: false });
+        });
       }
       return window.KazixProfile.getDashboardState({ silent: false });
     })

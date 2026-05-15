@@ -52,6 +52,7 @@
     var getAccessToken = helpers.getAccessToken;
     var requestJson = helpers.requestJson;
     var getMyProfile = helpers.getMyProfile;
+    var hydrateShell = helpers.hydrateShell;
     var initials = helpers.initials;
     var setText = helpers.setText;
     var formatLocation = helpers.formatLocation;
@@ -87,6 +88,13 @@
         return;
       }
 
+      var dashboardStatePromise = typeof helpers.getDashboardState === "function"
+        ? helpers.getDashboardState({ silent: true }).catch(function () { return null; })
+        : Promise.resolve(null);
+      var notificationSummaryPromise = typeof helpers.hydrateNotificationSummary === "function"
+        ? helpers.hydrateNotificationSummary({ silent: true }).catch(function () { return null; })
+        : Promise.resolve(null);
+
       var name = profile.full_name || "My account";
       var avatar = initials(name);
       var location = formatLocation(profile);
@@ -97,11 +105,15 @@
           ? "Admin account"
           : "Client account";
 
-      setText("#navUserAvatar", avatar);
-      setText("#navUserName", name);
-      setText("#sidebarAvatar", avatar);
-      setText("#sidebarName", name);
-      setText("#sidebarRole", roleLabel);
+      if (typeof hydrateShell === "function") {
+        await hydrateShell({ data: data, silent: false, prefetch: false });
+      } else {
+        setText("#navUserAvatar", avatar);
+        setText("#navUserName", name);
+        setText("#sidebarAvatar", avatar);
+        setText("#sidebarName", name);
+        setText("#sidebarRole", roleLabel);
+      }
 
       // Update user menu header with user name
       var userMenuName = document.getElementById("userMenuName");
@@ -116,18 +128,21 @@
       var greeting = greetingForHour(new Date()) + ", " + greetingName + " 👋";
       setText("#dashboardGreeting", greeting);
       setText("#availabilityLocation", location);
-      if (typeof helpers.hydrateDashboardState === "function") {
-        helpers.hydrateDashboardState({ silent: true });
-      }
-      if (typeof helpers.hydrateNotificationSummary === "function") {
-        helpers.hydrateNotificationSummary({ silent: true });
-      }
 
       if (options.updateDocumentTitle !== false) {
         document.title = role === "fundi"
           ? "Dashboard — " + name + " · KaziX Pro"
           : "Dashboard — " + name + " · KaziX";
       }
+
+      return {
+        dashboardStatePromise: dashboardStatePromise,
+        notificationSummaryPromise: notificationSummaryPromise,
+        profileData: data,
+        role: role,
+        roleLabel: roleLabel,
+        avatar: avatar,
+      };
     } catch (error) {
       console.error("Failed to hydrate dashboard shell", error);
       if ((error && error.message || "").toLowerCase().indexOf("sign in") !== -1) {

@@ -406,8 +406,7 @@ async def get_dashboard_state(user: CurrentUser):
             jobs = (
                 admin.table("jobs")
                 .select(
-                    "id, client_id, title, trade, county, area, budget_min, budget_max, "
-                    "payment_type, urgency, preferred_date, preferred_time, status, created_at, updated_at"
+                    "id, title, trade, county, area, budget_min, budget_max, status, created_at"
                 )
                 .eq("client_id", user.user_id)
                 .order("created_at", desc=True)
@@ -419,7 +418,7 @@ async def get_dashboard_state(user: CurrentUser):
             if job_ids:
                 applications = (
                     admin.table("applications")
-                    .select("id, job_id, status, bid_amount, created_at, updated_at")
+                    .select("id, job_id, status, created_at")
                     .in_("job_id", job_ids)
                     .order("created_at", desc=True)
                     .execute()
@@ -473,7 +472,7 @@ async def get_dashboard_state(user: CurrentUser):
 
             applications = (
                 admin.table("applications")
-                .select("id, job_id, status, bid_amount, created_at, updated_at")
+                .select("id, job_id, status, created_at")
                 .eq("fundi_id", user.user_id)
                 .order("created_at", desc=True)
                 .execute()

@@ -73,6 +73,7 @@
     fundi: 'worker-profile-edit.html',
     admin: 'admin-dashboard.html',
   };
+  const PROFILE_CACHE_KEY = 'kazix_profile';
   const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
   const DASHBOARD_STATE_MAX_AGE_MS = 60 * 1000;
   const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
@@ -382,23 +383,30 @@
     }
 
     if (!myProfilePromise) {
-      myProfilePromise = requestJson('/v1/profiles/me', { auth: true }).catch((error) => {
-        myProfilePromise = null;
-        
-        // Handle 404 Profile not found — user hasn't completed registration yet.
-        // We do NOT clear the auth tokens here, as the user IS authenticated with Supabase,
-        // they just don't have a KaziX profile record yet.
-        if (error.message && (error.message.includes('404') || error.message.includes('Profile not found'))) {
-          const redirectUrl = 'register.html?mode=complete-profile';
-          console.warn('Profile not found for authenticated user. Redirecting to registration:', error.message);
-          window.location.replace(redirectUrl);
-          
-          // Return a rejected promise in case redirect is blocked
-          return Promise.reject(new Error('Profile not found. Please complete your registration.'));
-        }
-        
-        throw error;
-      });
+      myProfilePromise = requestJson('/v1/profiles/me', { auth: true })
+        .then((data) => {
+          if (data?.profile) {
+            writeProfileCache(data.profile);
+          }
+          return data;
+        })
+        .catch((error) => {
+          myProfilePromise = null;
+
+          // Handle 404 Profile not found — user hasn't completed registration yet.
+          // We do NOT clear the auth tokens here, as the user IS authenticated with Supabase,
+          // they just don't have a KaziX profile record yet.
+          if (error.message && (error.message.includes('404') || error.message.includes('Profile not found'))) {
+            const redirectUrl = 'register.html?mode=complete-profile';
+            console.warn('Profile not found for authenticated user. Redirecting to registration:', error.message);
+            window.location.replace(redirectUrl);
+
+            // Return a rejected promise in case redirect is blocked
+            return Promise.reject(new Error('Profile not found. Please complete your registration.'));
+          }
+
+          throw error;
+        });
     }
 
     return myProfilePromise;
@@ -537,6 +545,19 @@
 
   function invalidateProfileCache() {
     myProfilePromise = null;
+  }
+
+  function writeProfileCache(profile) {
+    if (!profile || typeof profile !== 'object' || !profile.id) return;
+
+    try {
+      window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
+      if (profile.role) {
+        window.localStorage.setItem('kazix_role', profile.role);
+      }
+    } catch (_error) {
+      // Ignore storage failures; the in-memory promise still stays valid.
+    }
   }
 
   function arrayToCsv(value) {
@@ -962,7 +983,7 @@
   }
 
   async function hydrateShell(options = {}) {
-    const { data = null, silent = true } = options;
+    const { data = null, silent = true, prefetch = true } = options;
 
     try {
       const shellData = data || await getMyProfile();
@@ -988,8 +1009,10 @@
       setDestination('.topnav .user-chip', accountHref);
       setDestination('.sidebar-bottom .sidebar-profile', accountHref);
       wireNotificationButtons();
-      hydrateDashboardState({ silent: true });
-      hydrateNotificationSummary({ silent: true });
+      if (prefetch) {
+        hydrateDashboardState({ silent: true });
+        hydrateNotificationSummary({ silent: true });
+      }
 
       return shellData;
     } catch (error) {

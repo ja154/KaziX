@@ -30,6 +30,7 @@
   ]);
   const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
+  let initSequence = 0;
   let refreshSessionPromise = null;
 
   function normalizeApiBase(candidate) {
@@ -314,6 +315,17 @@
     return normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
   }
 
+  function cacheProfile(profile) {
+    const normalized = normalizeProfile(profile);
+    if (!normalized) return null;
+
+    window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(normalized));
+    if (normalized.role) {
+      window.localStorage.setItem('kazix_role', normalized.role);
+    }
+    return normalized;
+  }
+
   function isPendingRegistration() {
     return window.localStorage.getItem('kazix_reg_pending_profile') === '1'
       || window.localStorage.getItem('kazix_auth_flow') === 'register';
@@ -485,31 +497,52 @@
   }
 
   async function init() {
+    const sequence = ++initSequence;
+    const storedToken = getToken();
+    const cachedProfile = storedToken ? getCachedProfile() : null;
+
     renderGuest();
+    if (!storedToken) return;
 
-    const token = await getValidAccessToken();
-    if (!token) return;
-
-    const cachedProfile = getCachedProfile();
     if (cachedProfile) {
       window.KaziXUser = cachedProfile;
       renderSignedIn(cachedProfile);
     }
 
-    const profile = await fetchProfile(token);
-    if (!profile) {
-      if (!getToken() || !cachedProfile) {
-        renderGuest();
+    const refreshProfile = async () => {
+      const token = await getValidAccessToken();
+      if (sequence !== initSequence) return;
+      if (!token) {
+        if (!getToken()) {
+          renderGuest();
+        }
+        return;
       }
+
+      const profile = await fetchProfile(token);
+      if (sequence !== initSequence) return;
+      if (!profile) {
+        if (!getToken() || !cachedProfile) {
+          renderGuest();
+        }
+        return;
+      }
+
+      const nextProfile = cacheProfile(profile) || profile;
+      window.KaziXUser = nextProfile;
+      renderSignedIn(nextProfile);
+    };
+
+    if (typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(() => {
+        refreshProfile();
+      });
       return;
     }
 
-    window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
-    if (profile.role) {
-      window.localStorage.setItem('kazix_role', profile.role);
-    }
-    window.KaziXUser = profile;
-    renderSignedIn(profile);
+    window.setTimeout(() => {
+      refreshProfile();
+    }, 0);
   }
 
   document.addEventListener('click', (event) => {
