@@ -37,6 +37,7 @@ class HireRequest(BaseModel):
     start_date:     str | None = None  # ISO date
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 async def list_bookings(
     user: CurrentUser,
