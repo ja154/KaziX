@@ -325,14 +325,9 @@
 <script>
 function resolveApiBase() {
   const configured = String(window.KAZIX_API_BASE || window.KAZIX_CONFIG?.KAZIX_API_BASE || '').trim();
+  const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
   const host = window.location.hostname;
-  const proxyHosts = new Set([
-    'kazixfrontend.vercel.app',
-    'kazix.vercel.app',
-    'kazix.co.ke',
-    'www.kazix.co.ke',
-  ]);
-  const useSameOriginProxy = proxyHosts.has(host) || host.endsWith('.kazix.co.ke');
+  const isLocalHost = ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
 
   if (configured) {
     try {
@@ -346,11 +341,11 @@ function resolveApiBase() {
     }
   }
 
-  if (useSameOriginProxy) {
-    return '';
+  if (isLocalHost) {
+    return window.location.origin.replace(/\/$/, '');
   }
 
-  return window.location.origin.replace(/\/$/, '');
+  return DEFAULT_REMOTE_API_BASE;
 }
 
 const API_BASE = resolveApiBase();

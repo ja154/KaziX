@@ -1,11 +1,5 @@
 (function () {
   const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
-  const SAME_ORIGIN_PROXY_HOSTS = new Set([
-    'kazixfrontend.vercel.app',
-    'kazix.vercel.app',
-    'kazix.co.ke',
-    'www.kazix.co.ke',
-  ]);
   const PROFILE_CACHE_KEY = 'kazix_profile';
   const TOKEN_KEYS = ['kazix_access_token', 'sb-access-token', 'access_token'];
   const AUTH_STORAGE_KEYS = new Set([
@@ -58,10 +52,6 @@
     return ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
   }
 
-  function shouldUseSameOriginProxy(host) {
-    return SAME_ORIGIN_PROXY_HOSTS.has(host) || host.endsWith('.vercel.app') || host.endsWith('.kazix.co.ke');
-  }
-
   function resolveApiBase() {
     const configured = normalizeApiBase(window.KAZIX_API_BASE ?? window.KAZIX_CONFIG?.KAZIX_API_BASE ?? null);
     if (configured !== null) {
@@ -74,10 +64,6 @@
 
     if (isLocalHost(window.location.hostname)) {
       return window.location.origin.replace(/\/$/, '');
-    }
-
-    if (shouldUseSameOriginProxy(window.location.hostname)) {
-      return '';
     }
 
     return DEFAULT_REMOTE_API_BASE;
