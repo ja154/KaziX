@@ -765,7 +765,7 @@ async function submitJob() {
       initialClientName = snapshot.clientName;
     }
 
-    const createdJob = await window.KazixProfile.requestJson('/v1/jobs', {
+    const createdJob = await window.KazixProfile.requestJson('/v1/jobs/', {
       auth: true,
       method: 'POST',
       body: {

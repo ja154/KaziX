@@ -99,6 +99,7 @@ def _job_write_http_error(exc: Exception, *, default_detail: str) -> HTTPExcepti
 
 # ── Routes ───────────────────────────────────────────────────
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 async def list_jobs(
     trade:   str | None = Query(None),
@@ -180,6 +181,7 @@ async def get_job(job_id: str):
         raise HTTPException(status_code=500, detail="Failed to fetch job detail.")
 
 
+@router.post("", include_in_schema=False, status_code=201)
 @router.post("/", status_code=201)
 async def create_job(body: CreateJobRequest, user: ClientUser, session: CurrentSession):
     """Client creates a new job post."""
