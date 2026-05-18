@@ -5,63 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght,300;0,400;0,500;1,300;1,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,600&display=swap">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Sign In — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/error-components.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
 <style>
-  :root{--auth-nav-height:73px}
-  :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:var(--app-viewport-height)}
-  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35}
-
-  /* NAV */
-  nav{display:flex;align-items:center;justify-content:space-between;min-height:var(--auth-nav-height);padding:1rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.04em;color:var(--ink);text-decoration:none}
-  .logo span{color:var(--saffron)}
-  .nav-register{font-size:0.875rem;color:var(--muted);text-decoration:none;transition:color 0.2s}
-  .nav-register strong{color:var(--ink)}
-  .nav-register:hover strong{color:var(--green)}
-
-  /* AUTH LAYOUT */
-  .auth-layout{display:grid;grid-template-columns:1fr 1fr;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}
-
-  /* LEFT PANEL — decorative */
-  .auth-left{background:var(--ink);color:var(--cream);padding:5rem;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+  .auth-form-wrap{max-width:420px}
   .auth-left::after{content:'INGIA';position:absolute;right:-5%;bottom:-5%;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(80px,16vw,220px);opacity:0.05;letter-spacing:-0.06em;line-height:0.9;pointer-events:none}
-  .auth-left-eyebrow{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);margin-bottom:1.5rem}
-  .auth-left h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2rem,3.5vw,3rem);letter-spacing:-0.04em;line-height:1.05;margin-bottom:1.5rem}
-  .auth-left h2 em{font-style:normal;color:var(--saffron)}
-  .auth-left p{color:rgba(245,240,232,0.55);font-size:0.95rem;line-height:1.7;max-width:400px;margin-bottom:3rem}
   .auth-perks{display:flex;flex-direction:column;gap:1rem}
   .auth-perk{display:flex;align-items:center;gap:0.85rem;font-size:0.875rem;color:rgba(245,240,232,0.75)}
   .perk-icon{width:32px;height:32px;border-radius:50%;background:rgba(245,166,35,0.15);color:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
-
-  /* RIGHT PANEL — form */
-  .auth-right{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3rem 2rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height));overflow-y:auto;background:white}
-  .auth-form-wrap{width:100%;max-width:420px}
-  .auth-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.04em;margin-bottom:0.4rem}
-  .auth-sub{font-size:0.9rem;color:var(--muted);margin-bottom:2.5rem;line-height:1.5}
-  .auth-sub a{color:var(--ink);font-weight:600;text-decoration:none}
-  .auth-sub a:hover{color:var(--green)}
-
-  /* FORM FIELDS */
-  .field-group{margin-bottom:1.25rem}
-  .field-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;display:block}
-  .field-input{width:100%;padding:0.9rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s,background 0.2s}
-  .field-input:focus{border-color:var(--ink);background:white}
-  .field-input::placeholder{color:var(--muted)}
-  .phone-input-wrap{display:flex;border:1.5px solid var(--border);border-radius:2px;overflow:hidden;background:var(--cream);transition:border-color 0.2s}
-  .phone-input-wrap:focus-within{border-color:var(--ink)}
-  .phone-prefix{padding:0.9rem 1rem;background:var(--cream);font-size:0.9rem;font-weight:600;color:var(--ink);border-right:1px solid var(--border);white-space:nowrap;font-family:'Syne',sans-serif}
-  .phone-input{flex:1;padding:0.9rem 1rem;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:white;color:var(--ink);letter-spacing:0.04em}
-  .phone-input::placeholder{color:var(--muted);letter-spacing:0}
-  .field-hint{font-size:0.75rem;color:var(--muted);margin-top:0.35rem}
   .auth-method-panel{display:none}
-  .auth-method-panel.active{display:block;animation:slideUp 0.4s ease both}
+  .auth-method-panel.active{display:block;animation:authSlideUp 0.4s ease both}
   .email-status{display:none;margin-top:1rem}
   .email-status.show{display:block}
   .status-card{display:flex;gap:0.85rem;padding:1rem;border:1px solid var(--border);border-radius:4px;background:var(--cream)}
@@ -72,32 +29,19 @@
   .status-note{font-size:0.78rem;color:var(--muted);margin-top:0.75rem}
 
   /* OTP PANEL */
-  .otp-panel{display:none;animation:slideUp 0.4s ease both}
+  .otp-panel{display:none;animation:authSlideUp 0.4s ease both}
   .otp-panel.show{display:block}
   .otp-sent-msg{background:#E1F5EE;border:1px solid #9FE1CB;border-radius:2px;padding:0.85rem 1rem;font-size:0.82rem;color:var(--green);margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem}
-  .otp-inputs{display:flex;gap:0.5rem;margin-bottom:0.75rem}
-  .otp-digit{width:100%;aspect-ratio:1;border:1.5px solid var(--border);border-radius:2px;text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;outline:none;transition:border-color 0.2s;background:var(--cream);color:var(--ink)}
-  .otp-digit:focus{border-color:var(--ink)}
   .otp-resend{font-size:0.78rem;color:var(--muted);margin-top:0.4rem}
   .otp-resend button{background:none;border:none;color:var(--rust);font-weight:600;cursor:pointer;font-size:0.78rem;font-family:'DM Sans',sans-serif;padding:0}
   .otp-resend button:disabled{color:var(--muted);cursor:default}
   .otp-change-phone{font-size:0.78rem;color:var(--muted);margin-top:0.25rem}
   .otp-change-phone button{background:none;border:none;color:var(--ink);font-weight:600;cursor:pointer;font-size:0.78rem;font-family:'DM Sans',sans-serif;padding:0;text-decoration:underline}
 
-  /* SUBMIT BUTTON */
-  .auth-btn{width:100%;padding:1rem;background:var(--ink);color:var(--cream);font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;letter-spacing:0.02em;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s;margin-top:0.75rem}
-  .auth-btn:hover{background:var(--green)}
-  .auth-btn:disabled{background:var(--muted);cursor:not-allowed}
-  .auth-btn-secondary{width:100%;padding:0.9rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.875rem;border:1.5px solid var(--ink);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;text-decoration:none;display:block;text-align:center}
-  .auth-btn-secondary:hover{background:var(--ink);color:var(--cream)}
-
   /* DIVIDER */
   .divider{display:flex;align-items:center;gap:1rem;margin:1.5rem 0;color:var(--muted);font-size:0.78rem}
   .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
   .oauth-actions{display:flex;flex-direction:column;gap:0.6rem;margin-bottom:0.75rem}
-  .oauth-btn{width:100%;padding:0.78rem 1rem;border:1.5px solid var(--border);border-radius:2px;background:white;color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.84rem;cursor:pointer;transition:all 0.2s}
-  .oauth-btn:hover{border-color:var(--ink);background:var(--cream)}
-  .oauth-btn:disabled{opacity:0.65;cursor:not-allowed}
 
   /* ROLE TOGGLE */
   .role-toggle{display:flex;border:1.5px solid var(--border);border-radius:2px;overflow:hidden;margin-bottom:2rem}
@@ -106,43 +50,26 @@
   .method-toggle{display:flex;gap:0.5rem;margin-bottom:1rem}
   .method-option{flex:1;padding:0.78rem 0.9rem;border:1.5px solid var(--border);border-radius:2px;background:white;color:var(--muted);font-family:'Syne',sans-serif;font-size:0.8rem;font-weight:700;text-align:center;cursor:pointer;transition:all 0.2s;user-select:none}
   .method-option.active{border-color:var(--ink);background:var(--ink);color:var(--cream)}
-
-  /* FOOTER NOTE */
-  .auth-footer{margin-top:2rem;font-size:0.72rem;color:var(--muted);text-align:center;line-height:1.5}
-  .auth-footer a{color:var(--ink);text-decoration:none}
-
-  @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  @media(max-width:900px){
-    .auth-layout{grid-template-columns:1fr}
-    .auth-left{display:none}
-    .auth-right{padding:2rem 1.5rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}
-  }
-  @media(max-width:720px){
-    nav{flex-wrap:wrap;justify-content:center;gap:0.75rem;text-align:center}
-    .nav-register{width:100%}
-    .auth-right{padding:1.75rem 1rem}
-  }
   @media(max-width:480px){
     .role-toggle,.method-toggle{flex-direction:column}
-    .otp-inputs{gap:0.35rem}
-    .auth-title{font-size:1.55rem}
+    .auth-heading{font-size:1.55rem}
   }
 </style>
 </head>
-<body>
+<body class="auth-page">
 
-<nav>
+<nav class="auth-nav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
-  <a href="register.html" class="nav-register">Don't have an account? <strong>Register free →</strong></a>
+  <a href="register.html" class="nav-register auth-nav-link">Don't have an account? <strong>Register free →</strong></a>
 </nav>
 
-<div class="auth-layout">
+<div class="auth-split auth-layout">
 
   <!-- LEFT: BRAND PANEL -->
-  <div class="auth-left">
-    <div class="auth-left-eyebrow">Welcome Back</div>
-    <h2>Karibu<br>tena kwenye<br><em>KaziX</em></h2>
-    <p>Kenya's largest marketplace for skilled workers and artisans. Sign in to manage your jobs, track payments, and connect with fundis.</p>
+  <div class="auth-brand auth-left">
+    <div class="auth-brand-eyebrow auth-left-eyebrow">Welcome Back</div>
+    <h2 class="auth-brand-title">Karibu<br>tena kwenye<br><em>KaziX</em></h2>
+    <p class="auth-brand-copy">Kenya's largest marketplace for skilled workers and artisans. Sign in to manage your jobs, track payments, and connect with fundis.</p>
     <div class="auth-perks">
       <div class="auth-perk"><div class="perk-icon">📍</div>12,000+ verified fundis across 47 counties</div>
       <div class="auth-perk"><div class="perk-icon">📱</div>M-Pesa secure escrow payments</div>
@@ -152,8 +79,8 @@
   </div>
 
   <!-- RIGHT: FORM -->
-  <div class="auth-right">
-    <div class="auth-form-wrap">
+  <div class="auth-panel auth-right">
+    <div class="auth-panel-inner auth-form-wrap">
 
       <!-- ROLE TOGGLE -->
       <div class="role-toggle">
@@ -161,10 +88,10 @@
         <div class="role-option" onclick="setRole(this,'pro')">🔧 I am a Fundi</div>
       </div>
 
-      <div class="auth-title">Sign in</div>
-      <div class="auth-sub" id="authSub">Use your email and password to access your KaziX account.<br>New here? <a href="register.html">Create a free account →</a></div>
+      <div class="auth-heading auth-title">Sign in</div>
+      <div class="auth-subcopy auth-sub" id="authSub">Use your email and password to access your KaziX account.<br>New here? <a href="register.html">Create a free account →</a></div>
 
-      <div id="loginNextNotice" style="display:none;background:#FFF8E1;border:1px solid #F5A623;border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.9rem;color:#0D0D0D;">
+      <div id="loginNextNotice" class="auth-notice auth-notice--warn auth-hidden">
         Please sign in to continue.
       </div>
       <script>
@@ -173,7 +100,9 @@
         }
       </script>
 
-      <div class="method-toggle" style="display:none">
+      <div id="loginInlineError" class="auth-notice auth-notice--error auth-hidden" role="alert"></div>
+
+      <div class="method-toggle auth-hidden">
         <div class="method-option active" onclick="setAuthMethod(this,'email')">Email sign-in</div>
         <div class="method-option" onclick="setAuthMethod(this,'phone')">Phone OTP</div>
       </div>
@@ -189,15 +118,15 @@
           <input class="field-input" type="password" id="passwordInput" placeholder="Your password" autocomplete="current-password" oninput="validateEmail()">
           <div class="field-hint">Minimum 8 characters.</div>
         </div>
-        <div style="text-align:right; margin-top:.4rem;">
-          <a href="/pages/forgot-password.html" style="font-size:.9rem; color:#0D0D0D;">
+        <div class="auth-link-row">
+          <a href="/pages/forgot-password.html" class="auth-inline-link">
             Forgot password?
           </a>
         </div>
         <button class="auth-btn" id="sendEmailBtn" onclick="signInWithEmailPassword()" disabled>Sign In →</button>
       </div>
 
-      <div class="auth-method-panel" id="phonePanel" style="display:none">
+      <div class="auth-method-panel" id="phonePanel">
         <div id="phoneStep">
           <div class="field-group">
             <label class="field-label">Phone Number</label>
@@ -400,6 +329,7 @@ function setRole(el, role) {
 
 function setAuthMethod(el, method) {
   currentAuthMethod = method;
+  hideInlineError();
   document.querySelectorAll('.method-option').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('emailPanel').classList.toggle('active', method === 'email');
@@ -420,6 +350,23 @@ function validateEmail() {
   document.getElementById('sendEmailBtn').disabled = !isValidEmail(emailInput.value) || (passwordInput?.value || '').length < 8;
 }
 
+function hideInlineError() {
+  const el = document.getElementById('loginInlineError');
+  if (!el) return;
+  el.textContent = '';
+  el.classList.add('auth-hidden');
+  el.style.display = '';
+}
+
+function showInlineError(message) {
+  const el = document.getElementById('loginInlineError');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.remove('auth-hidden');
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 async function signInWithEmailPassword() {
   const email = document.getElementById('emailInput').value.trim();
   const password = document.getElementById('passwordInput').value;
@@ -429,6 +376,7 @@ async function signInWithEmailPassword() {
   }
 
   const btn = document.getElementById('sendEmailBtn');
+  hideInlineError();
   btn.disabled = true;
   btn.textContent = 'Signing in…';
 
@@ -456,6 +404,7 @@ async function startOAuth(provider) {
     provider === 'google' ? 'oauthGoogleBtn' : 'oauthGithubBtn'
   );
   if (btn) btn.disabled = true;
+  hideInlineError();
 
   try {
     const authClient = requireSupabaseClient();
@@ -670,6 +619,7 @@ async function sendMagicLink() {
   if (!isValidEmail(email)) return;
 
   const btn = document.getElementById('sendEmailBtn');
+  hideInlineError();
   btn.disabled = true;
   btn.textContent = 'Sending link…';
 
@@ -688,6 +638,7 @@ async function sendMagicLink() {
 async function resendMagicLink() {
   const email = document.getElementById('emailInput').value.trim();
   const resendBtn = document.getElementById('resendEmailBtn');
+  hideInlineError();
   resendBtn.disabled = true;
 
   try {
@@ -713,6 +664,7 @@ async function sendOTP() {
   if (phone.length !== 9) return;
 
   const btn = document.getElementById('sendOtpBtn');
+  hideInlineError();
   btn.disabled = true;
   btn.textContent = 'Sending OTP…';
 
@@ -756,6 +708,7 @@ async function resendOTP() {
 }
 
 function changePhone() {
+  hideInlineError();
   document.getElementById('phoneStep').style.display = 'block';
   document.getElementById('otpStep').classList.remove('show');
   clearInterval(countdownTimer);
@@ -784,6 +737,7 @@ async function verifyOTP() {
   if (code.length !== 6 || phone.length !== 9) return;
 
   const btn = document.getElementById('verifyBtn');
+  hideInlineError();
   btn.textContent = 'Signing in…';
   btn.disabled = true;
 

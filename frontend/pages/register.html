@@ -10,42 +10,18 @@
 <title>Create Account — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <link rel="stylesheet" href="../assets/css/error-components.css">
+<link rel="stylesheet" href="../assets/css/auth.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../env.js"></script>
 <script src="../assets/js/error-messages.js"></script>
 <script src="../assets/js/error-handler.js"></script>
 <script src="../assets/js/form-handler.js"></script>
 <style>
-  :root{--auth-nav-height:73px}
-  :root{--ink:#0D0D0D;--cream:#F5F0E8;--saffron:#F5A623;--rust:#C0392B;--green:#1B6B3A;--steel:#2C3E50;--muted:#7A7468;--card-bg:#FFFFFF;--border:rgba(13,13,13,0.1)}
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;min-height:var(--app-viewport-height)}
-  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35}
-  nav{display:flex;align-items:center;justify-content:space-between;min-height:var(--auth-nav-height);padding:1rem max(1rem, calc(env(safe-area-inset-right) + 0.5rem)) 1rem max(1rem, calc(env(safe-area-inset-left) + 0.5rem));background:rgba(245,240,232,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.6rem;letter-spacing:-0.04em;color:var(--ink);text-decoration:none}
-  .logo span{color:var(--saffron)}
-  .nav-login{font-size:0.875rem;color:var(--muted);text-decoration:none;transition:color 0.2s}
-  .nav-login strong{color:var(--ink)}
-  .nav-login:hover strong{color:var(--green)}
-
-  /* LAYOUT */
-  .reg-layout{display:grid;grid-template-columns:1fr 1fr;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}
-
-  /* LEFT */
-  .reg-left{background:var(--ink);color:var(--cream);padding:5rem;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden}
+  .reg-form-wrap{max-width:460px}
   .reg-left::after{content:'JIUNGE';position:absolute;right:-5%;bottom:-3%;font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(60px,12vw,180px);opacity:0.05;letter-spacing:-0.06em;line-height:0.9;pointer-events:none}
-  .reg-eyebrow{font-size:0.72rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--saffron);margin-bottom:1.5rem}
-  .reg-left h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.8rem,3.5vw,2.8rem);letter-spacing:-0.04em;line-height:1.05;margin-bottom:1.25rem}
-  .reg-left h2 em{font-style:normal;color:var(--saffron)}
-  .reg-left p{color:rgba(245,240,232,0.55);font-size:0.9rem;line-height:1.7;max-width:400px;margin-bottom:2.5rem}
   .trust-items{display:flex;flex-direction:column;gap:0.85rem}
   .trust-item{display:flex;align-items:center;gap:0.75rem;font-size:0.85rem;color:rgba(245,240,232,0.75)}
   .t-check{width:20px;height:20px;border-radius:50%;background:var(--green);color:white;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;flex-shrink:0}
-
-  /* RIGHT */
-  .reg-right{background:white;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:3rem 2rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height));overflow-y:auto}
-  .reg-form-wrap{width:100%;max-width:460px}
 
   /* STEP PROGRESS */
   .reg-steps{display:flex;align-items:center;gap:0;margin-bottom:2.5rem}
@@ -68,32 +44,11 @@
   .type-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.3rem}
   .type-sub{font-size:0.78rem;color:var(--muted);line-height:1.4}
 
-  /* FORM FIELDS */
   .reg-step{display:none}
-  .reg-step.active{display:block;animation:slideUp 0.4s ease both}
+  .reg-step.active{display:block;animation:authSlideUp 0.4s ease both}
   .reg-step-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.5rem;letter-spacing:-0.04em;margin-bottom:0.3rem}
   .reg-step-sub{font-size:0.875rem;color:var(--muted);margin-bottom:2rem;line-height:1.5}
-  .field-group{margin-bottom:1.1rem}
-  .field-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.45rem;display:block}
   .req{color:var(--rust)}
-  .field-input{width:100%;padding:0.82rem 1rem;border:1.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--ink);outline:none;transition:border-color 0.2s}
-  .field-input:focus{border-color:var(--ink);background:white}
-  .field-input::placeholder{color:var(--muted)}
-  select.field-input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7468' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 1rem center;background-color:var(--cream)}
-  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
-  .field-hint{font-size:0.72rem;color:var(--muted);margin-top:0.3rem}
-
-  /* PHONE FIELD */
-  .phone-wrap{display:flex;border:1.5px solid var(--border);border-radius:2px;overflow:hidden;transition:border-color 0.2s}
-  .phone-wrap:focus-within{border-color:var(--ink)}
-  .phone-prefix{padding:0.82rem 1rem;background:var(--cream);font-size:0.9rem;font-weight:600;border-right:1px solid var(--border);font-family:'Syne',sans-serif;white-space:nowrap}
-  .phone-field{flex:1;padding:0.82rem 1rem;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:white;color:var(--ink)}
-  .phone-field::placeholder{color:var(--muted)}
-
-  /* OTP */
-  .otp-inputs{display:flex;gap:0.5rem;margin-bottom:0.75rem}
-  .otp-digit{width:100%;aspect-ratio:1;border:1.5px solid var(--border);border-radius:2px;text-align:center;font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;outline:none;transition:border-color 0.2s;background:var(--cream)}
-  .otp-digit:focus{border-color:var(--ink)}
   .otp-note{font-size:0.75rem;color:var(--muted)}
   .otp-note button{background:none;border:none;color:var(--rust);font-weight:600;cursor:pointer;font-size:0.75rem;font-family:'DM Sans',sans-serif;padding:0}
 
@@ -115,39 +70,17 @@
   .upload-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;margin-bottom:0.25rem}
   .upload-sub{font-size:0.75rem;color:var(--muted)}
 
-  /* BUTTONS */
   .reg-btns{display:flex;gap:0.75rem;margin-top:1.5rem}
-  .btn-back{padding:0.9rem 1.25rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:1.5px solid var(--ink);border-radius:2px;cursor:pointer;transition:all 0.2s}
-  .btn-back:hover{background:var(--cream)}
-  .btn-next{flex:1;padding:0.9rem;background:var(--ink);color:var(--cream);font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s}
-  .btn-next:hover{background:var(--green)}
-  .btn-submit{flex:1;padding:0.9rem;background:var(--saffron);color:var(--ink);font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer;transition:all 0.2s}
-  .btn-submit:hover{background:var(--green);color:white}
 
-  /* TERMS */
   .terms-check{display:flex;align-items:flex-start;gap:0.75rem;margin-top:1rem;font-size:0.8rem;color:var(--muted);line-height:1.5}
   .terms-check input{width:16px;height:16px;accent-color:var(--ink);margin-top:1px;cursor:pointer;flex-shrink:0}
   .terms-check a{color:var(--ink);font-weight:600;text-decoration:none}
 
-  /* SUCCESS */
-  .success-state{display:none;text-align:center;padding:2.5rem 1rem;animation:slideUp 0.5s ease both}
+  .success-state{display:none;text-align:center;padding:2.5rem 1rem;animation:authSlideUp 0.5s ease both}
   .success-state.show{display:block}
   .success-icon{font-size:4rem;margin-bottom:1rem}
   .success-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.75rem;letter-spacing:-0.04em;margin-bottom:0.75rem}
   .success-sub{color:var(--muted);font-size:0.9rem;line-height:1.65;margin-bottom:2rem}
-  .btn-home{display:inline-block;padding:0.9rem 2rem;background:var(--ink);color:var(--cream);font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border-radius:2px;text-decoration:none;transition:background 0.2s;margin:0 0.25rem 0.5rem}
-  .btn-home:hover{background:var(--green)}
-
-  .auth-footer{margin-top:1.5rem;font-size:0.72rem;color:var(--muted);text-align:center;line-height:1.5}
-  .auth-footer a{color:var(--ink);text-decoration:none}
-
-  @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-  @media(max-width:900px){.reg-layout{grid-template-columns:1fr}.reg-left{display:none}.reg-right{padding:2rem 1.5rem;min-height:calc(var(--app-viewport-height) - var(--auth-nav-height))}.field-row{grid-template-columns:1fr}}
-  @media(max-width:720px){
-    nav{flex-wrap:wrap;justify-content:center;gap:0.75rem;text-align:center}
-    .nav-login{width:100%}
-    .reg-right{padding:1.75rem 1rem}
-  }
   @media(max-width:480px){
     .account-type-grid{grid-template-columns:1fr}
     .rs-label{font-size:0.58rem;line-height:1.3}
@@ -157,20 +90,20 @@
   }
 </style>
 </head>
-<body>
+<body class="auth-page">
 
-<nav>
+<nav class="auth-nav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
-  <a href="login.html" class="nav-login">Already have an account? <strong>Sign in →</strong></a>
+  <a href="login.html" class="nav-login auth-nav-link">Already have an account? <strong>Sign in →</strong></a>
 </nav>
 
-<div class="reg-layout">
+<div class="auth-split reg-layout">
 
   <!-- LEFT PANEL -->
-  <div class="reg-left">
-    <div class="reg-eyebrow">Join for Free</div>
-    <h2>Your next job<br>is waiting on<br><em>KaziX</em></h2>
-    <p>Whether you're hiring a fundi or offering your skills — KaziX connects Kenya's best workers with clients who need them. Free to join. Instant M-Pesa payments.</p>
+  <div class="auth-brand reg-left">
+    <div class="auth-brand-eyebrow reg-eyebrow">Join for Free</div>
+    <h2 class="auth-brand-title">Your next job<br>is waiting on<br><em>KaziX</em></h2>
+    <p class="auth-brand-copy">Whether you're hiring a fundi or offering your skills — KaziX connects Kenya's best workers with clients who need them. Free to join. Instant M-Pesa payments.</p>
     <div class="trust-items">
       <div class="trust-item"><div class="t-check">✓</div>Free registration — no monthly fees</div>
       <div class="trust-item"><div class="t-check">✓</div>Get your first job within hours of registering</div>
@@ -181,8 +114,10 @@
   </div>
 
   <!-- RIGHT PANEL -->
-  <div class="reg-right">
-    <div class="reg-form-wrap">
+  <div class="auth-panel reg-right">
+    <div class="auth-panel-inner reg-form-wrap">
+
+      <div id="regInlineError" class="auth-notice auth-notice--error auth-hidden" role="alert"></div>
 
       <!-- STEP PROGRESS -->
       <div class="reg-steps" id="stepProgress">
@@ -208,10 +143,10 @@
             <div class="type-sub">I offer skilled services and want to find more clients</div>
           </div>
         </div>
-        <div class="reg-btns" style="flex-direction:column;gap:0.75rem">
-          <button class="btn-next" onclick="goRStep(2)" style="width:100%">Continue →</button>
+        <div class="reg-btns auth-btn-row--stack">
+          <button class="btn-next auth-btn--full" onclick="goRStep(2)">Continue →</button>
         </div>
-        <div class="auth-footer" style="margin-top:1rem">Already have an account? <a href="login.html">Sign in here</a></div>
+        <div class="auth-footer auth-footer--compact">Already have an account? <a href="login.html">Sign in here</a></div>
       </div>
 
       <!-- STEP 2: PERSONAL DETAILS -->
@@ -252,7 +187,7 @@
           </div>
         </div>
         <!-- Pro-only fields (shown when role = pro) -->
-        <div id="proFields" style="display:none">
+        <div id="proFields" class="auth-hidden">
           <div class="field-group">
             <label class="field-label">Your Trade <span class="req">*</span></label>
             <div class="trade-chips">
@@ -323,7 +258,7 @@
         <div id="proProfile">
           <div class="field-group">
             <label class="field-label">Bio <span class="req">*</span></label>
-            <textarea class="field-input" id="regBio" rows="4" placeholder="Describe your experience, skills, and what makes you stand out as a fundi…" style="resize:vertical;line-height:1.6"></textarea>
+            <textarea class="field-input auth-textarea" id="regBio" rows="4" placeholder="Describe your experience, skills, and what makes you stand out as a fundi…"></textarea>
             <div class="field-hint">Minimum 50 characters. Workers with good bios get 3x more jobs.</div>
           </div>
           <div class="field-group">
@@ -361,7 +296,7 @@
         </div>
 
         <!-- Client-only profile -->
-        <div id="clientProfile" style="display:none">
+        <div id="clientProfile" class="auth-hidden">
           <div class="field-group">
             <label class="field-label">What will you mainly use KaziX for?</label>
             <select class="field-input">
@@ -382,9 +317,9 @@
               <option>Other</option>
             </select>
           </div>
-          <div style="background:var(--cream);border-radius:4px;padding:1.25rem;margin-bottom:1.25rem">
-            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;margin-bottom:0.5rem">🎉 You're all set!</div>
-            <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">Your account is ready. Start browsing fundis or post your first job now. First job is guaranteed to receive applications within 20 minutes.</div>
+          <div class="auth-card-note">
+            <div class="auth-card-note__title">🎉 You're all set!</div>
+            <div class="auth-card-note__copy">Your account is ready. Start browsing fundis or post your first job now. First job is guaranteed to receive applications within 20 minutes.</div>
           </div>
         </div>
 
@@ -406,7 +341,7 @@
         <div class="success-sub" id="successSub">Welcome to KaziX! Your account is active. Start exploring jobs or posting your first request.</div>
         <div>
           <a href="client-profile.html" class="btn-home">Open My Profile</a>
-          <a href="post-job.html" class="btn-home" style="background:var(--green)">Post a Job</a>
+          <a href="post-job.html" class="btn-home btn-home--green">Post a Job</a>
         </div>
       </div>
 
@@ -516,13 +451,23 @@ function showRegError(message) {
   if (!el) {
     el = document.createElement('div');
     el.id = 'regInlineError';
-    el.style.cssText = 'background:#FDECEA;color:#B71C1C;padding:.85rem 1rem;border-radius:8px;margin-bottom:1rem;font-family:inherit;display:none';
-    var form = document.querySelector('form') || document.body;
-    form.prepend(el);
+    el.className = 'auth-notice auth-notice--error';
+    el.setAttribute('role', 'alert');
+    var container = document.querySelector('.reg-form-wrap') || document.body;
+    container.prepend(el);
   }
   el.textContent = message;
+  el.classList.remove('auth-hidden');
   el.style.display = 'block';
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function hideRegError() {
+  var el = document.getElementById('regInlineError');
+  if (!el) return;
+  el.textContent = '';
+  el.classList.add('auth-hidden');
+  el.style.display = '';
 }
 
 function toDisplayError(err, fallback) {
@@ -608,6 +553,7 @@ function selectType(type) {
 }
 
 function goRStep(n) {
+  hideRegError();
   for (let i = 1; i <= 4; i++) {
     const step = document.getElementById('rstep' + i);
     const node = document.getElementById('rsn' + i);
@@ -993,6 +939,7 @@ function restoreRegFormData() {
 }
 
 function continueRegSetup() {
+  hideRegError();
   const error = validateStep2();
   if (error) {
     showRegError(typeof error === "string" ? error : (error && error.message) || "An error occurred");
@@ -1004,6 +951,7 @@ function continueRegSetup() {
 }
 
 async function createRegAccount() {
+  hideRegError();
   const detailError = validateStep2();
   if (detailError) {
     showRegError(detailError);
@@ -1090,6 +1038,7 @@ function getMagicLinkCallbackUrl() {
 
 // Poll localStorage for magic link completion signal set by auth-callback.html
 async function submitReg() {
+  hideRegError();
   const accessToken = await getValidStoredAccessToken();
   if (!accessToken) {
     showRegError('Your session expired. Please sign in again to continue registration.');
