@@ -42,6 +42,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.4rem
 .hero-btn.primary:hover{background:#ffc255}
 .hero-btn.secondary{border:1px solid rgba(245,240,232,0.22);color:var(--cream)}
 .hero-btn.secondary:hover{background:rgba(245,240,232,0.12)}
+.hero-btn.saved{background:rgba(245,240,232,0.12);border:1px solid rgba(245,240,232,0.22);color:var(--cream)}
+.hero-btn.saved.active{background:var(--rust);border-color:var(--rust);color:white}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(245,240,232,0.1);border-radius:4px;overflow:hidden;margin:2rem 5% 0}
 .stat{background:rgba(0,0,0,0.24);padding:1.2rem 1rem;text-align:center}
 .stat-value{display:block;font-family:'Syne',sans-serif;font-weight:800;font-size:1.45rem;color:var(--saffron);letter-spacing:-0.04em}
@@ -128,6 +130,7 @@ footer{background:var(--ink);color:var(--cream);padding:3rem 5% 2rem;display:gri
     </div>
     <div class="hero-actions" id="heroActions">
       <a class="hero-btn primary" href="login.html" id="primaryHeroAction">Sign in to hire</a>
+      <button class="hero-btn saved" type="button" id="saveWorkerButton" style="display:none">Save Fundi</button>
       <a class="hero-btn secondary" href="find-workers.html">Browse more fundis</a>
     </div>
   </div>
@@ -194,9 +197,11 @@ footer{background:var(--ink);color:var(--cream);padding:3rem 5% 2rem;display:gri
 </div>
 
 <script src="../assets/js/profile-utils.js"></script>
+<script src="../assets/js/saved-workers.js"></script>
 <script src="../assets/js/auth-state.js"></script>
 <script>
 const {
+  buildMessagesPath,
   formatCurrency,
   formatLanguage,
   formatLocation,
@@ -211,6 +216,62 @@ const {
   setHtml,
   setText,
 } = window.KazixProfile;
+let currentWorkerState = null;
+
+function redirectToLoginForSave() {
+  const next = encodeURIComponent(window.location.pathname + window.location.search);
+  window.location.href = `login.html?next=${next}`;
+}
+
+function syncSaveWorkerButton(profile, fundiProfile, options = {}) {
+  const button = document.getElementById('saveWorkerButton');
+  if (!button) return;
+
+  const {
+    isOwnProfile = false,
+  } = options;
+
+  if (!profile?.id || isOwnProfile) {
+    button.style.display = 'none';
+    return;
+  }
+
+  const saved = Boolean(window.KazixSavedWorkers?.isWorkerSaved(profile.id));
+  button.style.display = 'inline-flex';
+  button.classList.toggle('active', saved);
+  button.textContent = saved ? 'Saved Fundi' : 'Save Fundi';
+  button.setAttribute('aria-pressed', saved ? 'true' : 'false');
+  button.setAttribute('title', saved ? 'Remove this fundi from your saved list' : 'Save this fundi for later');
+
+  currentWorkerState = {
+    profile,
+    fundiProfile,
+    options,
+  };
+}
+
+function toggleSavedWorkerFromProfile() {
+  if (!currentWorkerState?.profile?.id || !window.KazixSavedWorkers) {
+    return;
+  }
+
+  if (!getAccessToken()) {
+    redirectToLoginForSave();
+    return;
+  }
+
+  const snapshot = window.KazixSavedWorkers.buildSavedWorkerFromProfile(
+    currentWorkerState.profile,
+    currentWorkerState.fundiProfile
+  );
+  const result = window.KazixSavedWorkers.toggleSavedWorker(snapshot);
+  syncSaveWorkerButton(
+    currentWorkerState.profile,
+    currentWorkerState.fundiProfile,
+    currentWorkerState.options
+  );
+  return result;
+}
 
 async function loadWorkerProfile() {
   const requestedId = getProfileIdFromQuery();
@@ -331,14 +392,19 @@ function renderProfile(profile, fundiProfile, options = {}) {
       : 'You are viewing the public version of this profile.',
   ];
   document.getElementById('pageNotice').textContent = noticeParts.join(' ');
+  syncSaveWorkerButton(profile, fundiProfile, {
+    isOwnProfile,
+    signedIn,
+    viewerRole,
+  });
 
   if (signedIn) {
     document.getElementById('navCta').textContent = 'My Profile';
     document.getElementById('navCta').href = viewerRole === 'client' ? 'client-profile.html' : 'worker-profile-edit.html';
     document.getElementById('primaryHeroAction').textContent = isOwnProfile ? 'Edit My Profile' : 'Send Message';
-    document.getElementById('primaryHeroAction').href = isOwnProfile ? 'worker-profile-edit.html' : 'messages.html';
+    document.getElementById('primaryHeroAction').href = isOwnProfile ? 'worker-profile-edit.html' : buildMessagesPath({ participantId: profile.id });
     document.getElementById('sidebarPrimaryAction').textContent = isOwnProfile ? 'Edit My Profile' : 'Send Message';
-    document.getElementById('sidebarPrimaryAction').href = isOwnProfile ? 'worker-profile-edit.html' : 'messages.html';
+    document.getElementById('sidebarPrimaryAction').href = isOwnProfile ? 'worker-profile-edit.html' : buildMessagesPath({ participantId: profile.id });
   }
 }
 
@@ -389,7 +455,19 @@ function normalizeRole(role) {
   return String(role || '').trim().toLowerCase();
 }
 
-document.addEventListener('DOMContentLoaded', loadWorkerProfile);
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('saveWorkerButton')?.addEventListener('click', toggleSavedWorkerFromProfile);
+  window.addEventListener('kazix:saved-workers-updated', function () {
+    if (currentWorkerState?.profile?.id) {
+      syncSaveWorkerButton(
+        currentWorkerState.profile,
+        currentWorkerState.fundiProfile,
+        currentWorkerState.options
+      );
+    }
+  });
+  loadWorkerProfile();
+});
 </script>
 </body>
 </html>

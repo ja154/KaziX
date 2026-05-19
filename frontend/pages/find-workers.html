@@ -97,6 +97,9 @@
   .pro-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.1)}
   .pro-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--saffron);transform:scaleX(0);transform-origin:left;transition:transform 0.3s}
   .pro-card:hover::before{transform:scaleX(1)}
+  .save-worker-btn{position:absolute;top:0.9rem;right:0.9rem;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;border:1px solid rgba(192,57,43,0.18);background:rgba(192,57,43,0.08);color:var(--rust);font-size:1rem;cursor:pointer;transition:all 0.2s;z-index:2}
+  .save-worker-btn:hover{background:var(--rust);border-color:var(--rust);color:white}
+  .save-worker-btn.active{background:var(--rust);border-color:var(--rust);color:white}
 
   .pro-card-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem}
   .pro-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:2px solid var(--border);background:var(--cream)}
@@ -353,6 +356,7 @@
   let currentOffset = 0;
   const PAGE_SIZE   = 20;
   let lastParams    = {};
+  const renderedWorkers = new Map();
 
   // ── View toggle ────────────────────────────────────────────
   function setView(mode) {
@@ -383,9 +387,54 @@
            '☆'.repeat(Math.max(0, 5 - full - (half ? 1 : 0)));
   }
 
+  function userCanSaveWorkers() {
+    return Boolean(localStorage.getItem('kazix_access_token'));
+  }
+
+  function syncSaveWorkerButton(button, saved) {
+    if (!button) return;
+    button.classList.toggle('active', Boolean(saved));
+    button.textContent = saved ? '♥' : '♡';
+    button.setAttribute('aria-pressed', saved ? 'true' : 'false');
+    button.setAttribute('title', saved ? 'Remove from saved fundis' : 'Save fundi');
+  }
+
+  function refreshRenderedSavedStates() {
+    document.querySelectorAll('.save-worker-btn[data-worker-id]').forEach((button) => {
+      const workerId = button.getAttribute('data-worker-id');
+      const saved = window.KazixSavedWorkers?.isWorkerSaved(workerId);
+      syncSaveWorkerButton(button, saved);
+    });
+  }
+
+  function redirectToLoginForSave() {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `login.html?next=${next}`;
+  }
+
+  function toggleSavedWorkerFromSearch(button) {
+    const workerId = button?.getAttribute('data-worker-id');
+    if (!workerId) return;
+
+    if (!userCanSaveWorkers()) {
+      redirectToLoginForSave();
+      return;
+    }
+
+    const worker = renderedWorkers.get(workerId);
+    if (!worker || !window.KazixSavedWorkers) {
+      return;
+    }
+
+    const snapshot = window.KazixSavedWorkers.buildSavedWorkerFromSearchResult(worker);
+    const result = window.KazixSavedWorkers.toggleSavedWorker(snapshot);
+    syncSaveWorkerButton(button, result.saved);
+  }
+
   // ── Render cards ───────────────────────────────────────────
   function renderCards(fundis) {
     const grid = document.getElementById('workersGrid');
+    renderedWorkers.clear();
     if (!fundis.length) {
       grid.innerHTML = `
         <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--muted)">
@@ -397,15 +446,18 @@
     }
 
     grid.innerHTML = fundis.map((f, i) => {
+      renderedWorkers.set(f.id, f);
       const location = [f.area, f.county].filter(Boolean).join(', ') || 'Kenya';
       const skills   = (f.skills || []).map(s => `<span class="skill-chip">${esc(s)}</span>`).join('');
       const verified = f.is_verified ? `<span class="verified-badge">✓ Verified</span>` : '';
       const avail    = f.is_available ? `<span class="avail-dot"></span>` : '';
+      const saved    = window.KazixSavedWorkers?.isWorkerSaved(f.id);
       const avatarStyle = f.avatar_url
         ? ` style="background-image:url(&quot;${esc(f.avatar_url)}&quot;);background-size:cover;background-position:center;background-repeat:no-repeat;"`
         : '';
       const avatarLabel = f.avatar_url ? '' : esc(f.trade_emoji);
       return `<div class="pro-card" style="animation-delay:${i * 0.04}s">
+        <button class="save-worker-btn ${saved ? 'active' : ''}" type="button" data-worker-id="${esc(f.id)}" aria-pressed="${saved ? 'true' : 'false'}" title="${saved ? 'Remove from saved fundis' : 'Save fundi'}" onclick="toggleSavedWorkerFromSearch(this)">${saved ? '♥' : '♡'}</button>
         <div class="pro-card-top">
           <div class="pro-avatar"${avatarStyle}>${avatarLabel}</div>
           <div class="pro-card-mid">
@@ -414,7 +466,7 @@
             <div class="pro-location">📍 ${esc(location)}</div>
             <div class="rating-row2">
               <span class="stars">${renderStars(f.rating)}</span>
-              <span class="score">${f.rating.toFixed(1)}</span>
+              <span class="score">${Number(f.rating || 0).toFixed(1)}</span>
               <span class="jobs">(${f.jobs_completed} jobs)</span>
               ${avail}
             </div>
@@ -679,10 +731,13 @@
       updateSlider({ target: rangeMin });
     }
 
+    window.addEventListener('kazix:saved-workers-updated', refreshRenderedSavedStates);
+
     // Initial load — all fundis, no filters
     runSearch();
   });
 </script>
+<script src="../assets/js/saved-workers.js"></script>
 <script src="../assets/js/auth-state.js"></script>
 </body>
 </html>
