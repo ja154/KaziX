@@ -165,6 +165,9 @@ Frontend checks:
 2. Confirm the landing page loads.
 3. Open `https://kazixfrontend.vercel.app/pages/login.html`
 4. Confirm login and auth bootstrap calls go to the Render API host.
+5. Ignore the Render startup log about embedded frontend assets not being bundled when using `dockerContext: backend`:
+   `Embedded frontend assets not bundled; serving API-only backend as expected in production`
+   That message is expected for the Vercel + Render split and does not indicate a failed deploy.
 
 ## 6. Notes
 

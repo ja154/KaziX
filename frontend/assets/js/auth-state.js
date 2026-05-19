@@ -26,6 +26,7 @@
   const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
   let initSequence = 0;
   let refreshSessionPromise = null;
+  let logoutPromise = null;
 
   function normalizeApiBase(candidate) {
     if (candidate === undefined || candidate === null) {
@@ -335,6 +336,7 @@
 
   function clearAuth() {
     refreshSessionPromise = null;
+    logoutPromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
     delete window.KaziXUser;
@@ -465,21 +467,37 @@
       // so we have one source of truth for clearing storage + redirect.
       return window.KazixProfile.logout();
     }
-    // Fallback used only when profile-utils.js is not present on the page.
-    const token = getToken();
-    try {
-      if (token) {
-        await fetch(`${API_BASE}/v1/auth/logout`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
-    } catch (_error) {
-      // Ignore API logout failures and clear local state anyway.
-    } finally {
-      clearAuth();
-      window.location.replace('login.html?logged_out=1');
+
+    if (logoutPromise) {
+      return logoutPromise;
     }
+
+    // Fallback used only when profile-utils.js is not present on the page.
+    logoutPromise = (async () => {
+      try {
+        const token = await getValidAccessToken();
+        if (token) {
+          const response = await fetch(`${API_BASE}/v1/auth/logout`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!response.ok && response.status !== 401) {
+            const text = await response.text();
+            console.warn('Logout request failed:', text || `HTTP ${response.status}`);
+          }
+        }
+      } catch (_error) {
+        // Ignore API logout failures and clear local state anyway.
+      } finally {
+        clearAuth();
+        window.location.replace('login.html?logged_out=1');
+      }
+    })().finally(() => {
+      logoutPromise = null;
+    });
+
+    return logoutPromise;
   }
 
   async function init() {

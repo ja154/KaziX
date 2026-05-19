@@ -91,6 +91,7 @@
   let dashboardStatePromise = null;
   let notificationSummaryPromise = null;
   let refreshSessionPromise = null;
+  let logoutPromise = null;
 
   function getAccessToken() {
     return localStorage.getItem('kazix_access_token');
@@ -683,6 +684,7 @@
     dashboardStatePromise = null;
     notificationSummaryPromise = null;
     refreshSessionPromise = null;
+    logoutPromise = null;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
   }
@@ -1008,20 +1010,38 @@
   }
 
   async function logout() {
-    try {
-      const token = getAccessToken();
-      if (token) {
-        await requestJson('/v1/auth/logout', { auth: true, method: 'POST' });
-      }
-    } catch (error) {
-      console.warn('Logout request failed:', error);
-    } finally {
-      clearAuthStorage();
-
-      // Replace the current history entry so the user cannot bounce back into
-      // an authenticated page after logging out.
-      window.location.replace('login.html?logged_out=1');
+    if (logoutPromise) {
+      return logoutPromise;
     }
+
+    logoutPromise = (async () => {
+      try {
+        const token = await getValidAccessToken();
+        if (token) {
+          const response = await fetch(`${API_BASE}/v1/auth/logout`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!response.ok && response.status !== 401) {
+            const text = await response.text();
+            console.warn('Logout request failed:', text || `HTTP ${response.status}`);
+          }
+        }
+      } catch (error) {
+        console.warn('Logout request failed:', error);
+      } finally {
+        clearAuthStorage();
+
+        // Replace the current history entry so the user cannot bounce back into
+        // an authenticated page after logging out.
+        window.location.replace('login.html?logged_out=1');
+      }
+    })().finally(() => {
+      logoutPromise = null;
+    });
+
+    return logoutPromise;
   }
 
   window.KazixProfile = {

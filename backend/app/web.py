@@ -37,7 +37,9 @@ def mount_frontend(app: FastAPI) -> None:
         log_message = "Frontend directory not found"
         log_kwargs = {"checked_paths": checked_paths}
         if settings.is_production:
-            log_message = "Frontend directory not found; serving API-only backend"
+            log_message = (
+                "Embedded frontend assets not bundled; serving API-only backend as expected in production"
+            )
             log_kwargs["frontend_url"] = settings.frontend_url
             logger.info(log_message, **log_kwargs)
         else:

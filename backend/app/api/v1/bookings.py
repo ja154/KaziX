@@ -7,14 +7,14 @@ GET  /v1/bookings/{id}          → get booking detail
 POST /v1/bookings/{id}/complete → client marks job complete, triggers escrow release
 """
 
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, ClientUser
-from app.core.supabase import get_admin_client
+from app.api.deps import ClientUser, CurrentUser
 from app.core.logging import get_logger
+from app.core.supabase import get_admin_client
 from app.services.notifications import create_notification
 
 logger = get_logger(__name__)
@@ -26,9 +26,44 @@ BOOKING_LIST_SELECT = (
     "job:jobs!job_id(id, title, trade, county, area, status, created_at, updated_at), "
     "client_profile:profiles!client_id(id, full_name, phone, avatar_url, county, area), "
     "fundi_profile:profiles!fundi_id(id, full_name, phone, avatar_url, county, area), "
-    "fundi_details:fundi_profiles!fundi_id(trade, rating_avg, jobs_completed, experience_years, kyc_status, is_available), "
     "transactions(id, type, amount, mpesa_ref, status, created_at)"
 )
+FUNDI_DETAILS_FIELDS = (
+    "trade",
+    "rating_avg",
+    "jobs_completed",
+    "experience_years",
+    "kyc_status",
+    "is_available",
+)
+FUNDI_DETAILS_SELECT = "id, " + ", ".join(FUNDI_DETAILS_FIELDS)
+
+
+def _serialize_fundi_details(row: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not row:
+        return None
+    return {field: row.get(field) for field in FUNDI_DETAILS_FIELDS}
+
+
+def _attach_fundi_details(admin, booking_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    fundi_ids = sorted({str(row.get("fundi_id")) for row in booking_rows if row.get("fundi_id")})
+    if not fundi_ids:
+        return booking_rows
+
+    fundi_result = admin.table("fundi_profiles").select(FUNDI_DETAILS_SELECT).in_("id", fundi_ids).execute()
+    fundi_details_by_id = {
+        str(row["id"]): _serialize_fundi_details(row)
+        for row in (fundi_result.data or [])
+        if isinstance(row, dict) and row.get("id")
+    }
+
+    enriched_rows: list[dict[str, Any]] = []
+    for row in booking_rows:
+        enriched = dict(row)
+        enriched["fundi_details"] = fundi_details_by_id.get(str(row.get("fundi_id"))) if row.get("fundi_id") else None
+        enriched_rows.append(enriched)
+
+    return enriched_rows
 
 
 class HireRequest(BaseModel):
@@ -81,7 +116,7 @@ async def list_bookings(
                 )
 
         result = query.order("created_at", desc=True).execute()
-        return result.data or []
+        return _attach_fundi_details(admin, result.data or [])
     except HTTPException:
         raise
     except Exception as exc:
@@ -155,7 +190,7 @@ async def hire_fundi(body: HireRequest, user: ClientUser):
             type_="hired",
             title="You've been hired! 🎉",
             body=f"You were hired for: {job['title']}. Check your bookings.",
-            action_url=f"/worker-hires.html",
+            action_url="/worker-hires.html",
         )
 
         logger.info("Fundi hired", booking_id=booking["id"], fundi=app_["fundi_id"])
@@ -188,11 +223,11 @@ async def get_booking(booking_id: str, user: CurrentUser):
         if not result.data:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
 
-        b = result.data
+        b = dict(result.data)
         if b["client_id"] != user.user_id and b["fundi_id"] != user.user_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your booking")
 
-        return b
+        return _attach_fundi_details(admin, [b])[0]
     except HTTPException:
         raise
     except Exception as exc:

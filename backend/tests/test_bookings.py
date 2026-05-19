@@ -11,7 +11,7 @@ class _FakeResult:
         self.data = data
 
 
-class _FakeBookingsQuery:
+class _FakeTableQuery:
     def __init__(self, rows: list[dict]) -> None:
         self.rows = [dict(row) for row in rows]
         self._filters: list[tuple[str, str, object]] = []
@@ -54,13 +54,16 @@ class _FakeBookingsQuery:
 
 
 class _FakeAdminClient:
-    def __init__(self, bookings_rows: list[dict]) -> None:
+    def __init__(self, bookings_rows: list[dict], fundi_profile_rows: list[dict] | None = None) -> None:
         self.bookings_rows = bookings_rows
+        self.fundi_profile_rows = fundi_profile_rows or []
 
     def table(self, table_name: str):
-        if table_name != "bookings":
-            raise AssertionError(f"Unexpected table requested: {table_name}")
-        return _FakeBookingsQuery(self.bookings_rows)
+        if table_name == "bookings":
+            return _FakeTableQuery(self.bookings_rows)
+        if table_name == "fundi_profiles":
+            return _FakeTableQuery(self.fundi_profile_rows)
+        raise AssertionError(f"Unexpected table requested: {table_name}")
 
 
 def _override_client_user():
@@ -83,6 +86,10 @@ async def test_list_bookings_supports_canonical_path_without_redirect(monkeypatc
                 "status": "confirmed",
                 "escrow_status": "pending",
                 "created_at": "2026-05-02T09:00:00Z",
+                "fundi_profile": {
+                    "id": "fundi-1",
+                    "full_name": "Alice Wanjiku",
+                },
             },
             {
                 "id": "booking-older",
@@ -92,6 +99,10 @@ async def test_list_bookings_supports_canonical_path_without_redirect(monkeypatc
                 "status": "in_progress",
                 "escrow_status": "held",
                 "created_at": "2026-05-01T09:00:00Z",
+                "fundi_profile": {
+                    "id": "fundi-2",
+                    "full_name": "Brian Otieno",
+                },
             },
             {
                 "id": "booking-other-client",
@@ -102,7 +113,27 @@ async def test_list_bookings_supports_canonical_path_without_redirect(monkeypatc
                 "escrow_status": "pending",
                 "created_at": "2026-05-03T09:00:00Z",
             },
-        ]
+        ],
+        [
+            {
+                "id": "fundi-1",
+                "trade": "plumber",
+                "rating_avg": 4.8,
+                "jobs_completed": 17,
+                "experience_years": 6,
+                "kyc_status": "approved",
+                "is_available": True,
+            },
+            {
+                "id": "fundi-2",
+                "trade": "electrician",
+                "rating_avg": 4.4,
+                "jobs_completed": 9,
+                "experience_years": 4,
+                "kyc_status": "approved",
+                "is_available": False,
+            },
+        ],
     )
 
     monkeypatch.setattr(bookings_module, "get_admin_client", lambda: fake_admin)
@@ -116,10 +147,24 @@ async def test_list_bookings_supports_canonical_path_without_redirect(monkeypatc
         app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert [booking["id"] for booking in response.json()] == [
+    payload = response.json()
+
+    assert [booking["id"] for booking in payload] == [
         "booking-newest",
         "booking-older",
     ]
+    assert payload[0]["fundi_profile"] == {
+        "id": "fundi-1",
+        "full_name": "Alice Wanjiku",
+    }
+    assert payload[0]["fundi_details"] == {
+        "trade": "plumber",
+        "rating_avg": 4.8,
+        "jobs_completed": 17,
+        "experience_years": 6,
+        "kyc_status": "approved",
+        "is_available": True,
+    }
 
 
 @pytest.mark.asyncio
@@ -135,7 +180,18 @@ async def test_list_bookings_trailing_slash_path_remains_compatible(monkeypatch)
                 "escrow_status": "pending",
                 "created_at": "2026-05-02T09:00:00Z",
             }
-        ]
+        ],
+        [
+            {
+                "id": "fundi-1",
+                "trade": "plumber",
+                "rating_avg": 4.8,
+                "jobs_completed": 17,
+                "experience_years": 6,
+                "kyc_status": "approved",
+                "is_available": True,
+            }
+        ],
     )
 
     monkeypatch.setattr(bookings_module, "get_admin_client", lambda: fake_admin)
@@ -152,6 +208,45 @@ async def test_list_bookings_trailing_slash_path_remains_compatible(monkeypatch)
     assert canonical_response.status_code == 200
     assert compatibility_response.status_code == 200
     assert compatibility_response.json() == canonical_response.json()
+
+
+@pytest.mark.asyncio
+async def test_list_bookings_returns_null_fundi_details_when_profile_row_missing(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        [
+            {
+                "id": "booking-1",
+                "job_id": "job-1",
+                "client_id": "client-123",
+                "fundi_id": "fundi-missing",
+                "status": "confirmed",
+                "escrow_status": "pending",
+                "created_at": "2026-05-02T09:00:00Z",
+                "fundi_profile": {
+                    "id": "fundi-missing",
+                    "full_name": "Missing Fundi",
+                },
+            }
+        ]
+    )
+
+    monkeypatch.setattr(bookings_module, "get_admin_client", lambda: fake_admin)
+    app.dependency_overrides[deps_module.get_current_user] = _override_client_user
+
+    try:
+        transport = httpx.ASGITransport(app=app)
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.get("/v1/bookings", params={"role": "client"})
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload[0]["fundi_profile"] == {
+        "id": "fundi-missing",
+        "full_name": "Missing Fundi",
+    }
+    assert payload[0]["fundi_details"] is None
 
 
 @pytest.mark.asyncio
