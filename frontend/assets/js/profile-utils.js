@@ -66,7 +66,7 @@
   const DASHBOARD_STATE_MAX_AGE_MS = 60 * 1000;
   const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
   const NOTIFICATION_SUMMARY_MAX_AGE_MS = 60 * 1000;
-  const AUTH_STORAGE_KEYS = new Set([
+  const SESSION_AUTH_STORAGE_KEYS = new Set([
     'kazix_access_token',
     'kazix_refresh_token',
     'kazix_expires_in',
@@ -75,6 +75,12 @@
     'kazix_user_id',
     'kazix_role',
     'kazix_login_email',
+    'kazix_reg_pending_profile',
+    PROFILE_CACHE_KEY,
+    DASHBOARD_STATE_STORAGE_KEY,
+    NOTIFICATION_SUMMARY_STORAGE_KEY,
+  ]);
+  const LOCAL_COORDINATION_STORAGE_KEYS = new Set([
     'kazix_magic_link_complete',
     'kazix_auth_next_page',
     'kazix_auth_flow',
@@ -83,11 +89,22 @@
     'kazix_auth_waiting_flow',
     'kazix_auth_waiting_heartbeat',
     'kazix_auth_waiting_started_at',
+  ]);
+  const LOCAL_RESETTABLE_STORAGE_PREFIXES = ['kazix_reg_'];
+  const LEGACY_PERSISTED_AUTH_KEYS = new Set([
+    'kazix_access_token',
+    'kazix_refresh_token',
+    'kazix_expires_in',
+    'kazix_expires_at',
+    'kazix_token_type',
+    'kazix_user_id',
+    'kazix_role',
+    'kazix_login_email',
     'kazix_reg_pending_profile',
+    PROFILE_CACHE_KEY,
     DASHBOARD_STATE_STORAGE_KEY,
     NOTIFICATION_SUMMARY_STORAGE_KEY,
   ]);
-  const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
   let myProfilePromise = null;
   let dashboardStatePromise = null;
@@ -100,18 +117,61 @@
     role: null,
   };
 
+  function readSessionStorage(key) {
+    try {
+      return window.sessionStorage.getItem(key);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeSessionStorage(key, value) {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (_error) {
+      // Ignore storage write failures.
+    }
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore legacy cleanup failures.
+    }
+  }
+
+  function removeSessionStorage(key) {
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore storage cleanup failures.
+    }
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore legacy cleanup failures.
+    }
+  }
+
+  function purgeLegacyPersistentAuth() {
+    clearMatchingStorage(window.localStorage, {
+      keys: LEGACY_PERSISTED_AUTH_KEYS,
+      includeSupabase: true,
+    });
+  }
+
   function getAccessToken() {
-    return localStorage.getItem('kazix_access_token');
+    return readSessionStorage('kazix_access_token');
   }
 
   function getStoredUserId() {
-    const value = localStorage.getItem(USER_ID_STORAGE_KEY);
+    const value = readSessionStorage(USER_ID_STORAGE_KEY);
     const normalized = String(value || '').trim();
     return normalized || null;
   }
 
   function getCachedProfileId() {
-    const cached = safeJson(localStorage.getItem(PROFILE_CACHE_KEY) || 'null');
+    const cached = safeJson(readSessionStorage(PROFILE_CACHE_KEY) || 'null');
     const value = cached && cached.id ? String(cached.id).trim() : '';
     return value || null;
   }
@@ -121,7 +181,8 @@
     dashboardStatePromise = null;
     notificationSummaryPromise = null;
     try {
-      localStorage.removeItem(PROFILE_CACHE_KEY);
+      window.sessionStorage.removeItem(PROFILE_CACHE_KEY);
+      window.localStorage.removeItem(PROFILE_CACHE_KEY);
     } catch (_error) {
       // Ignore storage cleanup failures.
     }
@@ -157,10 +218,10 @@
     }
 
     if (nextUserId) {
-      localStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+      writeSessionStorage(USER_ID_STORAGE_KEY, nextUserId);
     }
     if (nextRole) {
-      localStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+      writeSessionStorage(ROLE_STORAGE_KEY, nextRole);
     }
 
     lastIdentitySync = {
@@ -176,11 +237,11 @@
   }
 
   function getRefreshToken() {
-    return localStorage.getItem('kazix_refresh_token');
+    return readSessionStorage('kazix_refresh_token');
   }
 
   function getStoredExpiresAtSeconds() {
-    const value = Number(localStorage.getItem('kazix_expires_at'));
+    const value = Number(readSessionStorage('kazix_expires_at'));
     if (!Number.isFinite(value) || value <= 0) {
       return null;
     }
@@ -213,29 +274,29 @@
     const expiresIn = Number(payload.expires_in);
     const expiresAt = computeExpiresAtSeconds(payload);
 
-    localStorage.setItem('kazix_access_token', payload.access_token);
+    writeSessionStorage('kazix_access_token', payload.access_token);
     if (payload.refresh_token) {
-      localStorage.setItem('kazix_refresh_token', payload.refresh_token);
+      writeSessionStorage('kazix_refresh_token', payload.refresh_token);
     }
     if (Number.isFinite(expiresIn) && expiresIn > 0) {
-      localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+      writeSessionStorage('kazix_expires_in', String(Math.floor(expiresIn)));
     } else {
-      localStorage.removeItem('kazix_expires_in');
+      removeSessionStorage('kazix_expires_in');
     }
     if (expiresAt !== null) {
-      localStorage.setItem('kazix_expires_at', String(expiresAt));
+      writeSessionStorage('kazix_expires_at', String(expiresAt));
     } else {
-      localStorage.removeItem('kazix_expires_at');
+      removeSessionStorage('kazix_expires_at');
     }
-    localStorage.setItem(
+    writeSessionStorage(
       'kazix_token_type',
-      payload.token_type || localStorage.getItem('kazix_token_type') || 'bearer'
+      payload.token_type || readSessionStorage('kazix_token_type') || 'bearer'
     );
     if (payload.user_id) {
-      localStorage.setItem(USER_ID_STORAGE_KEY, String(payload.user_id));
+      writeSessionStorage(USER_ID_STORAGE_KEY, String(payload.user_id));
     }
     if (payload.role) {
-      localStorage.setItem(ROLE_STORAGE_KEY, String(payload.role));
+      writeSessionStorage(ROLE_STORAGE_KEY, String(payload.role));
     }
 
     return payload.access_token;
@@ -623,9 +684,9 @@
 
     try {
       syncResolvedIdentity(profile);
-      window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
+      writeSessionStorage(PROFILE_CACHE_KEY, JSON.stringify(profile));
       if (profile.role) {
-        window.localStorage.setItem(ROLE_STORAGE_KEY, profile.role);
+        writeSessionStorage(ROLE_STORAGE_KEY, profile.role);
       }
     } catch (_error) {
       // Ignore storage failures; the in-memory promise still stays valid.
@@ -747,17 +808,22 @@
       || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key);
   }
 
-  function clearMatchingStorage(storage) {
+  function clearMatchingStorage(storage, options = {}) {
     if (!storage) return;
+    const {
+      keys = SESSION_AUTH_STORAGE_KEYS,
+      prefixes = [],
+      includeSupabase = false,
+    } = options;
 
     for (let index = storage.length - 1; index >= 0; index -= 1) {
       const key = storage.key(index);
       if (!key) continue;
 
       if (
-        AUTH_STORAGE_KEYS.has(key)
-        || AUTH_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
-        || isSupabaseStorageKey(key)
+        keys.has(key)
+        || prefixes.some((prefix) => key.startsWith(prefix))
+        || (includeSupabase && isSupabaseStorageKey(key))
       ) {
         storage.removeItem(key);
       }
@@ -776,8 +842,33 @@
       role: null,
     };
     delete window.KaziXUser;
-    clearMatchingStorage(window.localStorage);
-    clearMatchingStorage(window.sessionStorage);
+    clearMatchingStorage(window.sessionStorage, {
+      keys: SESSION_AUTH_STORAGE_KEYS,
+      includeSupabase: true,
+    });
+    clearMatchingStorage(window.localStorage, {
+      keys: new Set([
+        ...LEGACY_PERSISTED_AUTH_KEYS,
+        ...LOCAL_COORDINATION_STORAGE_KEYS,
+      ]),
+      prefixes: LOCAL_RESETTABLE_STORAGE_PREFIXES,
+      includeSupabase: true,
+    });
+  }
+
+  function hasAuthSession() {
+    purgeLegacyPersistentAuth();
+    return Boolean(getAccessToken());
+  }
+
+  function requireAuthPage() {
+    if (hasAuthSession()) {
+      return true;
+    }
+
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`login.html?next=${next}`);
+    return false;
   }
 
   function readCachedDashboardState(maxAgeMs) {
@@ -1168,6 +1259,7 @@
     getNotificationSummary,
     getProfileIdFromQuery,
     getStoredUserId,
+    hasAuthSession,
     hydrateDashboardState,
     hydrateNotificationSummary,
     hydrateShell,
@@ -1176,6 +1268,7 @@
     logout,
     profilePath,
     refreshAccessToken,
+    requireAuthPage,
     requestJson,
     roleHomePath,
     roleLabel,
@@ -1194,6 +1287,8 @@
     summarizeNotifications,
     syncNotificationSummaryFromNotifications,
   };
+
+  purgeLegacyPersistentAuth();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', wireNotificationButtons);

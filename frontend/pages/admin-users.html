@@ -39,6 +39,12 @@
   .user-filters .search-input{min-width:100%}
 }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+if (window.KazixAuthGuard.requireAuthPage() && sessionStorage.getItem("kazix_role") !== "admin") {
+  window.location.replace("index.html");
+}
+</script>
 </head>
 <body data-admin-active="users">
 <main class="main" data-admin-main>

@@ -50,6 +50,12 @@ textarea.note-input{width:100%;min-height:110px;border:1.5px solid var(--border)
   .disputes-grid{grid-template-columns:1fr}
 }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+if (window.KazixAuthGuard.requireAuthPage() && sessionStorage.getItem("kazix_role") !== "admin") {
+  window.location.replace("index.html");
+}
+</script>
 </head>
 <body class="app" data-admin-active="disputes">
 <main class="main" data-admin-main>

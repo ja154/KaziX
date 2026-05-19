@@ -407,13 +407,19 @@ const SUPABASE_CONFIG_ERROR = !window.supabase
       : null);
 const supabaseClient = SUPABASE_CONFIG_ERROR
   ? null
-  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storage: window.sessionStorage,
+        persistSession: true,
+      },
+    });
 
 let regRole = 'client';
 let regCurrentStep = 1;
 let regAuthPayload = null;
 let regCountdownTimer = null;
 let magicLinkPollTimer = null;
+const AUTH_CHANNEL_NAME = 'kazix-auth-session';
 const AUTH_WAITER_SESSION_KEY = 'kazix_auth_waiter_id';
 const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
@@ -437,8 +443,69 @@ const REGISTER_AUTH_STORAGE_KEYS = [
   'kazix_auth_flow',
   'kazix_reg_pending_profile',
 ];
+const LEGACY_PERSISTED_AUTH_KEYS = [
+  ...REGISTER_AUTH_STORAGE_KEYS,
+  'kazix_profile',
+  'kazix_dashboard_state',
+  'kazix_notification_summary',
+];
 const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
 let refreshSessionPromise = null;
+const authChannel = typeof window.BroadcastChannel === 'function'
+  ? new window.BroadcastChannel(AUTH_CHANNEL_NAME)
+  : null;
+
+function readSessionAuthValue(key) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function writeSessionAuthValue(key, value) {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch (_error) {
+    // Ignore session storage failures.
+  }
+
+  try {
+    window.localStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore legacy cleanup failures.
+  }
+}
+
+function removeSessionAuthValue(key) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore session cleanup failures.
+  }
+
+  try {
+    window.localStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore legacy cleanup failures.
+  }
+}
+
+function isSupabaseStorageKey(key) {
+  return key === 'supabase.auth.token'
+    || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key);
+}
+
+function purgeLegacyPersistentAuth() {
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (!key) continue;
+
+    if (LEGACY_PERSISTED_AUTH_KEYS.includes(key) || isSupabaseStorageKey(key)) {
+      window.localStorage.removeItem(key);
+    }
+  }
+}
 
 
 function showRegError(message) {
@@ -620,12 +687,15 @@ function clearAuthTabWaiting() {
 function clearStoredAuthSession() {
   refreshSessionPromise = null;
   regAuthPayload = null;
-  REGISTER_AUTH_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+  REGISTER_AUTH_STORAGE_KEYS.forEach((key) => {
+    removeSessionAuthValue(key);
+    localStorage.removeItem(key);
+  });
 
   for (let index = localStorage.length - 1; index >= 0; index -= 1) {
     const key = localStorage.key(index);
     if (!key) continue;
-    if (key === 'supabase.auth.token' || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key)) {
+    if (isSupabaseStorageKey(key)) {
       localStorage.removeItem(key);
     }
   }
@@ -633,7 +703,7 @@ function clearStoredAuthSession() {
   for (let index = sessionStorage.length - 1; index >= 0; index -= 1) {
     const key = sessionStorage.key(index);
     if (!key) continue;
-    if (key === 'supabase.auth.token' || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key)) {
+    if (isSupabaseStorageKey(key)) {
       sessionStorage.removeItem(key);
     }
   }
@@ -648,23 +718,23 @@ function persistSession(payload) {
         ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn)
         : null);
 
-  localStorage.setItem('kazix_access_token', payload.access_token);
-  if (payload.refresh_token) localStorage.setItem('kazix_refresh_token', payload.refresh_token);
+  writeSessionAuthValue('kazix_access_token', payload.access_token);
+  if (payload.refresh_token) writeSessionAuthValue('kazix_refresh_token', payload.refresh_token);
   if (Number.isFinite(expiresIn) && expiresIn > 0) {
-    localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+    writeSessionAuthValue('kazix_expires_in', String(Math.floor(expiresIn)));
   } else {
-    localStorage.removeItem('kazix_expires_in');
+    removeSessionAuthValue('kazix_expires_in');
   }
   if (expiresAt !== null) {
-    localStorage.setItem('kazix_expires_at', String(expiresAt));
+    writeSessionAuthValue('kazix_expires_at', String(expiresAt));
   } else {
-    localStorage.removeItem('kazix_expires_at');
+    removeSessionAuthValue('kazix_expires_at');
   }
-  localStorage.setItem('kazix_token_type', payload.token_type || 'bearer');
+  writeSessionAuthValue('kazix_token_type', payload.token_type || 'bearer');
 }
 
 function getStoredExpiresAtSeconds() {
-  const value = Number(localStorage.getItem('kazix_expires_at'));
+  const value = Number(readSessionAuthValue('kazix_expires_at'));
   if (!Number.isFinite(value) || value <= 0) {
     return null;
   }
@@ -678,8 +748,8 @@ function getStoredExpiresAtMs() {
 }
 
 function shouldRefreshStoredSession() {
-  const accessToken = localStorage.getItem('kazix_access_token');
-  const refreshToken = localStorage.getItem('kazix_refresh_token');
+  const accessToken = readSessionAuthValue('kazix_access_token');
+  const refreshToken = readSessionAuthValue('kazix_refresh_token');
   const expiresAtMs = getStoredExpiresAtMs();
 
   return Boolean(
@@ -692,8 +762,8 @@ function shouldRefreshStoredSession() {
 
 async function refreshStoredSession(options = {}) {
   const { force = false } = options;
-  const currentToken = localStorage.getItem('kazix_access_token');
-  const refreshToken = localStorage.getItem('kazix_refresh_token');
+  const currentToken = readSessionAuthValue('kazix_access_token');
+  const refreshToken = readSessionAuthValue('kazix_refresh_token');
 
   if (!refreshToken) {
     return force ? null : currentToken;
@@ -727,8 +797,8 @@ async function refreshStoredSession(options = {}) {
     persistSession(data);
     regAuthPayload = {
       access_token: data.access_token,
-      refresh_token: data.refresh_token || localStorage.getItem('kazix_refresh_token'),
-      token_type: data.token_type || localStorage.getItem('kazix_token_type') || 'bearer',
+      refresh_token: data.refresh_token || readSessionAuthValue('kazix_refresh_token'),
+      token_type: data.token_type || readSessionAuthValue('kazix_token_type') || 'bearer',
     };
     return data.access_token;
   })().finally(() => {
@@ -740,7 +810,7 @@ async function refreshStoredSession(options = {}) {
 
 async function getValidStoredAccessToken(options = {}) {
   const { forceRefresh = false } = options;
-  const currentToken = localStorage.getItem('kazix_access_token');
+  const currentToken = readSessionAuthValue('kazix_access_token');
   if (!currentToken) return null;
 
   const shouldRefresh = forceRefresh || shouldRefreshStoredSession();
@@ -754,7 +824,7 @@ async function getValidStoredAccessToken(options = {}) {
     if (forceRefresh || error?.status === 400 || error?.status === 401) {
       return null;
     }
-    return localStorage.getItem('kazix_access_token') || currentToken;
+    return readSessionAuthValue('kazix_access_token') || currentToken;
   }
 }
 
@@ -984,7 +1054,7 @@ async function createRegAccount() {
         const recoveredSession = await retryRegistrationSignin(email, password);
         regAuthPayload = recoveredSession;
         persistSession(recoveredSession);
-        localStorage.setItem('kazix_reg_pending_profile', '1');
+        writeSessionAuthValue('kazix_reg_pending_profile', '1');
         goRStep(4);
         return;
       }
@@ -993,7 +1063,7 @@ async function createRegAccount() {
 
     regAuthPayload = data;
     persistSession(data);
-    localStorage.setItem('kazix_reg_pending_profile', '1');
+    writeSessionAuthValue('kazix_reg_pending_profile', '1');
     goRStep(4);
   } catch (err) {
     console.error('createRegAccount error:', err);
@@ -1078,8 +1148,8 @@ async function submitReg() {
   try {
     regAuthPayload = {
       access_token: accessToken,
-      refresh_token: localStorage.getItem('kazix_refresh_token'),
-      token_type: localStorage.getItem('kazix_token_type') || 'bearer',
+      refresh_token: readSessionAuthValue('kazix_refresh_token'),
+      token_type: readSessionAuthValue('kazix_token_type') || 'bearer',
     };
     const resp = await fetchWithStoredAuth('/v1/auth/profile', {
       method: 'POST',
@@ -1088,8 +1158,8 @@ async function submitReg() {
     const data = await readApiResponse(resp);
     if (!resp.ok) throw new Error(data?.detail || 'Failed to create profile');
 
-    localStorage.setItem('kazix_role', payload.role);
-    localStorage.removeItem('kazix_reg_pending_profile');
+    writeSessionAuthValue('kazix_role', payload.role);
+    removeSessionAuthValue('kazix_reg_pending_profile');
   } catch (err) {
     showRegError(toDisplayError(err, 'Could not complete registration.'));
     submitBtn.disabled = false;
@@ -1118,11 +1188,11 @@ async function resumePendingRegistration() {
 
   regAuthPayload = {
     access_token: accessToken,
-    refresh_token: localStorage.getItem('kazix_refresh_token'),
-    token_type: localStorage.getItem('kazix_token_type') || 'bearer',
+    refresh_token: readSessionAuthValue('kazix_refresh_token'),
+    token_type: readSessionAuthValue('kazix_token_type') || 'bearer',
   };
 
-  if (localStorage.getItem('kazix_reg_pending_profile') === '1') {
+  if (readSessionAuthValue('kazix_reg_pending_profile') === '1') {
     goRStep(4);
     return true;
   }
@@ -1148,15 +1218,31 @@ async function resumePendingRegistration() {
   return false;
 }
 
+function handleAuthChannelMessage(payload) {
+  if (!payload || payload.flow !== 'register') {
+    return;
+  }
+
+  persistSession(payload);
+  if (payload.nextPage && !payload.nextPage.startsWith('register.html')) {
+    window.location.href = payload.nextPage;
+    return;
+  }
+
+  writeSessionAuthValue('kazix_reg_pending_profile', '1');
+  goRStep(4);
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (isCanonicalRedirectPending) return;
+  purgeLegacyPersistentAuth();
   if (SUPABASE_CONFIG_ERROR) {
     console.error(SUPABASE_CONFIG_ERROR);
   }
   restoreRegFormData();
   const params = new URLSearchParams(window.location.search);
-  if (params.get('step') === '4' && localStorage.getItem('kazix_access_token')) {
-    localStorage.setItem('kazix_reg_pending_profile', '1');
+  if (params.get('step') === '4' && readSessionAuthValue('kazix_access_token')) {
+    writeSessionAuthValue('kazix_reg_pending_profile', '1');
   }
   if (await resumePendingRegistration()) {
     return;
@@ -1164,7 +1250,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   goRStep(1);
 });
 
-window.addEventListener('beforeunload', clearAuthTabWaiting);
+if (authChannel) {
+  authChannel.addEventListener('message', (event) => {
+    handleAuthChannelMessage(event.data);
+  });
+}
+
+window.addEventListener('beforeunload', () => {
+  clearAuthTabWaiting();
+  authChannel?.close();
+});
 </script>
 </body>
 </html>

@@ -39,14 +39,15 @@
   .dashboard-stats{grid-template-columns:1fr}
 }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
 <script>
 (function(){
-  if (!localStorage.getItem("kazix_access_token")) {
+  if (!window.KazixAuthGuard.hasSession()) {
     var next = encodeURIComponent(location.pathname + location.search);
     location.replace("login.html?next=" + next);
     return;
   }
-  if (localStorage.getItem("kazix_role") !== "admin") {
+  if (sessionStorage.getItem("kazix_role") !== "admin") {
     location.replace("index.html");
     return;
   }

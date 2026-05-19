@@ -6,7 +6,7 @@
   const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
   const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
   const TOKEN_KEYS = ['kazix_access_token', 'sb-access-token', 'access_token'];
-  const AUTH_STORAGE_KEYS = new Set([
+  const SESSION_AUTH_STORAGE_KEYS = new Set([
     'kazix_access_token',
     'kazix_refresh_token',
     'kazix_expires_in',
@@ -15,6 +15,12 @@
     'kazix_user_id',
     'kazix_role',
     'kazix_login_email',
+    'kazix_reg_pending_profile',
+    PROFILE_CACHE_KEY,
+    DASHBOARD_STATE_STORAGE_KEY,
+    NOTIFICATION_SUMMARY_STORAGE_KEY,
+  ]);
+  const LOCAL_COORDINATION_STORAGE_KEYS = new Set([
     'kazix_magic_link_complete',
     'kazix_auth_next_page',
     'kazix_auth_flow',
@@ -23,10 +29,22 @@
     'kazix_auth_waiting_flow',
     'kazix_auth_waiting_heartbeat',
     'kazix_auth_waiting_started_at',
+  ]);
+  const LOCAL_RESETTABLE_STORAGE_PREFIXES = ['kazix_reg_'];
+  const LEGACY_PERSISTED_AUTH_KEYS = new Set([
+    'kazix_access_token',
+    'kazix_refresh_token',
+    'kazix_expires_in',
+    'kazix_expires_at',
+    'kazix_token_type',
+    'kazix_user_id',
+    'kazix_role',
+    'kazix_login_email',
     'kazix_reg_pending_profile',
     PROFILE_CACHE_KEY,
+    DASHBOARD_STATE_STORAGE_KEY,
+    NOTIFICATION_SUMMARY_STORAGE_KEY,
   ]);
-  const AUTH_STORAGE_PREFIXES = ['kazix_reg_'];
   const AUTH_REFRESH_BUFFER_MS = 60 * 1000;
   let initSequence = 0;
   let refreshSessionPromise = null;
@@ -89,6 +107,49 @@
     }
   }
 
+  function readSessionStorage(key) {
+    try {
+      return window.sessionStorage.getItem(key);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeSessionStorage(key, value) {
+    try {
+      window.sessionStorage.setItem(key, value);
+    } catch (_error) {
+      // Ignore session storage failures.
+    }
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore legacy cleanup failures.
+    }
+  }
+
+  function removeSessionStorage(key) {
+    try {
+      window.sessionStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore session cleanup failures.
+    }
+
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_error) {
+      // Ignore legacy cleanup failures.
+    }
+  }
+
+  function purgeLegacyPersistentAuth() {
+    clearMatchingStorage(window.localStorage, {
+      keys: LEGACY_PERSISTED_AUTH_KEYS,
+      includeSupabase: true,
+    });
+  }
+
   function looksLikeToken(value) {
     return typeof value === 'string'
       && value.trim().length > 20
@@ -148,21 +209,21 @@
   }
 
   function getToken() {
-    return findTokenInStorage(window.localStorage) || findTokenInStorage(window.sessionStorage);
+    return findTokenInStorage(window.sessionStorage);
   }
 
   function getStoredUserId() {
-    const value = window.localStorage.getItem(USER_ID_STORAGE_KEY);
+    const value = readSessionStorage(USER_ID_STORAGE_KEY);
     const normalized = String(value || '').trim();
     return normalized || null;
   }
 
   function getRefreshToken() {
-    return window.localStorage.getItem('kazix_refresh_token');
+    return readSessionStorage('kazix_refresh_token');
   }
 
   function getStoredExpiresAtSeconds() {
-    const value = Number(window.localStorage.getItem('kazix_expires_at'));
+    const value = Number(readSessionStorage('kazix_expires_at'));
     if (!Number.isFinite(value) || value <= 0) {
       return null;
     }
@@ -195,29 +256,29 @@
     const expiresIn = Number(payload.expires_in);
     const expiresAt = computeExpiresAtSeconds(payload);
 
-    window.localStorage.setItem('kazix_access_token', payload.access_token);
+    writeSessionStorage('kazix_access_token', payload.access_token);
     if (payload.refresh_token) {
-      window.localStorage.setItem('kazix_refresh_token', payload.refresh_token);
+      writeSessionStorage('kazix_refresh_token', payload.refresh_token);
     }
     if (Number.isFinite(expiresIn) && expiresIn > 0) {
-      window.localStorage.setItem('kazix_expires_in', String(Math.floor(expiresIn)));
+      writeSessionStorage('kazix_expires_in', String(Math.floor(expiresIn)));
     } else {
-      window.localStorage.removeItem('kazix_expires_in');
+      removeSessionStorage('kazix_expires_in');
     }
     if (expiresAt !== null) {
-      window.localStorage.setItem('kazix_expires_at', String(expiresAt));
+      writeSessionStorage('kazix_expires_at', String(expiresAt));
     } else {
-      window.localStorage.removeItem('kazix_expires_at');
+      removeSessionStorage('kazix_expires_at');
     }
-    window.localStorage.setItem(
+    writeSessionStorage(
       'kazix_token_type',
-      payload.token_type || window.localStorage.getItem('kazix_token_type') || 'bearer'
+      payload.token_type || readSessionStorage('kazix_token_type') || 'bearer'
     );
     if (payload.user_id) {
-      window.localStorage.setItem(USER_ID_STORAGE_KEY, String(payload.user_id));
+      writeSessionStorage(USER_ID_STORAGE_KEY, String(payload.user_id));
     }
     if (payload.role) {
-      window.localStorage.setItem(ROLE_STORAGE_KEY, String(payload.role));
+      writeSessionStorage(ROLE_STORAGE_KEY, String(payload.role));
     }
 
     return payload.access_token;
@@ -315,7 +376,7 @@
   }
 
   function getCachedProfile() {
-    const profile = normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
+    const profile = normalizeProfile(safeJson(readSessionStorage(PROFILE_CACHE_KEY) || 'null'));
     if (!profile) return null;
     const currentUserId = getStoredUserId();
     if (currentUserId && profile.id && String(profile.id) !== currentUserId) {
@@ -326,6 +387,7 @@
 
   function clearAccountScopedState() {
     try {
+      window.sessionStorage.removeItem(PROFILE_CACHE_KEY);
       window.localStorage.removeItem(PROFILE_CACHE_KEY);
       window.sessionStorage.removeItem(DASHBOARD_STATE_STORAGE_KEY);
       window.sessionStorage.removeItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
@@ -341,7 +403,7 @@
 
     const nextUserId = String(normalized.id).trim();
     const previousUserId = getStoredUserId();
-    const cachedProfile = normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
+    const cachedProfile = normalizeProfile(safeJson(readSessionStorage(PROFILE_CACHE_KEY) || 'null'));
     const previousProfileId = cachedProfile?.id ? String(cachedProfile.id).trim() : '';
 
     if (
@@ -354,9 +416,9 @@
       clearAccountScopedState();
     }
 
-    window.localStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+    writeSessionStorage(USER_ID_STORAGE_KEY, nextUserId);
     if (normalized.role) {
-      window.localStorage.setItem(ROLE_STORAGE_KEY, normalized.role);
+      writeSessionStorage(ROLE_STORAGE_KEY, normalized.role);
     }
 
     return normalized;
@@ -366,28 +428,33 @@
     const normalized = syncAccountIdentity(profile);
     if (!normalized) return null;
 
-    window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(normalized));
+    writeSessionStorage(PROFILE_CACHE_KEY, JSON.stringify(normalized));
     if (normalized.role) {
-      window.localStorage.setItem(ROLE_STORAGE_KEY, normalized.role);
+      writeSessionStorage(ROLE_STORAGE_KEY, normalized.role);
     }
     return normalized;
   }
 
   function isPendingRegistration() {
-    return window.localStorage.getItem('kazix_reg_pending_profile') === '1'
+    return readSessionStorage('kazix_reg_pending_profile') === '1'
       || window.localStorage.getItem('kazix_auth_flow') === 'register';
   }
 
-  function clearMatchingStorage(storage) {
+  function clearMatchingStorage(storage, options = {}) {
     if (!storage) return;
+    const {
+      keys = SESSION_AUTH_STORAGE_KEYS,
+      prefixes = [],
+      includeSupabase = false,
+    } = options;
 
     for (let index = storage.length - 1; index >= 0; index -= 1) {
       const key = storage.key(index);
       if (!key) continue;
       if (
-        AUTH_STORAGE_KEYS.has(key)
-        || AUTH_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
-        || isSupabaseStorageKey(key)
+        keys.has(key)
+        || prefixes.some((prefix) => key.startsWith(prefix))
+        || (includeSupabase && isSupabaseStorageKey(key))
       ) {
         storage.removeItem(key);
       }
@@ -397,8 +464,18 @@
   function clearAuth() {
     refreshSessionPromise = null;
     logoutPromise = null;
-    clearMatchingStorage(window.localStorage);
-    clearMatchingStorage(window.sessionStorage);
+    clearMatchingStorage(window.sessionStorage, {
+      keys: SESSION_AUTH_STORAGE_KEYS,
+      includeSupabase: true,
+    });
+    clearMatchingStorage(window.localStorage, {
+      keys: new Set([
+        ...LEGACY_PERSISTED_AUTH_KEYS,
+        ...LOCAL_COORDINATION_STORAGE_KEYS,
+      ]),
+      prefixes: LOCAL_RESETTABLE_STORAGE_PREFIXES,
+      includeSupabase: true,
+    });
     delete window.KaziXUser;
   }
 
@@ -561,6 +638,7 @@
   }
 
   async function init() {
+    purgeLegacyPersistentAuth();
     const sequence = ++initSequence;
     const storedToken = getToken();
     const cachedProfile = storedToken ? getCachedProfile() : null;
@@ -620,12 +698,14 @@
     if (
       !event.key
       || TOKEN_KEYS.includes(event.key)
-      || AUTH_STORAGE_KEYS.has(event.key)
+      || LEGACY_PERSISTED_AUTH_KEYS.has(event.key)
       || isSupabaseStorageKey(event.key)
     ) {
       init();
     }
   });
+
+  purgeLegacyPersistentAuth();
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

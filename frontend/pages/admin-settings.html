@@ -58,6 +58,12 @@
     .settings-nav-item{flex:1;min-width:120px;text-align:center;padding:0.5rem 0.75rem}
   }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+if (window.KazixAuthGuard.requireAuthPage() && sessionStorage.getItem("kazix_role") !== "admin") {
+  window.location.replace("index.html");
+}
+</script>
 </head>
 <body data-admin-active="settings">
 <main class="main" data-admin-main>

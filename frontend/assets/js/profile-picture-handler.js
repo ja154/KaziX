@@ -332,10 +332,10 @@
         try {
           return await window.KazixProfile.getValidAccessToken();
         } catch (_error) {
-          return localStorage.getItem('kazix_access_token');
+          return sessionStorage.getItem('kazix_access_token');
         }
       }
-      return localStorage.getItem('kazix_access_token');
+      return sessionStorage.getItem('kazix_access_token');
     }
 
     getUploadFilename() {

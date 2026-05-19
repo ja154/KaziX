@@ -75,7 +75,7 @@
         throw new Error("Missing profile details.");
       }
 
-      localStorage.setItem("kazix_role", role);
+      sessionStorage.setItem("kazix_role", role);
 
       if (options.expectedRole && role !== options.expectedRole) {
         var defaultRedirects = {

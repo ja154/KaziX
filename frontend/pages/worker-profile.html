@@ -312,7 +312,7 @@ async function loadWorkerProfile() {
         viewerProfile,
       }),
       signedIn,
-      viewerRole: normalizeRole(viewerProfile?.role) || normalizeRole(localStorage.getItem('kazix_role')),
+      viewerRole: normalizeRole(viewerProfile?.role) || normalizeRole(sessionStorage.getItem('kazix_role')),
     });
   } catch (err) {
     document.getElementById('pageNotice').textContent = err.message || 'Failed to load worker profile.';

@@ -95,6 +95,10 @@
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.rep-banner{grid-template-columns:1fr}.sub-ratings{gap:1rem}.sub-rating-picks{grid-template-columns:1fr}}
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+window.KazixAuthGuard.requireAuthPage();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">

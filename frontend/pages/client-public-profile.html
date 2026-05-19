@@ -259,7 +259,7 @@ function syncViewerActions({ signedIn, viewedProfile, viewerProfile }) {
     return;
   }
 
-  const viewerRole = normalizeRole(viewerProfile?.role || localStorage.getItem('kazix_role'));
+  const viewerRole = normalizeRole(viewerProfile?.role || sessionStorage.getItem('kazix_role'));
   const isWorkerViewer = viewerRole === 'worker' || viewerRole === 'fundi';
   const isOwnProfile = Boolean(
     viewerProfile?.id

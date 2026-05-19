@@ -388,7 +388,10 @@
   }
 
   function userCanSaveWorkers() {
-    return Boolean(localStorage.getItem('kazix_access_token'));
+    if (window.KazixProfile && typeof window.KazixProfile.getAccessToken === 'function') {
+      return Boolean(window.KazixProfile.getAccessToken());
+    }
+    return Boolean(sessionStorage.getItem('kazix_access_token'));
   }
 
   function syncSaveWorkerButton(button, saved) {

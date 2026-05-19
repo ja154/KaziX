@@ -110,9 +110,10 @@ textarea.f-input{resize:vertical;min-height:110px;line-height:1.6}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @media(max-width:900px){.sidebar{display:none}.dispute-layout{grid-template-columns:1fr}}
 </style>
+<script src="../assets/js/auth-guard.js"></script>
 <script>
 (function(){
-  if (!localStorage.getItem("kazix_access_token")) {
+  if (!window.KazixAuthGuard.hasSession()) {
     var next = encodeURIComponent(location.pathname + location.search);
     location.replace("login.html?next=" + next);
     return;

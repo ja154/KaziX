@@ -40,6 +40,9 @@
 .edit-profile-btn:hover{background:var(--green)}
 .view-public-btn{width:100%;padding:0.65rem;background:transparent;color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;font-size:0.8rem;border:1.5px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem;text-decoration:none;display:block;text-align:center}
 .view-public-btn:hover{border-color:var(--ink)}
+.profile-logout-btn{width:100%;padding:0.65rem;background:rgba(192,57,43,0.08);color:var(--rust);font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem;border:1.5px solid rgba(192,57,43,0.2);border-radius:2px;cursor:pointer;transition:all 0.2s;margin-top:0.5rem}
+.profile-logout-btn:hover{background:var(--rust);border-color:var(--rust);color:#F5F0E8}
+.mobile-nav-drawer-button{background:none;border:none;width:100%;text-align:left;font:inherit}
 .profile-right{display:flex;flex-direction:column;gap:1.25rem}
 .section-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden}
 .sc-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -72,6 +75,10 @@
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.profile-layout{grid-template-columns:1fr}.profile-card{position:static}.info-grid,.pref-grid{grid-template-columns:1fr}}
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+window.KazixAuthGuard.requireAuthPage();
+</script>
 </head>
 <body class="app">
 <nav class="topnav">
@@ -127,6 +134,7 @@
           <div class="p-location">📍 Westlands, Nairobi</div>
           <div class="p-member">Member since March 2021 · 8 yrs experience</div>
           <a href="worker-profile.html" class="view-public-btn">👁 View Public Profile</a>
+          <button class="profile-logout-btn" type="button" onclick="window.KazixProfile.logout()">Log out</button>
         </div>
       </div>
       <div class="profile-right">
@@ -228,6 +236,7 @@
       <a class="mobile-nav-drawer-item active" href="worker-profile-edit.html">👤 Profile</a>
       <a class="mobile-nav-drawer-item" href="worker-earnings.html">💳 Earnings</a>
       <a class="mobile-nav-drawer-item" href="worker-reviews.html">⭐ Reviews</a>
+      <button class="mobile-nav-drawer-item mobile-nav-drawer-button" type="button" onclick="window.KazixProfile.logout()">↩ Log out</button>
     </div>
   </div>
 </nav>

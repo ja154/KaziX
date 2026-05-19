@@ -107,9 +107,10 @@
   .card-head,.card-body{padding:1rem}
 }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
 <script>
 (function(){
-  if (!localStorage.getItem("kazix_access_token")) {
+  if (!window.KazixAuthGuard.hasSession()) {
     var next = encodeURIComponent(location.pathname + location.search);
     location.replace("login.html?next=" + next);
     return;
@@ -133,7 +134,7 @@
           </div>
         </div>
         <div class="user-menu-body">
-          <a href="#" class="user-menu-item" onclick="window.location.href = window.KazixProfile.roleHomePath(localStorage.getItem('kazix_role') || 'client'); return false;">View Profile</a>
+          <a href="#" class="user-menu-item" onclick="window.location.href = window.KazixProfile.roleHomePath(sessionStorage.getItem('kazix_role') || 'client'); return false;">View Profile</a>
           <a href="worker-profile-edit.html" class="user-menu-item">Settings</a>
           <button class="user-menu-item logout" onclick="window.KazixProfile.logout()">Logout</button>
         </div>

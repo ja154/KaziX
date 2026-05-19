@@ -58,12 +58,12 @@
       }
     }
 
-    const storedUserId = trimValue(window.localStorage.getItem('kazix_user_id'));
+    const storedUserId = trimValue(window.sessionStorage.getItem('kazix_user_id'));
     if (storedUserId) {
       return storedUserId;
     }
 
-    const cachedProfile = safeJson(window.localStorage.getItem('kazix_profile') || 'null');
+    const cachedProfile = safeJson(window.sessionStorage.getItem('kazix_profile') || 'null');
     return trimValue(cachedProfile && cachedProfile.id);
   }
 

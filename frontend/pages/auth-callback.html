@@ -75,6 +75,7 @@ const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || window.KAZIX_CONFIG?.SUPAB
 const initialSearchParams = new URLSearchParams(window.location.search);
 const initialHashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 const authFlow = initialSearchParams.get('flow') || localStorage.getItem('kazix_auth_flow') || 'register';
+const AUTH_CHANNEL_NAME = 'kazix-auth-session';
 const AUTH_WAITER_SESSION_KEY = 'kazix_auth_waiter_id';
 const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
@@ -85,6 +86,23 @@ const USER_ID_STORAGE_KEY = 'kazix_user_id';
 const ROLE_STORAGE_KEY = 'kazix_role';
 const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
 const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
+const SESSION_AUTH_STORAGE_KEYS = [
+  'kazix_access_token',
+  'kazix_refresh_token',
+  'kazix_expires_in',
+  'kazix_expires_at',
+  'kazix_token_type',
+  USER_ID_STORAGE_KEY,
+  ROLE_STORAGE_KEY,
+  'kazix_login_email',
+  'kazix_reg_pending_profile',
+  PROFILE_CACHE_KEY,
+];
+const LEGACY_PERSISTED_AUTH_KEYS = [
+  ...SESSION_AUTH_STORAGE_KEYS,
+  DASHBOARD_STATE_STORAGE_KEY,
+  NOTIFICATION_SUMMARY_STORAGE_KEY,
+];
 const SUPABASE_CONFIG_ERROR = !window.supabase
   ? 'Supabase browser client failed to load. Refresh the page and try again.'
   : (!SUPABASE_URL || !SUPABASE_ANON_KEY
@@ -93,8 +111,53 @@ const SUPABASE_CONFIG_ERROR = !window.supabase
 const supabaseClient = SUPABASE_CONFIG_ERROR
   ? null
   : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { detectSessionInUrl: false },
+      auth: {
+        detectSessionInUrl: false,
+        storage: window.sessionStorage,
+        persistSession: true,
+      },
     });
+const authChannel = typeof window.BroadcastChannel === 'function'
+  ? new window.BroadcastChannel(AUTH_CHANNEL_NAME)
+  : null;
+
+function readSessionAuthValue(key) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch (_error) {
+    return null;
+  }
+}
+
+function writeSessionAuthValue(key, value) {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch (_error) {
+    // Ignore session storage failures.
+  }
+
+  try {
+    window.localStorage.removeItem(key);
+  } catch (_error) {
+    // Ignore legacy cleanup failures.
+  }
+}
+
+function isSupabaseStorageKey(key) {
+  return key === 'supabase.auth.token'
+    || /^sb-[a-z0-9_-]+-auth-token(?:-code-verifier)?$/i.test(key);
+}
+
+function purgeLegacyPersistentAuth() {
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (!key) continue;
+
+    if (LEGACY_PERSISTED_AUTH_KEYS.includes(key) || isSupabaseStorageKey(key)) {
+      window.localStorage.removeItem(key);
+    }
+  }
+}
 
 function toDisplayError(err, fallback) {
   const message = err?.message?.trim();
@@ -138,6 +201,7 @@ function parseStoredProfileId(storage) {
 
 function clearAccountScopedState(targetWindow = window) {
   try {
+    targetWindow.sessionStorage?.removeItem(PROFILE_CACHE_KEY);
     targetWindow.localStorage?.removeItem(PROFILE_CACHE_KEY);
   } catch (_error) {
     // Ignore storage cleanup failures.
@@ -174,13 +238,13 @@ function inferRoleFromRedirectTarget(redirectTo, fallbackRole = null) {
 }
 
 function syncStoredIdentity(targetWindow, options = {}) {
-  const targetLocalStorage = targetWindow?.localStorage;
-  if (!targetLocalStorage) return;
+  const targetSessionStorage = targetWindow?.sessionStorage;
+  if (!targetSessionStorage) return;
 
   const nextUserId = String(options.userId || '').trim();
   const nextRole = String(options.role || '').trim();
-  const previousUserId = String(targetLocalStorage.getItem(USER_ID_STORAGE_KEY) || '').trim();
-  const previousProfileId = parseStoredProfileId(targetLocalStorage) || '';
+  const previousUserId = String(targetSessionStorage.getItem(USER_ID_STORAGE_KEY) || '').trim();
+  const previousProfileId = parseStoredProfileId(targetSessionStorage) || '';
 
   if (
     nextUserId
@@ -193,10 +257,12 @@ function syncStoredIdentity(targetWindow, options = {}) {
   }
 
   if (nextUserId) {
-    targetLocalStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+    targetSessionStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+    targetWindow?.localStorage?.removeItem(USER_ID_STORAGE_KEY);
   }
   if (nextRole) {
-    targetLocalStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+    targetSessionStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+    targetWindow?.localStorage?.removeItem(ROLE_STORAGE_KEY);
   }
 }
 
@@ -328,24 +394,37 @@ function persistSession(session, options = {}) {
         ? Math.floor(Date.now() / 1000) + Math.floor(expiresIn)
         : null);
 
-  localStorage.setItem('kazix_access_token', session.access_token);
-  localStorage.setItem('kazix_refresh_token', session.refresh_token);
+  writeSessionAuthValue('kazix_access_token', session.access_token);
+  writeSessionAuthValue('kazix_refresh_token', session.refresh_token);
   if (expiresIn !== null) {
-    localStorage.setItem('kazix_expires_in', String(expiresIn));
+    writeSessionAuthValue('kazix_expires_in', String(expiresIn));
   } else {
-    localStorage.removeItem('kazix_expires_in');
+    window.sessionStorage.removeItem('kazix_expires_in');
+    window.localStorage.removeItem('kazix_expires_in');
   }
   if (expiresAt !== null) {
-    localStorage.setItem('kazix_expires_at', String(expiresAt));
+    writeSessionAuthValue('kazix_expires_at', String(expiresAt));
   } else {
-    localStorage.removeItem('kazix_expires_at');
+    window.sessionStorage.removeItem('kazix_expires_at');
+    window.localStorage.removeItem('kazix_expires_at');
   }
-  localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
+  writeSessionAuthValue('kazix_token_type', session.token_type || 'bearer');
 
   syncStoredIdentity(window, {
     userId: options.userId || decodeJwtUserId(session.access_token),
     role: options.role || inferRoleFromRedirectTarget(options.redirectTo, null),
   });
+}
+
+function signalAuthCompletion(nextPage, flow) {
+  localStorage.setItem('kazix_magic_link_complete', '1');
+  localStorage.setItem('kazix_auth_next_page', nextPage);
+  localStorage.setItem('kazix_auth_flow', flow);
+}
+
+function broadcastAuthCompletion(payload) {
+  if (!authChannel) return;
+  authChannel.postMessage(payload);
 }
 
 async function bootstrapSession(session) {
@@ -432,24 +511,22 @@ function handOffViaWindowOpener(session, bootstrap, flow) {
     const resolvedRole = bootstrap?.profile?.role || bootstrap?.role || inferRoleFromRedirectTarget(bootstrap?.redirect_to, null);
     
     // Inject session and auth state into the opening window
-    window.opener.localStorage.setItem('kazix_access_token', session.access_token);
-    window.opener.localStorage.setItem('kazix_refresh_token', session.refresh_token);
+    window.opener.sessionStorage.setItem('kazix_access_token', session.access_token);
+    window.opener.sessionStorage.setItem('kazix_refresh_token', session.refresh_token);
     if (session.expires_in !== null) {
-      window.opener.localStorage.setItem('kazix_expires_in', String(session.expires_in));
+      window.opener.sessionStorage.setItem('kazix_expires_in', String(session.expires_in));
     }
     if (expiresAt !== null) {
-      window.opener.localStorage.setItem('kazix_expires_at', String(expiresAt));
+      window.opener.sessionStorage.setItem('kazix_expires_at', String(expiresAt));
     }
-    window.opener.localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
+    window.opener.sessionStorage.setItem('kazix_token_type', session.token_type || 'bearer');
     syncStoredIdentity(window.opener, {
       userId: resolvedUserId,
       role: resolvedRole,
     });
     
     // Signal the original tab to redirect
-    window.opener.localStorage.setItem('kazix_magic_link_complete', '1');
-    window.opener.localStorage.setItem('kazix_auth_next_page', nextPage);
-    window.opener.localStorage.setItem('kazix_auth_flow', flow);
+    signalAuthCompletion(nextPage, flow);
     
     // Show success message in this tab
     document.getElementById('icon').textContent  = '✅';
@@ -517,10 +594,6 @@ async function handleCallback() {
     });
     const nextPage = mapRedirectToPage(bootstrap.redirect_to, authFlow);
 
-    localStorage.setItem('kazix_magic_link_complete', '1');
-    localStorage.setItem('kazix_auth_next_page', nextPage);
-    localStorage.setItem('kazix_auth_flow', authFlow);
-
     document.getElementById('icon').textContent  = '✅';
     document.getElementById('title').textContent = authFlow === 'login' ? "You're signed in!" : 'Email confirmed!';
     document.getElementById('sub').textContent   = getSuccessMessage(nextPage, authFlow);
@@ -533,7 +606,19 @@ async function handleCallback() {
     }
 
     // ── FALLBACK METHOD 2: localStorage heartbeat (for same-tab flows or if opener unavailable) ──
-    if (shouldHandOffToOriginalTab(authFlow)) {
+    if (authChannel && shouldHandOffToOriginalTab(authFlow)) {
+      signalAuthCompletion(nextPage, authFlow);
+      broadcastAuthCompletion({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_in: session.expires_in,
+        expires_at: session.expires_at,
+        token_type: session.token_type || 'bearer',
+        user_id: resolvedUserId,
+        role: resolvedRole,
+        nextPage,
+        flow: authFlow,
+      });
       handOffToOriginalTab(nextPage, authFlow);
       return;
     }
@@ -548,6 +633,7 @@ async function handleCallback() {
 }
 
 if (!isCanonicalRedirectPending) {
+  purgeLegacyPersistentAuth();
   configureFlowUi(authFlow);
   if (SUPABASE_CONFIG_ERROR) {
     console.error(SUPABASE_CONFIG_ERROR);
@@ -556,6 +642,10 @@ if (!isCanonicalRedirectPending) {
     handleCallback();
   }
 }
+
+window.addEventListener('beforeunload', () => {
+  authChannel?.close();
+});
 </script>
 </body>
 </html>

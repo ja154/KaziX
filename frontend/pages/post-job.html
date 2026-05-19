@@ -136,9 +136,10 @@
   }
   @media(max-width:480px){.form-card{padding:1.5rem 1rem}}
 </style>
+<script src="../assets/js/auth-guard.js"></script>
 <script>
 (function(){
-  if (!localStorage.getItem("kazix_access_token")) {
+  if (!window.KazixAuthGuard.hasSession()) {
     var next = encodeURIComponent(location.pathname + location.search);
     location.replace("login.html?next=" + next);
     return;

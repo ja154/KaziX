@@ -48,6 +48,12 @@
   .docs-grid,.details-grid{grid-template-columns:1fr}
 }
 </style>
+<script src="../assets/js/auth-guard.js"></script>
+<script>
+if (window.KazixAuthGuard.requireAuthPage() && sessionStorage.getItem("kazix_role") !== "admin") {
+  window.location.replace("index.html");
+}
+</script>
 </head>
 <body data-admin-active="verifications">
 <main class="main" data-admin-main>
