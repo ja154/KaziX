@@ -524,4 +524,9 @@ async def test_search_fundis_filters_sorts_and_paginates_embedded_profiles(monke
     assert second_page["total"] == 2
     assert [item["id"] for item in second_page["results"]] == ["fundi-1"]
     assert fake_anon.last_query is not None
-    assert "profiles!id!inner(" in (fake_anon.last_query.selected_columns or "")
+    assert "profiles!fundi_profiles_id_fkey!inner(" in (fake_anon.last_query.selected_columns or "")
+    assert (
+        "or",
+        "profiles",
+        "county.ilike.*nairobi*,area.ilike.*nairobi*",
+    ) in fake_anon.last_query._filters

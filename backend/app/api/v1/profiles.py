@@ -375,7 +375,7 @@ async def search_fundis(
     try:
         query = client.table("fundi_profiles").select(
             "id, trade, skills, rate_min, rate_max, rating_avg, jobs_completed, "
-            "is_available, kyc_status, profiles!id!inner(full_name, avatar_url, county, area, is_verified)",
+            "is_available, kyc_status, profiles!fundi_profiles_id_fkey!inner(full_name, avatar_url, county, area, is_verified)",
             count="exact",
         )
 
