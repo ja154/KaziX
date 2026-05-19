@@ -33,6 +33,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 .conv-item{display:flex;align-items:flex-start;gap:0.85rem;padding:1rem 1.25rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative;text-decoration:none;color:inherit}
 .conv-item:hover{background:var(--cream)}
 .conv-item.active{background:rgba(13,13,13,0.04)}
+.conv-item.pending{background:rgba(13,13,13,0.06)}
 .conv-item.unread{background:rgba(245,166,35,0.05)}
 .ci-avatar{width:42px;height:42px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.92rem;font-family:'Syne',sans-serif;font-weight:800;flex-shrink:0;border:1px solid var(--border);position:relative}
 .ci-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid white}
@@ -330,6 +331,9 @@ const state = {
   activeThread: null,
   activeMessages: [],
   sending: false,
+  threadLoading: false,
+  pendingThreadSignature: null,
+  threadRequestId: 0,
   threadLoadError: null,
   threadsRecoveredFromCache: false,
 };
@@ -507,6 +511,10 @@ function upsertThread(thread) {
   sortThreads(state.threads);
 }
 
+function isThreadPending(thread) {
+  return Boolean(thread && state.threadLoading && state.pendingThreadSignature === threadSignature(thread));
+}
+
 function formatThreadTime(value) {
   if (!value) return '';
   const date = new Date(value);
@@ -623,14 +631,15 @@ function renderThreadList() {
     const initialsText = initials(thread?.participant_name || 'KX');
     const preview = threadPreview(thread);
     const isActive = activeSignature && activeSignature === threadSignature(thread);
+    const isPending = isThreadPending(thread);
 
     return `
-      <a class="conv-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}" href="${escapeHtml(buildMessagesPath({
+      <a class="conv-item ${isActive ? 'active' : ''} ${isPending ? 'pending' : ''} ${unread > 0 ? 'unread' : ''}" href="${escapeHtml(buildMessagesPath({
         participantId: thread.participant_id,
         jobId: thread.job_id,
         applicationId: thread.application_id,
         bookingId: thread.booking_id,
-      }))}" data-thread-signature="${escapeHtml(threadSignature(thread))}">
+      }))}" data-thread-signature="${escapeHtml(threadSignature(thread))}" ${isPending ? 'aria-busy="true"' : ''}>
         ${buildAvatarHtml({
           className: 'ci-avatar',
           name: thread?.participant_name || 'KX',
@@ -784,6 +793,7 @@ function renderActiveThread() {
   else subParts.push(thread.participant_role === 'client' ? 'Client account' : 'Worker account');
   if (thread.participant_rating) subParts.push(`${Number(thread.participant_rating).toFixed(1)}★`);
   if (location) subParts.push(location);
+  if (state.threadLoading) subParts.push('Updating…');
 
   setAvatarElement('#chatAvatar', {
     name,
@@ -853,8 +863,8 @@ function renderActiveThread() {
   } else {
     input.placeholder = 'Type a message…';
   }
-  input.disabled = archived;
-  sendBtn.disabled = archived || state.sending;
+  input.disabled = archived || state.threadLoading;
+  sendBtn.disabled = archived || state.sending || state.threadLoading;
   autoSizeMessageInput();
 
   renderThreadList();
@@ -889,8 +899,18 @@ async function loadThread(threadLike, options = {}) {
   if (!seed.participant_id) {
     return;
   }
+  const requestId = state.threadRequestId + 1;
+  const pendingSignature = threadSignature(seed);
+  const hadActiveThread = Boolean(state.activeThread);
+  state.threadRequestId = requestId;
+  state.threadLoading = true;
+  state.pendingThreadSignature = pendingSignature;
 
-  showChatPlaceholder('Loading conversation', 'We’re fetching the real message history for this thread.');
+  if (hadActiveThread) {
+    renderActiveThread();
+  } else {
+    renderThreadList();
+  }
 
   try {
     const payload = await requestJson(`/v1/messages/thread?${serializeThreadQuery(seed)}`, {
@@ -898,6 +918,12 @@ async function loadThread(threadLike, options = {}) {
       showError: false,
     });
 
+    if (requestId !== state.threadRequestId) {
+      return;
+    }
+
+    state.threadLoading = false;
+    state.pendingThreadSignature = null;
     state.activeThread = payload.thread || null;
     state.activeMessages = Array.isArray(payload.messages) ? payload.messages : [];
     if (state.activeThread) {
@@ -908,9 +934,19 @@ async function loadThread(threadLike, options = {}) {
       }
     }
   } catch (error) {
-    state.activeThread = null;
-    state.activeMessages = [];
+    if (requestId !== state.threadRequestId) {
+      return;
+    }
+
+    state.threadLoading = false;
+    state.pendingThreadSignature = null;
     renderThreadList();
+
+    if (state.activeThread) {
+      renderActiveThread();
+      setStatus(error?.message || 'Could not load this conversation.', 'error');
+      return;
+    }
 
     const request = requestedContext();
     if (request.participant && !request.job && !request.application && !request.booking) {
@@ -1095,6 +1131,7 @@ function bindEvents() {
     event.preventDefault();
 
     const signature = link.dataset.threadSignature;
+    if (state.threadLoading && signature === state.pendingThreadSignature) return;
     const thread = state.threads.find((item) => threadSignature(item) === signature);
     if (!thread) return;
 
