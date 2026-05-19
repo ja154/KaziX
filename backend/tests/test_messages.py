@@ -223,9 +223,59 @@ async def test_get_message_thread_marks_incoming_messages_as_read(monkeypatch) -
     )
 
     assert result["thread"]["participant_id"] == "client-1"
+    assert result["thread"]["can_send"] is True
+    assert result["thread"]["thread_state"] == "active"
+    assert result["thread"]["thread_notice"] is None
     assert result["messages"][0]["read_at"] is not None
     assert fake_admin.tables["messages"][0]["read_at"] is not None
     assert result["thread"]["participant_trade"] is None
+
+
+@pytest.mark.asyncio
+async def test_get_message_thread_returns_archived_history_when_context_is_no_longer_accessible(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "completed", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [],
+            "bookings": [],
+            "messages": [
+                {
+                    "id": "msg-1",
+                    "sender_id": "fundi-1",
+                    "recipient_id": "client-1",
+                    "job_id": "job-1",
+                    "application_id": None,
+                    "booking_id": None,
+                    "body": "Checking back on the old repair.",
+                    "created_at": "2026-05-01T09:30:00Z",
+                    "read_at": None,
+                }
+            ],
+        }
+    )
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+
+    result = await messages_module.get_message_thread(
+        _override_user("client", "client-1"),
+        participant_id="fundi-1",
+        job_id="job-1",
+    )
+
+    assert result["thread"]["participant_id"] == "fundi-1"
+    assert result["thread"]["job_id"] == "job-1"
+    assert result["thread"]["job_title"] == "Fix sink"
+    assert result["thread"]["can_send"] is False
+    assert result["thread"]["thread_state"] == "archived"
+    assert "preserved for reference" in result["thread"]["thread_notice"]
+    assert result["messages"][0]["read_at"] is not None
+    assert fake_admin.tables["messages"][0]["read_at"] is not None
 
 
 @pytest.mark.asyncio
@@ -343,9 +393,58 @@ async def test_list_message_threads_seeds_application_threads_without_messages(m
     assert thread["job_id"] == "job-1"
     assert thread["application_id"] == "app-1"
     assert thread["booking_id"] is None
+    assert thread["can_send"] is True
+    assert thread["thread_state"] == "active"
+    assert thread["thread_notice"] is None
     assert thread["message_count"] == 0
     assert thread["has_messages"] is False
     assert thread["last_message_at"] == "2026-05-01T09:10:00Z"
+
+
+@pytest.mark.asyncio
+async def test_list_message_threads_preserves_archived_message_history_when_context_is_no_longer_accessible(monkeypatch) -> None:
+    fake_admin = _FakeAdminClient(
+        {
+            "profiles": [
+                {"id": "client-1", "role": "client", "full_name": "Client One", "county": "Nairobi", "area": "Westlands"},
+                {"id": "fundi-1", "role": "fundi", "full_name": "Fundi One", "county": "Nairobi", "area": "Kilimani"},
+            ],
+            "jobs": [
+                {"id": "job-1", "client_id": "client-1", "title": "Fix sink", "trade": "plumber", "county": "Nairobi", "area": "Westlands", "status": "completed", "created_at": "2026-05-01T09:00:00Z"},
+            ],
+            "applications": [],
+            "bookings": [],
+            "messages": [
+                {
+                    "id": "msg-1",
+                    "sender_id": "client-1",
+                    "recipient_id": "fundi-1",
+                    "job_id": "job-1",
+                    "application_id": None,
+                    "booking_id": None,
+                    "body": "Thanks again for the repair.",
+                    "created_at": "2026-05-01T09:30:00Z",
+                    "read_at": "2026-05-01T09:31:00Z",
+                }
+            ],
+        }
+    )
+
+    monkeypatch.setattr(messages_module, "get_admin_client", lambda: fake_admin)
+
+    result = await messages_module.list_message_threads(_override_user("client", "client-1"))
+
+    assert len(result["data"]) == 1
+    thread = result["data"][0]
+    assert thread["participant_id"] == "fundi-1"
+    assert thread["job_id"] == "job-1"
+    assert thread["job_title"] == "Fix sink"
+    assert thread["can_send"] is False
+    assert thread["thread_state"] == "archived"
+    assert "preserved for reference" in thread["thread_notice"]
+    assert thread["message_count"] == 1
+    assert thread["has_messages"] is True
+    assert thread["last_message_at"] == "2026-05-01T09:30:00Z"
 
 
 @pytest.mark.asyncio

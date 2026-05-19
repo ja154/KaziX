@@ -29,6 +29,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 .conv-search:focus{border-color:var(--ink)}
 .conv-items{flex:1;overflow-y:auto;padding-bottom:calc(0.85rem + env(safe-area-inset-bottom))}
 .conv-empty{padding:1rem 1.25rem;border-bottom:1px solid var(--border);font-size:0.78rem;color:var(--muted);line-height:1.65}
+.conv-empty.error{background:rgba(192,57,43,0.06);border-color:rgba(192,57,43,0.18);color:var(--rust)}
 .conv-item{display:flex;align-items:flex-start;gap:0.85rem;padding:1rem 1.25rem;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border);position:relative;text-decoration:none;color:inherit}
 .conv-item:hover{background:var(--cream)}
 .conv-item.active{background:rgba(13,13,13,0.04)}
@@ -40,6 +41,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 .ci-name-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-time{font-size:0.65rem;color:var(--muted);font-weight:400;flex-shrink:0}
 .ci-job{font-size:0.68rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-state{color:var(--steel)}
 .ci-preview{font-size:0.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ci-preview.strong{color:var(--ink);font-weight:500}
 .ci-unread-badge{position:absolute;right:1rem;top:1rem;min-width:18px;height:18px;padding:0 0.28rem;border-radius:50px;background:var(--saffron);color:var(--ink);font-size:0.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -60,6 +62,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 .chat-action-btn.primary:hover{background:var(--green)}
 .chat-context{padding:0.8rem 1.5rem;border-bottom:1px solid var(--border);background:rgba(13,13,13,0.02);font-size:0.78rem;color:var(--steel);line-height:1.6}
 .chat-context a{color:var(--rust);font-weight:600;text-decoration:none}
+.chat-context-notice{margin-bottom:0.4rem;font-weight:600;color:var(--rust)}
 .chat-placeholder{display:flex;flex:1;align-items:center;justify-content:center;padding:2rem;background:var(--cream)}
 .chat-placeholder-card{max-width:420px;text-align:center}
 .chat-placeholder-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:var(--ink);margin-bottom:0.4rem}
@@ -88,9 +91,11 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 .chat-input-area{padding:1rem 1.5rem calc(1rem + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:white;flex-shrink:0}
 .chat-input-extras{display:flex;gap:0.5rem;margin-bottom:0.6rem;flex-wrap:wrap}
 .context-pill{padding:0.32rem 0.8rem;border:1px solid var(--border);border-radius:20px;background:white;font-size:0.72rem;color:var(--muted)}
+.context-pill.archived{border-color:rgba(192,57,43,0.2);background:rgba(192,57,43,0.06);color:var(--rust)}
 .chat-input-wrap{display:flex;gap:0.75rem;align-items:flex-end}
 .chat-input-box{flex:1;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.875rem;resize:none;outline:none;background:var(--cream);max-height:120px;line-height:1.5;transition:border-color 0.2s}
 .chat-input-box:focus{border-color:var(--ink)}
+.chat-input-box:disabled{background:rgba(13,13,13,0.03);color:var(--muted);cursor:not-allowed}
 .send-btn{width:42px;height:42px;border-radius:50%;background:var(--ink);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;color:white;flex-shrink:0;transition:background 0.2s}
 .send-btn:hover:not(:disabled){background:var(--green)}
 .send-btn:disabled{opacity:0.55;cursor:not-allowed}
@@ -326,7 +331,10 @@ const state = {
   activeMessages: [],
   sending: false,
   threadLoadError: null,
+  threadsRecoveredFromCache: false,
 };
+
+const THREAD_CACHE_PREFIX = 'kazix_message_threads:';
 
 function setStatus(message, tone) {
   const el = document.getElementById('messageStatus');
@@ -398,6 +406,43 @@ function renderMobileNav(role) {
 
 function currentUserId() {
   return state.profile?.id || '';
+}
+
+function isArchivedThread(thread) {
+  return Boolean(thread && (thread.can_send === false || thread.thread_state === 'archived'));
+}
+
+function threadCacheKey() {
+  const userId = currentUserId();
+  return userId ? `${THREAD_CACHE_PREFIX}:${userId}` : null;
+}
+
+function readThreadCache() {
+  const key = threadCacheKey();
+  if (!key) return [];
+
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.data) ? parsed.data : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+function writeThreadCache(threads) {
+  const key = threadCacheKey();
+  if (!key) return;
+
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify({
+      saved_at: Date.now(),
+      data: Array.isArray(threads) ? threads : [],
+    }));
+  } catch (_error) {
+    /* ignore storage errors */
+  }
 }
 
 function requestedContext() {
@@ -508,19 +553,21 @@ function messageBodyHtml(value) {
 function threadPreview(thread) {
   const preview = (thread?.latest_message_preview || '').trim();
   if (preview) return preview;
+  if (isArchivedThread(thread)) return 'Archived conversation history.';
   if (thread?.booking_id) return 'Booking conversation ready to start.';
   if (thread?.application_id) return 'Application conversation ready to start.';
   return 'No messages yet.';
 }
 
 function threadMetaLine(thread) {
+  const stateMeta = isArchivedThread(thread) ? 'Archived' : null;
   const roleMeta = thread?.participant_trade
     ? formatTrade(thread.participant_trade)
     : (thread?.participant_role === 'client' ? 'Client account' : 'Worker account');
-  const jobMeta = thread?.job_title || roleMeta || 'Conversation';
-  return thread?.job_title
+  const summary = thread?.job_title
     ? `${roleMeta} · ${thread.job_title}`
     : roleMeta;
+  return [stateMeta, summary].filter(Boolean).join(' · ');
 }
 
 function renderThreadHint(message) {
@@ -558,6 +605,10 @@ function renderThreadList() {
   }
 
   if (!state.threads.length) {
+    if (state.threadLoadError) {
+      list.innerHTML = `<div class="conv-empty error">${escapeHtml(state.threadLoadError?.message || 'We could not load your live conversations right now.')}</div>`;
+      return;
+    }
     list.innerHTML = '<div class="conv-empty">No conversations yet. Threads from your active applications and bookings will show up here automatically.</div>';
     return;
   }
@@ -636,9 +687,13 @@ function contextLink(thread) {
 function renderChatContext(thread) {
   const root = document.getElementById('chatContext');
   const context = contextLink(thread);
+  const archivedNotice = isArchivedThread(thread) && thread?.thread_notice
+    ? `<div class="chat-context-notice">${escapeHtml(thread.thread_notice)}</div>`
+    : '';
 
   if (thread.booking_id) {
     root.innerHTML = `
+      ${archivedNotice}
       Booking conversation for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
       ${thread.booking_start_date ? ` · starts ${escapeHtml(thread.booking_start_date)}` : ''}
       ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
@@ -648,6 +703,7 @@ function renderChatContext(thread) {
 
   if (thread.application_id) {
     root.innerHTML = `
+      ${archivedNotice}
       Application chat for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
       ${thread.application_status ? ` · ${escapeHtml(thread.application_status.replace(/_/g, ' '))}` : ''}
       ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
@@ -655,7 +711,16 @@ function renderChatContext(thread) {
     return;
   }
 
+  if (!thread.job_id) {
+    root.innerHTML = `
+      ${archivedNotice}
+      Conversation history with <strong>${escapeHtml(thread.participant_name || 'this user')}</strong>
+    `;
+    return;
+  }
+
   root.innerHTML = `
+    ${archivedNotice}
     Job conversation for <strong>${escapeHtml(thread.job_title || 'this job')}</strong>
     ${context ? ` · <a href="${escapeHtml(context.href)}">${escapeHtml(context.label)} →</a>` : ''}
   `;
@@ -675,6 +740,7 @@ function renderChatActions(thread) {
 
   if (
     state.role === 'client'
+    && !isArchivedThread(thread)
     && thread.job_id
     && thread.application_id
     && !thread.booking_id
@@ -726,9 +792,11 @@ function renderActiveThread() {
   });
   document.getElementById('chatName').textContent = name;
   document.getElementById('chatSub').textContent = subParts.join(' · ');
-  document.getElementById('inputContextLabel').textContent = thread.job_title
-    ? `Context: ${thread.job_title}`
-    : 'Context: active conversation';
+  const inputContext = document.getElementById('inputContextLabel');
+  inputContext.textContent = thread.job_title
+    ? `${isArchivedThread(thread) ? 'Archived' : 'Context'}: ${thread.job_title}`
+    : (isArchivedThread(thread) ? 'Archived conversation' : 'Context: active conversation');
+  inputContext.classList.toggle('archived', isArchivedThread(thread));
 
   renderChatActions(thread);
   renderChatContext(thread);
@@ -776,6 +844,19 @@ function renderActiveThread() {
     }).join('');
   }
 
+  const input = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const archived = isArchivedThread(thread);
+  if (archived) {
+    input.value = '';
+    input.placeholder = thread.thread_notice || 'This conversation is archived and read-only.';
+  } else {
+    input.placeholder = 'Type a message…';
+  }
+  input.disabled = archived;
+  sendBtn.disabled = archived || state.sending;
+  autoSizeMessageInput();
+
   renderThreadList();
   syncThreadUrl(thread);
   clearNotificationSummaryCache();
@@ -822,7 +903,7 @@ async function loadThread(threadLike, options = {}) {
     if (state.activeThread) {
       upsertThread(state.activeThread);
       renderActiveThread();
-      if (!options.preserveStatus) {
+      if (!options.preserveStatus && !state.threadsRecoveredFromCache) {
         setStatus('', 'info');
       }
     }
@@ -861,13 +942,23 @@ async function loadThreads() {
     });
     state.threads = Array.isArray(payload?.data) ? payload.data : [];
     state.threadLoadError = null;
+    state.threadsRecoveredFromCache = false;
     sortThreads(state.threads);
+    writeThreadCache(state.threads);
     renderThreadList();
     renderThreadHint('');
   } catch (error) {
-    state.threads = [];
     state.threadLoadError = error;
+    const cachedThreads = readThreadCache();
+    state.threads = cachedThreads;
+    state.threadsRecoveredFromCache = cachedThreads.length > 0;
+    sortThreads(state.threads);
     renderThreadList();
+    if (state.threadsRecoveredFromCache) {
+      renderThreadHint('Showing your last synced conversations while Messages reconnects.');
+      setStatus('Showing your last synced conversations while Messages reconnects.', 'info');
+      return;
+    }
     renderThreadHint(error?.message || 'Could not load your thread list right now.');
   }
 }
@@ -894,17 +985,11 @@ async function openInitialConversation() {
       return;
     }
 
-    showChatPlaceholder(
-      'Choose a conversation',
-      'We did not find an existing conversation for that participant yet. Open Messages from a job application or booking to start a new context-aware thread.',
-      state.role === 'client' ? 'job-applicants.html' : 'my-applications.html',
-      state.role === 'client' ? 'Review Applications' : 'View Applications'
-    );
-    setShellThreadOpen(false);
+    await loadThread(request);
     return;
   }
 
-  if (state.threadLoadError) {
+  if (state.threadLoadError && !state.threads.length) {
     showChatPlaceholder(
       'Messages unavailable',
       state.threadLoadError?.message || 'We could not load your thread list right now.',
@@ -936,15 +1021,26 @@ async function refreshThreadsAfterSend() {
       showError: false,
     });
     state.threads = Array.isArray(payload?.data) ? payload.data : [];
+    state.threadLoadError = null;
+    state.threadsRecoveredFromCache = false;
     sortThreads(state.threads);
+    writeThreadCache(state.threads);
+    renderThreadHint('');
+    setStatus('', 'info');
     renderThreadList();
-  } catch (_error) {
+  } catch (error) {
+    state.threadLoadError = error;
+    if (state.threads.length) {
+      state.threadsRecoveredFromCache = true;
+      renderThreadHint('Showing your last synced conversations while Messages reconnects.');
+      setStatus('Showing your last synced conversations while Messages reconnects.', 'info');
+    }
     renderThreadList();
   }
 }
 
 async function sendActiveMessage() {
-  if (!state.activeThread || state.sending) return;
+  if (!state.activeThread || state.sending || state.activeThread.can_send === false) return;
 
   const input = document.getElementById('messageInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -979,7 +1075,7 @@ async function sendActiveMessage() {
     setStatus(error?.message || 'Could not send your message.', 'error');
   } finally {
     state.sending = false;
-    sendBtn.disabled = false;
+    sendBtn.disabled = Boolean(state.activeThread?.can_send === false);
   }
 }
 
@@ -1062,7 +1158,9 @@ async function initMessagesPage() {
 
     await loadThreads();
     await openInitialConversation();
-    setStatus('', 'info');
+    if (!state.threadsRecoveredFromCache) {
+      setStatus('', 'info');
+    }
   } catch (error) {
     console.error('Failed to initialize messages page', error);
     renderThreadHint(error?.message || 'Could not load your threads.');

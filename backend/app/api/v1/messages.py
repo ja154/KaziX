@@ -173,6 +173,13 @@ def _is_seedable_application_status(status: str | None) -> bool:
     return normalized not in {"rejected", "withdrawn"}
 
 
+def _archived_thread_notice() -> str:
+    return (
+        "This conversation is preserved for reference because its original context is no "
+        "longer active. You can read the history here, but new messages are disabled."
+    )
+
+
 def _message_query_filters(context: dict) -> dict[str, str | None]:
     application = context.get("application") or {}
     booking = context.get("booking") or {}
@@ -196,6 +203,187 @@ def _message_action_url(context: dict, participant_id: str) -> str:
     if booking.get("id"):
         parts.append(f"booking={booking['id']}")
     return f"/messages.html?{'&'.join(parts)}"
+
+
+def _fetch_messages_for_filters(
+    admin,
+    *,
+    user_id: str,
+    participant_id: str,
+    filters: dict[str, str | None] | None = None,
+) -> list[dict]:
+    context_filters = filters or {}
+    sent = _fetch_rows(
+        admin,
+        "messages",
+        "*",
+        {"sender_id": user_id, "recipient_id": participant_id, **context_filters},
+    )
+    received = _fetch_rows(
+        admin,
+        "messages",
+        "*",
+        {"sender_id": participant_id, "recipient_id": user_id, **context_filters},
+    )
+    return _merge_messages(sent, received)
+
+
+def _mark_messages_read(admin, *, user_id: str, messages: list[dict]) -> None:
+    unread_ids = [
+        row["id"]
+        for row in messages
+        if row.get("recipient_id") == user_id and not row.get("read_at")
+    ]
+    if not unread_ids:
+        return
+
+    read_at = _now_iso()
+    for message_id in unread_ids:
+        admin.table("messages").update({"read_at": read_at}).eq("id", message_id).execute()
+    for row in messages:
+        if row.get("id") in unread_ids:
+            row["read_at"] = read_at
+
+
+def _fallback_thread_context(
+    admin,
+    *,
+    participant_id: str,
+    job_id: str | None,
+    application_id: str | None,
+    booking_id: str | None,
+    profile_cache: dict[str, dict | None],
+    fundi_profile_cache: dict[str, dict | None],
+    job_cache: dict[str, dict | None],
+    application_cache: dict[str, dict | None],
+    booking_cache: dict[str, dict | None],
+) -> dict:
+    participant = _get_profile(admin, participant_id, profile_cache)
+    participant_fundi_profile = _get_fundi_profile(admin, participant_id, fundi_profile_cache)
+    booking = _get_booking(admin, booking_id, booking_cache) if booking_id else None
+    application = _get_application(admin, application_id, application_cache) if application_id else None
+    job = _get_job(admin, job_id, job_cache) if job_id else None
+
+    if booking:
+        booking_application_id = booking.get("application_id")
+        booking_job_id = booking.get("job_id")
+        if booking_application_id and not application:
+            application = _get_application(admin, booking_application_id, application_cache)
+        if booking_job_id and not job:
+            job = _get_job(admin, booking_job_id, job_cache)
+
+    if application and application.get("job_id") and not job:
+        job = _get_job(admin, application["job_id"], job_cache)
+
+    return {
+        "participant": participant,
+        "participant_fundi_profile": participant_fundi_profile,
+        "job": job,
+        "application": application,
+        "booking": booking,
+    }
+
+
+def _history_lookup_filters(
+    *,
+    booking_id: str | None,
+    application_id: str | None,
+    job_id: str | None,
+) -> list[dict[str, str]]:
+    candidates: list[dict[str, str]] = []
+    seen: set[tuple[tuple[str, str], ...]] = set()
+
+    for field, value in (
+        ("booking_id", booking_id),
+        ("application_id", application_id),
+        ("job_id", job_id),
+    ):
+        if not value:
+            continue
+        candidate = {field: value}
+        marker = tuple(candidate.items())
+        if marker in seen:
+            continue
+        seen.add(marker)
+        candidates.append(candidate)
+
+    candidates.append({})
+    return candidates
+
+
+def _resolve_archived_thread_from_history(
+    admin,
+    *,
+    user_id: str,
+    participant_id: str,
+    job_id: str | None,
+    application_id: str | None,
+    booking_id: str | None,
+    unread_count: int,
+    profile_cache: dict[str, dict | None],
+    fundi_profile_cache: dict[str, dict | None],
+    job_cache: dict[str, dict | None],
+    application_cache: dict[str, dict | None],
+    booking_cache: dict[str, dict | None],
+    mark_read: bool = False,
+) -> dict | None:
+    messages: list[dict] = []
+    matched_filters: dict[str, str] = {}
+
+    for filters in _history_lookup_filters(
+        booking_id=booking_id,
+        application_id=application_id,
+        job_id=job_id,
+    ):
+        messages = _fetch_messages_for_filters(
+            admin,
+            user_id=user_id,
+            participant_id=participant_id,
+            filters=filters,
+        )
+        if messages:
+            matched_filters = filters
+            break
+
+    if not messages:
+        return None
+
+    if mark_read:
+        _mark_messages_read(admin, user_id=user_id, messages=messages)
+
+    last_message = messages[-1]
+    context = _fallback_thread_context(
+        admin,
+        participant_id=participant_id,
+        job_id=matched_filters.get("job_id") or job_id or last_message.get("job_id"),
+        application_id=(
+            matched_filters.get("application_id")
+            or application_id
+            or last_message.get("application_id")
+        ),
+        booking_id=matched_filters.get("booking_id") or booking_id or last_message.get("booking_id"),
+        profile_cache=profile_cache,
+        fundi_profile_cache=fundi_profile_cache,
+        job_cache=job_cache,
+        application_cache=application_cache,
+        booking_cache=booking_cache,
+    )
+
+    thread = _build_thread_summary(
+        admin,
+        user_id=user_id,
+        participant_id=participant_id,
+        context=context,
+        last_message=last_message,
+        unread_count=0 if mark_read else unread_count,
+        message_count=len(messages),
+        profile_cache=profile_cache,
+        fundi_profile_cache=fundi_profile_cache,
+        can_send=False,
+        thread_state="archived",
+        thread_notice=_archived_thread_notice(),
+    )
+    return {"thread": thread, "messages": messages}
 
 
 def _get_profile(admin, profile_id: str, cache: dict[str, dict | None]) -> dict | None:
@@ -385,6 +573,9 @@ def _build_thread_summary(
     message_count: int,
     profile_cache: dict[str, dict | None],
     fundi_profile_cache: dict[str, dict | None],
+    can_send: bool = True,
+    thread_state: str = "active",
+    thread_notice: str | None = None,
 ) -> dict:
     participant = context.get("participant") or _get_profile(admin, participant_id, profile_cache) or {}
     participant_fundi_profile = context.get("participant_fundi_profile") or _get_fundi_profile(
@@ -431,6 +622,9 @@ def _build_thread_summary(
         "message_count": message_count,
         "has_messages": bool(last_message),
         "current_user_id": user_id,
+        "can_send": can_send,
+        "thread_state": thread_state,
+        "thread_notice": thread_notice,
     }
 
 
@@ -593,14 +787,47 @@ async def list_message_threads(user: CurrentUser):
                         fundi_profile_cache=fundi_profile_cache,
                     )
                 )
-            except HTTPException:
+            except HTTPException as exc:
+                archived = None
+                if seed.get("message_count"):
+                    archived = _resolve_archived_thread_from_history(
+                        admin,
+                        user_id=user.user_id,
+                        participant_id=seed["participant_id"],
+                        job_id=seed.get("job_id"),
+                        application_id=seed.get("application_id"),
+                        booking_id=seed.get("booking_id"),
+                        unread_count=seed["unread_count"],
+                        profile_cache=profile_cache,
+                        fundi_profile_cache=fundi_profile_cache,
+                        job_cache=job_cache,
+                        application_cache=application_cache,
+                        booking_cache=booking_cache,
+                    )
+
+                if archived:
+                    threads.append(archived["thread"])
+                    logger.info(
+                        "archived_fallback_used",
+                        user_id=user.user_id,
+                        participant_id=seed["participant_id"],
+                        job_id=seed.get("job_id"),
+                        application_id=seed.get("application_id"),
+                        booking_id=seed.get("booking_id"),
+                        status_code=exc.status_code,
+                        reason=exc.detail,
+                    )
+                    continue
+
                 logger.warning(
-                    "Skipping inaccessible message thread",
+                    "thread_recovery_failed",
                     user_id=user.user_id,
                     participant_id=seed["participant_id"],
                     job_id=seed.get("job_id"),
                     application_id=seed.get("application_id"),
                     booking_id=seed.get("booking_id"),
+                    status_code=exc.status_code,
+                    reason=exc.detail,
                 )
 
         threads.sort(key=lambda row: row.get("last_message_at") or "", reverse=True)
@@ -628,42 +855,58 @@ async def get_message_thread(
     booking_cache: dict[str, dict | None] = {}
 
     try:
-        context = _resolve_thread_context(
-            admin,
-            user=user,
-            participant_id=participant_id,
-            job_id=job_id,
-            application_id=application_id,
-            booking_id=booking_id,
-            profile_cache=profile_cache,
-            fundi_profile_cache=fundi_profile_cache,
-            job_cache=job_cache,
-            application_cache=application_cache,
-            booking_cache=booking_cache,
-        )
-        context_filters = _message_query_filters(context)
-        sent = _fetch_rows(
-            admin,
-            "messages",
-            "*",
-            {"sender_id": user.user_id, "recipient_id": participant_id, **context_filters},
-        )
-        received = _fetch_rows(
-            admin,
-            "messages",
-            "*",
-            {"sender_id": participant_id, "recipient_id": user.user_id, **context_filters},
-        )
-        messages = _merge_messages(sent, received)
+        try:
+            context = _resolve_thread_context(
+                admin,
+                user=user,
+                participant_id=participant_id,
+                job_id=job_id,
+                application_id=application_id,
+                booking_id=booking_id,
+                profile_cache=profile_cache,
+                fundi_profile_cache=fundi_profile_cache,
+                job_cache=job_cache,
+                application_cache=application_cache,
+                booking_cache=booking_cache,
+            )
+        except HTTPException as exc:
+            archived = _resolve_archived_thread_from_history(
+                admin,
+                user_id=user.user_id,
+                participant_id=participant_id,
+                job_id=job_id,
+                application_id=application_id,
+                booking_id=booking_id,
+                unread_count=0,
+                profile_cache=profile_cache,
+                fundi_profile_cache=fundi_profile_cache,
+                job_cache=job_cache,
+                application_cache=application_cache,
+                booking_cache=booking_cache,
+                mark_read=True,
+            )
+            if archived:
+                logger.info(
+                    "archived_fallback_used",
+                    user_id=user.user_id,
+                    participant_id=participant_id,
+                    job_id=job_id,
+                    application_id=application_id,
+                    booking_id=booking_id,
+                    status_code=exc.status_code,
+                    reason=exc.detail,
+                )
+                return archived
+            raise
 
-        unread_ids = [row["id"] for row in messages if row.get("recipient_id") == user.user_id and not row.get("read_at")]
-        if unread_ids:
-            read_at = _now_iso()
-            for message_id in unread_ids:
-                admin.table("messages").update({"read_at": read_at}).eq("id", message_id).execute()
-            for row in messages:
-                if row.get("id") in unread_ids:
-                    row["read_at"] = read_at
+        context_filters = _message_query_filters(context)
+        messages = _fetch_messages_for_filters(
+            admin,
+            user_id=user.user_id,
+            participant_id=participant_id,
+            filters=context_filters,
+        )
+        _mark_messages_read(admin, user_id=user.user_id, messages=messages)
 
         last_message = messages[-1] if messages else None
         thread = _build_thread_summary(
