@@ -10,92 +10,108 @@
 <title>My Hires — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
+.main{max-width:1180px}
+.page-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin-bottom:1.25rem}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
+.notice.success{background:rgba(27,107,58,0.08);border-color:rgba(27,107,58,0.18);color:var(--green)}
 
-/* TABS */
-.hire-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:2rem}
-.htab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem}
+/* STATUS TABS */
+.hire-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:2rem;flex-wrap:wrap}
+.htab{padding:0.75rem 1.5rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s;display:flex;align-items:center;gap:0.4rem;background:none;border-left:none;border-right:none;border-top:none}
 .htab:hover{color:var(--ink)}
 .htab.active{color:var(--ink);border-bottom-color:var(--ink)}
-.htab .tc{background:var(--cream);font-size:0.65rem;padding:0.1rem 0.45rem;border-radius:10px}
+.htab .tc{background:var(--cream);color:var(--muted);font-size:0.65rem;padding:0.1rem 0.45rem;border-radius:10px}
 .htab.active .tc{background:var(--ink);color:#F5F0E8}
 
 /* CONTRACT CARDS */
-.contracts{display:flex;flex-direction:column;gap:1.25rem}
-.contract-card{background:white;border:1px solid var(--border);border-radius:6px;overflow:hidden;animation:slideUp 0.4s ease both;transition:box-shadow 0.2s}
-.contract-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.07)}
-.cc-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1.25rem}
-.cc-avatar{width:50px;height:50px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;border:2px solid var(--border)}
-.cc-worker-info{flex:1}
+.contracts{display:flex;flex-direction:column;gap:1rem}
+.contract-card{background:white;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;position:relative;overflow:hidden;animation:slideUp 0.4s ease both}
+.contract-card:hover{box-shadow:0 6px 24px rgba(0,0,0,0.08);transform:translateY(-2px)}
+.contract-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:rgba(13,13,13,0.12)}
+.contract-card.state-active::before{background:var(--green)}
+.contract-card.state-awaiting::before{background:var(--saffron)}
+.contract-card.state-completed::before{background:var(--muted)}
+.contract-card.state-disputed::before{background:var(--rust)}
+.cc-header{display:flex;align-items:flex-start;gap:1rem;padding:1.5rem 1.5rem 1.1rem;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.cc-avatar{width:54px;height:54px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;border:2px solid var(--border)}
+.cc-worker-info{flex:1;min-width:0}
 .cc-worker-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.15rem}
-.cc-trade{font-size:0.75rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
-.cc-loc{font-size:0.72rem;color:var(--muted);margin-top:0.15rem}
-.cc-status-block{display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem}
+.cc-trade{font-size:0.75rem;color:var(--rust);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem}
+.cc-loc{font-size:0.78rem;color:var(--muted)}
+.cc-status-block{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0;margin-left:auto}
 .cc-status{font-size:0.65rem;font-weight:700;padding:0.25rem 0.65rem;border-radius:2px;text-transform:uppercase;letter-spacing:0.06em}
-.cs-active{background:rgba(27,107,58,0.1);color:var(--green)}
+.cs-active{background:rgba(27,107,58,0.12);color:var(--green)}
 .cs-pending{background:rgba(245,166,35,0.15);color:#854F0B}
 .cs-done{background:var(--cream);color:var(--muted)}
+.cs-dispute{background:rgba(192,57,43,0.1);color:var(--rust)}
 .cc-ref{font-size:0.68rem;color:var(--muted)}
-.cc-body{padding:1.25rem 1.5rem}
-.cc-job-title{font-weight:600;font-size:0.95rem;margin-bottom:0.75rem}
-.cc-details{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem;padding:1rem;background:var(--cream);border-radius:4px}
-.ccd{text-align:center}
+.cc-body{padding:1.25rem 1.5rem 1.5rem}
+.cc-job-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.6rem}
+.hire-meta-row{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem}
+.hire-stars{color:#F5A623;font-size:0.82rem}
+.hire-rating-copy{font-size:0.78rem;color:var(--muted)}
+.hire-note{margin:0 0 1rem;padding:0.75rem 0.9rem;background:var(--cream);border-radius:4px;font-size:0.82rem;line-height:1.6;color:var(--steel)}
+.cc-details{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1rem}
+.ccd{background:var(--cream);padding:0.85rem 0.9rem;border-radius:4px;text-align:center}
 .ccd-val{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:var(--ink)}
 .ccd-label{font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:0.15rem}
 
-/* ESCROW BAR */
-.escrow-bar{background:var(--cream);border:1px solid var(--border);border-radius:4px;padding:1rem 1.25rem;margin-bottom:1rem}
-.escrow-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem}
-.escrow-label{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
-.escrow-amount{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--green)}
-.escrow-track{height:6px;background:rgba(27,107,58,0.15);border-radius:3px;overflow:hidden;margin-bottom:0.4rem}
-.escrow-fill{height:100%;background:var(--green);border-radius:3px}
-.escrow-note{font-size:0.72rem;color:var(--muted)}
-.escrow-release-timer{font-size:0.75rem;color:var(--rust);font-weight:500;display:flex;align-items:center;gap:0.3rem}
+/* ESCROW */
+.escrow-bar{background:white;border:1px solid var(--border);border-radius:4px;padding:1rem 1.1rem;margin-bottom:1rem}
+.escrow-header{display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.6rem}
+.escrow-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.escrow-amount{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;color:var(--green)}
+.escrow-track{height:7px;background:rgba(27,107,58,0.12);border-radius:999px;overflow:hidden;margin-bottom:0.5rem}
+.escrow-fill{height:100%;background:var(--green);border-radius:999px}
+.escrow-note{font-size:0.74rem;color:var(--muted)}
 
 /* TIMELINE */
-.timeline{display:flex;gap:0;margin-bottom:1rem}
-.tl-step{flex:1;text-align:center;position:relative}
-.tl-step:not(:last-child)::after{content:'';position:absolute;top:10px;left:50%;right:-50%;height:2px;background:var(--border)}
-.tl-step.done:not(:last-child)::after{background:var(--green)}
-.tl-dot{width:20px;height:20px;border-radius:50%;margin:0 auto 0.4rem;display:flex;align-items:center;justify-content:center;font-size:0.7rem;position:relative;z-index:1}
-.tl-dot.done{background:var(--green);color:white}
-.tl-dot.active{background:var(--ink);color:#F5F0E8;border:2px solid var(--ink)}
+.timeline{display:flex;padding:0.85rem 0.35rem 0;margin:0 0 1.15rem}
+.tl-step{flex:1;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:8px;left:50%;right:-50%;height:2px;background:var(--border);z-index:0}
+.tl-step.done:not(:last-child)::after{background:var(--ink)}
+.tl-dot{width:18px;height:18px;border-radius:50%;margin:0 auto 0.35rem;display:flex;align-items:center;justify-content:center;font-size:0.6rem;position:relative;z-index:1}
+.tl-dot.done{background:var(--ink);color:#F5F0E8}
+.tl-dot.active{background:var(--saffron);color:var(--ink)}
 .tl-dot.pending{background:white;border:2px solid var(--border)}
 .tl-label{font-size:0.62rem;color:var(--muted)}
-.tl-step.done .tl-label{color:var(--green);font-weight:600}
+.tl-step.done .tl-label{color:var(--ink);font-weight:600}
 .tl-step.active .tl-label{color:var(--ink);font-weight:700}
 
 /* ACTIONS */
-.cc-actions{display:flex;gap:0.6rem;flex-wrap:wrap}
-.cc-btn{padding:0.5rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border-radius:2px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem}
-.ccb-complete{background:var(--green);color:white;border:none}
-.ccb-complete:hover{background:#0F4F2A}
-.ccb-msg{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
-.ccb-msg:hover{background:var(--ink);color:white}
-.ccb-dispute{background:transparent;color:var(--rust);border:1px solid rgba(192,57,43,0.2)}
-.ccb-dispute:hover{background:var(--rust);color:white;border-color:var(--rust)}
-.ccb-review{background:rgba(245,166,35,0.15);color:#854F0B;border:1px solid rgba(245,166,35,0.3)}
-.ccb-review:hover{background:var(--saffron);color:var(--ink);border-color:var(--saffron)}
-.ccb-rehire{background:transparent;color:var(--muted);border:1px solid var(--border)}
-.page-notice{display:none;padding:0.9rem 1rem;border-radius:6px;margin-bottom:1rem;font-size:0.88rem;line-height:1.6}
-.page-notice.is-visible{display:block}
-.page-notice.is-success{background:#E8F5E9;color:#1B5E20;border:1px solid rgba(27,94,32,0.18)}
-.page-notice.is-error{background:#FDECEA;color:#B71C1C;border:1px solid rgba(183,28,28,0.15)}
-.page-notice.is-info{background:var(--cream);color:var(--steel);border:1px solid var(--border)}
-.hire-tabs{flex-wrap:wrap}
-.htab{background:transparent;border-left:none;border-right:none;border-top:none}
-.empty-state{padding:2.5rem 1.5rem;border:1px dashed var(--border);border-radius:8px;background:#FCFBF8;text-align:center}
-.empty-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.35rem}
-.empty-sub{font-size:0.9rem;color:var(--muted);line-height:1.65;max-width:560px;margin:0 auto 1rem}
-.empty-cta{display:inline-flex;align-items:center;justify-content:center;padding:0.7rem 1.1rem;background:var(--ink);color:#F5F0E8;text-decoration:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem}
-.empty-cta:hover{background:var(--green)}
-.hire-note{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:1rem}
-.hire-meta-row{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
-.hire-stars{color:#F5A623;font-size:0.82rem}
-.hire-rating-copy{font-size:0.8rem;color:var(--muted)}
+.cc-actions{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap}
+.cc-btn{padding:0.45rem 1rem;font-family:'Syne',sans-serif;font-weight:700;font-size:0.75rem;border-radius:2px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem}
+.cc-btn:disabled{opacity:0.55;cursor:not-allowed}
+.ccb-complete{background:var(--ink);color:#F5F0E8;border:none}
+.ccb-complete:hover:not(:disabled){background:var(--green)}
+.ccb-msg{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.ccb-msg:hover{background:var(--ink);color:#F5F0E8}
+.ccb-review,.ccb-rehire{background:transparent;color:var(--ink);border:1px solid var(--border)}
+.ccb-review:hover,.ccb-rehire:hover{border-color:var(--ink);color:var(--ink);background:rgba(13,13,13,0.03)}
+
+/* EMPTY AND LOADING STATES */
+.empty-state{background:white;border:1px dashed var(--border);border-radius:6px;padding:2.4rem 1.5rem;text-align:center;color:var(--muted)}
+.empty-state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--ink);margin-bottom:0.35rem}
+.empty-state-sub{font-size:0.84rem;line-height:1.65;max-width:520px;margin:0 auto 1rem}
+.empty-state-action{display:inline-flex;padding:0.7rem 1rem;background:var(--ink);color:#F5F0E8;text-decoration:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.8rem}
+.empty-state-action:hover{background:var(--green)}
 
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:900px){.sidebar{display:none}.cc-details{grid-template-columns:1fr 1fr}}
+@media(max-width:980px){
+  .sidebar{display:none}
+  .cc-details{grid-template-columns:1fr 1fr}
+  .cc-status-block{align-items:flex-start;margin-left:0}
+}
+@media(max-width:720px){
+  .cc-header{padding:1.25rem 1.25rem 1rem}
+  .cc-body{padding:1rem 1.25rem 1.25rem}
+  .cc-details{grid-template-columns:1fr}
+  .cc-actions{gap:0.6rem}
+  .cc-btn{width:100%;justify-content:center;min-height:44px}
+}
 </style>
 <script>
 (function(){
@@ -136,11 +152,11 @@
   </aside>
 
   <main class="main">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem;animation:slideUp 0.4s ease both">
+    <div class="page-top" style="animation:slideUp 0.4s ease both">
       <div><div class="page-title">My Hires</div><div class="page-sub" id="hiresSubtitle">Active contracts, job progress and payment escrow</div></div>
     </div>
 
-    <div class="page-notice is-info is-visible" id="hireNotice">Loading your hires…</div>
+    <div class="notice info" id="hireNotice">Loading your hires…</div>
 
     <div class="hire-tabs" id="hireTabs">
       <button class="htab active" type="button" data-filter="active">Active <span class="tc" id="tabCountActive">0</span></button>
@@ -151,8 +167,9 @@
 
     <div class="contracts">
       <div id="hiresContainer" style="display:grid;gap:1rem;padding-top:.5rem">
-        <div style="padding:2rem;text-align:center;color:#888;font-family:'DM Sans',sans-serif">
-          Loading your hires…
+        <div class="empty-state">
+          <div class="empty-state-title">Loading your hires</div>
+          <div class="empty-state-sub">Fetching the latest bookings from your KaziX account.</div>
         </div>
       </div>
 
@@ -243,11 +260,13 @@ function filterCount(filter) {
 function showHireNotice(message, tone) {
   if (!hireNotice) return;
   if (!message) {
-    hireNotice.className = 'page-notice';
+    hireNotice.hidden = true;
+    hireNotice.className = 'notice';
     hireNotice.textContent = '';
     return;
   }
-  hireNotice.className = 'page-notice is-visible is-' + (tone || 'info');
+  hireNotice.hidden = false;
+  hireNotice.className = 'notice ' + (tone || 'info');
   hireNotice.textContent = message;
 }
 
@@ -287,7 +306,8 @@ function bookingStatusMeta(booking) {
 
   if (status === 'completed') {
     return {
-      pillClass: 'cs-active',
+      cardClass: 'state-completed',
+      pillClass: 'cs-done',
       label: escrow === 'released' ? 'Completed · Paid' : 'Completed',
       note: escrow === 'released'
         ? 'This hire has been completed and the escrow payment has been released.'
@@ -297,7 +317,8 @@ function bookingStatusMeta(booking) {
 
   if (status === 'disputed') {
     return {
-      pillClass: 'cs-pending',
+      cardClass: 'state-disputed',
+      pillClass: 'cs-dispute',
       label: 'Disputed',
       note: 'This booking is currently in dispute. Support will contact both parties with the next steps.',
     };
@@ -305,6 +326,7 @@ function bookingStatusMeta(booking) {
 
   if (escrow === 'pending') {
     return {
+      cardClass: 'state-awaiting',
       pillClass: 'cs-pending',
       label: 'Awaiting Payment',
       note: 'M-Pesa escrow has not been confirmed yet. The booking is reserved, but funds are still pending.',
@@ -313,6 +335,7 @@ function bookingStatusMeta(booking) {
 
   if (status === 'in_progress') {
     return {
+      cardClass: 'state-active',
       pillClass: 'cs-active',
       label: 'In Progress',
       note: 'Escrow is secured and the fundi is actively working on this job.',
@@ -321,6 +344,7 @@ function bookingStatusMeta(booking) {
 
   if (status === 'confirmed') {
     return {
+      cardClass: 'state-active',
       pillClass: 'cs-active',
       label: 'Confirmed',
       note: 'The hire is confirmed and ready to begin.',
@@ -328,6 +352,7 @@ function bookingStatusMeta(booking) {
   }
 
   return {
+    cardClass: 'state-completed',
     pillClass: 'cs-done',
     label: status ? status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ') : 'Booked',
     note: 'This booking is available in your hire history.',
@@ -374,9 +399,9 @@ function escapeHtml(value) {
 
 function emptyState(title, description, href, cta) {
   return '<div class="empty-state">'
-    + '<div class="empty-title">' + escapeHtml(title) + '</div>'
-    + '<div class="empty-sub">' + escapeHtml(description) + '</div>'
-    + (href && cta ? '<a class="empty-cta" href="' + escapeHtml(href) + '">' + escapeHtml(cta) + '</a>' : '')
+    + '<div class="empty-state-title">' + escapeHtml(title) + '</div>'
+    + '<div class="empty-state-sub">' + escapeHtml(description) + '</div>'
+    + (href && cta ? '<a class="empty-state-action" href="' + escapeHtml(href) + '">' + escapeHtml(cta) + '</a>' : '')
     + '</div>';
 }
 
@@ -542,7 +567,7 @@ function renderBookingCard(booking) {
   var payout = Math.max(Math.round(Number(booking.agreed_amount || 0) * 0.9), 0);
   var fee = Math.max(Number(booking.agreed_amount || 0) - payout, 0);
 
-  return '<article class="contract-card" data-booking-id="' + escapeHtml(booking.id || '') + '">'
+  return '<article class="contract-card ' + escapeHtml(meta.cardClass || '') + '" data-booking-id="' + escapeHtml(booking.id || '') + '">'
     + '<div class="cc-header">'
     + (hireHelpers.buildAvatarHtml
       ? hireHelpers.buildAvatarHtml({
@@ -596,7 +621,10 @@ function renderBookings() {
   renderTabs();
 
   if (hiresState.loading) {
-    hireContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:#888;font-family:\'DM Sans\',sans-serif">Loading your hires…</div>';
+    hireContainer.innerHTML = emptyState(
+      'Loading your hires',
+      'Fetching the latest bookings from your KaziX account.'
+    );
     return;
   }
 
