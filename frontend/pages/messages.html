@@ -15,7 +15,7 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
 /* LAYOUT */
 .msg-shell{display:flex;flex:1;overflow:hidden;min-height:0}
 .notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin:0.9rem 1rem 0}
-.notice[hidden]{display:none}
+.notice[hidden],.chat-placeholder[hidden],.chat-panel[hidden]{display:none!important}
 .notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
 .notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
 
@@ -169,10 +169,10 @@ body.app{height:var(--app-viewport-height);min-height:var(--app-viewport-height)
     <div class="chat-area">
       <div class="notice info" id="messageStatus" hidden></div>
 
-      <div class="chat-placeholder" id="chatPlaceholder">
+      <div class="chat-placeholder" id="chatPlaceholder" hidden>
         <div class="chat-placeholder-card">
-          <div class="chat-placeholder-title">Loading conversations</div>
-          <div class="chat-placeholder-sub">We’re fetching your real threads and replacing the sample chat with your live KaziX messages.</div>
+          <div class="chat-placeholder-title">Choose a conversation</div>
+          <div class="chat-placeholder-sub">Pick a thread from the list to start messaging.</div>
         </div>
       </div>
 
@@ -449,6 +449,31 @@ function writeThreadCache(threads) {
   }
 }
 
+function applyLoadedThreads(liveThreads, options = {}) {
+  const rows = Array.isArray(liveThreads) ? liveThreads : [];
+  const cachedThreads = options.cachedThreads || readThreadCache();
+  const shouldKeepCached = !rows.length && cachedThreads.length > 0;
+
+  if (shouldKeepCached) {
+    state.threads = cachedThreads;
+    state.threadLoadError = null;
+    state.threadsRecoveredFromCache = true;
+    sortThreads(state.threads);
+    renderThreadList();
+    renderThreadHint('Showing your last synced conversations while Messages reconnects.');
+    setStatus('Showing your last synced conversations while Messages reconnects.', 'info');
+    return;
+  }
+
+  state.threads = rows;
+  state.threadLoadError = null;
+  state.threadsRecoveredFromCache = false;
+  sortThreads(state.threads);
+  writeThreadCache(state.threads);
+  renderThreadList();
+  renderThreadHint('');
+}
+
 function requestedContext() {
   const params = new URLSearchParams(window.location.search);
   return {
@@ -513,6 +538,39 @@ function upsertThread(thread) {
 
 function isThreadPending(thread) {
   return Boolean(thread && state.threadLoading && state.pendingThreadSignature === threadSignature(thread));
+}
+
+function buildPendingThread(seed, threadLike) {
+  return {
+    participant_id: seed.participant_id,
+    participant_name: threadLike?.participant_name || 'Conversation',
+    participant_avatar_url: threadLike?.participant_avatar_url || null,
+    participant_role: threadLike?.participant_role || 'client',
+    participant_county: threadLike?.participant_county || null,
+    participant_area: threadLike?.participant_area || null,
+    participant_phone: threadLike?.participant_phone || null,
+    participant_trade: threadLike?.participant_trade || null,
+    participant_rating: threadLike?.participant_rating || null,
+    job_id: seed.job_id,
+    job_title: threadLike?.job_title || null,
+    job_trade: threadLike?.job_trade || null,
+    job_county: threadLike?.job_county || null,
+    job_area: threadLike?.job_area || null,
+    job_status: threadLike?.job_status || null,
+    application_id: seed.application_id,
+    application_status: threadLike?.application_status || null,
+    booking_id: seed.booking_id,
+    booking_status: threadLike?.booking_status || null,
+    booking_start_date: threadLike?.booking_start_date || null,
+    latest_message_preview: threadLike?.latest_message_preview || '',
+    last_message_at: threadLike?.last_message_at || null,
+    unread_count: Number(threadLike?.unread_count || 0),
+    message_count: Number(threadLike?.message_count || 0),
+    has_messages: Boolean(threadLike?.has_messages),
+    can_send: threadLike?.can_send !== false,
+    thread_state: threadLike?.thread_state || 'active',
+    thread_notice: threadLike?.thread_notice || null,
+  };
 }
 
 function formatThreadTime(value) {
@@ -665,11 +723,29 @@ function setShellThreadOpen(isOpen) {
   document.getElementById('messageShell').classList.toggle('thread-open', Boolean(isOpen));
 }
 
-function showChatPlaceholder(title, message, actionHref, actionLabel) {
+function setChatSurface(mode) {
   const root = document.getElementById('chatPlaceholder');
   const panel = document.getElementById('chatPanel');
-  panel.hidden = true;
-  root.hidden = false;
+  const showingPanel = mode === 'panel';
+
+  panel.hidden = !showingPanel;
+  panel.style.display = showingPanel ? 'flex' : 'none';
+  root.hidden = showingPanel;
+  root.style.display = showingPanel ? 'none' : 'flex';
+}
+
+function showChatPlaceholder(title, message, actionHref, actionLabel, options = {}) {
+  const root = document.getElementById('chatPlaceholder');
+  if (options.cancelPending) {
+    state.threadLoading = false;
+    state.pendingThreadSignature = null;
+    state.threadRequestId += 1;
+  }
+  if (options.clearThread) {
+    state.activeThread = null;
+    state.activeMessages = [];
+  }
+  setChatSurface('placeholder');
   root.innerHTML = `
     <div class="chat-placeholder-card">
       <div class="chat-placeholder-title">${escapeHtml(title)}</div>
@@ -769,18 +845,14 @@ function renderChatActions(thread) {
 
 function renderActiveThread() {
   const thread = state.activeThread;
-  const panel = document.getElementById('chatPanel');
-  const placeholder = document.getElementById('chatPlaceholder');
 
   if (!thread) {
-    panel.hidden = true;
-    placeholder.hidden = false;
+    setChatSurface('placeholder');
     setShellThreadOpen(false);
     return;
   }
 
-  panel.hidden = false;
-  placeholder.hidden = true;
+  setChatSurface('panel');
   setShellThreadOpen(true);
   document.title = `${thread.participant_name || 'Messages'} — KaziX`;
 
@@ -815,7 +887,9 @@ function renderActiveThread() {
   if (!state.activeMessages.length) {
     messagesRoot.innerHTML = `
       <div class="empty-thread-note">
-        No messages yet in this conversation. Send the first message to get things moving.
+        ${escapeHtml(state.threadLoading
+          ? 'Loading messages…'
+          : 'No messages yet in this conversation. Send the first message to get things moving.')}
       </div>
     `;
   } else {
@@ -869,14 +943,16 @@ function renderActiveThread() {
 
   renderThreadList();
   syncThreadUrl(thread);
-  clearNotificationSummaryCache();
-  hydrateNotificationSummary({ silent: true, force: true }).catch(function () {
-    /* noop */
-  });
+  if (!state.threadLoading) {
+    clearNotificationSummaryCache();
+    hydrateNotificationSummary({ silent: true, force: true }).catch(function () {
+      /* noop */
+    });
 
-  window.requestAnimationFrame(function () {
-    messagesRoot.scrollTop = messagesRoot.scrollHeight;
-  });
+    window.requestAnimationFrame(function () {
+      messagesRoot.scrollTop = messagesRoot.scrollHeight;
+    });
+  }
 }
 
 function serializeThreadQuery(thread) {
@@ -901,7 +977,9 @@ async function loadThread(threadLike, options = {}) {
   }
   const requestId = state.threadRequestId + 1;
   const pendingSignature = threadSignature(seed);
-  const hadActiveThread = Boolean(state.activeThread);
+  const previousThread = state.activeThread;
+  const previousMessages = [...state.activeMessages];
+  const hadActiveThread = Boolean(previousThread);
   state.threadRequestId = requestId;
   state.threadLoading = true;
   state.pendingThreadSignature = pendingSignature;
@@ -909,7 +987,9 @@ async function loadThread(threadLike, options = {}) {
   if (hadActiveThread) {
     renderActiveThread();
   } else {
-    renderThreadList();
+    state.activeThread = buildPendingThread(seed, threadLike);
+    state.activeMessages = [];
+    renderActiveThread();
   }
 
   try {
@@ -940,13 +1020,18 @@ async function loadThread(threadLike, options = {}) {
 
     state.threadLoading = false;
     state.pendingThreadSignature = null;
-    renderThreadList();
 
-    if (state.activeThread) {
+    if (hadActiveThread) {
+      state.activeThread = previousThread;
+      state.activeMessages = previousMessages;
       renderActiveThread();
       setStatus(error?.message || 'Could not load this conversation.', 'error');
       return;
     }
+
+    state.activeThread = null;
+    state.activeMessages = [];
+    renderThreadList();
 
     const request = requestedContext();
     if (request.participant && !request.job && !request.application && !request.booking) {
@@ -954,7 +1039,8 @@ async function loadThread(threadLike, options = {}) {
         'No existing conversation found',
         'This link only points to a participant. Open Messages from a job application, booking, or existing thread so KaziX knows which conversation context to use.',
         state.role === 'client' ? 'my-jobs.html' : 'my-applications.html',
-        state.role === 'client' ? 'Back to My Jobs' : 'Back to My Applications'
+        state.role === 'client' ? 'Back to My Jobs' : 'Back to My Applications',
+        { clearThread: true, cancelPending: true }
       );
       setStatus('This message link needs a job, application, or booking context before a new conversation can be opened.', 'info');
       return;
@@ -964,7 +1050,8 @@ async function loadThread(threadLike, options = {}) {
       'Conversation unavailable',
       error?.message || 'We could not load this conversation right now.',
       null,
-      null
+      null,
+      { clearThread: true, cancelPending: true }
     );
     setStatus(error?.message || 'Could not load this conversation.', 'error');
   }
@@ -976,13 +1063,7 @@ async function loadThreads() {
       auth: true,
       showError: false,
     });
-    state.threads = Array.isArray(payload?.data) ? payload.data : [];
-    state.threadLoadError = null;
-    state.threadsRecoveredFromCache = false;
-    sortThreads(state.threads);
-    writeThreadCache(state.threads);
-    renderThreadList();
-    renderThreadHint('');
+    applyLoadedThreads(payload?.data);
   } catch (error) {
     state.threadLoadError = error;
     const cachedThreads = readThreadCache();
@@ -1030,7 +1111,8 @@ async function openInitialConversation() {
       'Messages unavailable',
       state.threadLoadError?.message || 'We could not load your thread list right now.',
       state.role === 'fundi' ? 'worker-dashboard.html' : 'client-dashboard.html',
-      'Back to Dashboard'
+      'Back to Dashboard',
+      { clearThread: true, cancelPending: true }
     );
     setShellThreadOpen(false);
     return;
@@ -1045,7 +1127,8 @@ async function openInitialConversation() {
     'No conversations yet',
     'Your active application and booking threads will appear here automatically, and new messages will keep the conversation going in one place.',
     state.role === 'client' ? 'job-applicants.html' : 'my-applications.html',
-    state.role === 'client' ? 'Open Applications' : 'Open My Applications'
+    state.role === 'client' ? 'Open Applications' : 'Open My Applications',
+    { clearThread: true, cancelPending: true }
   );
   setShellThreadOpen(false);
 }
@@ -1056,14 +1139,10 @@ async function refreshThreadsAfterSend() {
       auth: true,
       showError: false,
     });
-    state.threads = Array.isArray(payload?.data) ? payload.data : [];
-    state.threadLoadError = null;
-    state.threadsRecoveredFromCache = false;
-    sortThreads(state.threads);
-    writeThreadCache(state.threads);
-    renderThreadHint('');
-    setStatus('', 'info');
-    renderThreadList();
+    applyLoadedThreads(payload?.data, { cachedThreads: state.threads });
+    if (!state.threadsRecoveredFromCache) {
+      setStatus('', 'info');
+    }
   } catch (error) {
     state.threadLoadError = error;
     if (state.threads.length) {
@@ -1159,7 +1238,8 @@ function bindEvents() {
       'Choose a conversation',
       'Pick a thread from the list to continue messaging.',
       null,
-      null
+      null,
+      { clearThread: true, cancelPending: true }
     );
     renderThreadList();
   });
