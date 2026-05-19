@@ -375,7 +375,7 @@ async def search_fundis(
     try:
         query = client.table("fundi_profiles").select(
             "id, trade, skills, rate_min, rate_max, rating_avg, jobs_completed, "
-            "is_available, kyc_status, profiles!inner(full_name, avatar_url, county, area, is_verified)",
+            "is_available, kyc_status, profiles!id!inner(full_name, avatar_url, county, area, is_verified)",
             count="exact",
         )
 
@@ -391,8 +391,13 @@ async def search_fundis(
             query = query.eq("kyc_status", "approved")
         if available_only:
             query = query.eq("is_available", True)
-        if location:
-            query = query.ilike("profiles.county", f"%{location}%")
+        normalized_location = " ".join((location or "").split())
+        if normalized_location:
+            location_pattern = f"*{normalized_location}*"
+            query = query.or_(
+                f"county.ilike.{location_pattern},area.ilike.{location_pattern}",
+                reference_table="profiles",
+            )
 
         order_field, order_desc = {
             "rating": ("rating_avg", True),

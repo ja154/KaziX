@@ -88,12 +88,18 @@ class _FakeSearchQuery:
         self._order_field: str | None = None
         self._order_desc = False
         self._range: tuple[int, int] | None = None
+        self.selected_columns: str | None = None
 
-    def select(self, _columns: str, count: str | None = None):
+    def select(self, columns: str, count: str | None = None):
+        self.selected_columns = columns
         return self
 
     def ilike(self, field: str, pattern: str):
         self._filters.append(("ilike", field, pattern))
+        return self
+
+    def or_(self, filters: str, reference_table: str | None = None):
+        self._filters.append(("or", reference_table or "", filters))
         return self
 
     def eq(self, field: str, value: object):
@@ -129,15 +135,30 @@ class _FakeSearchQuery:
         return value
 
     def execute(self):
+        if self.selected_columns and "profiles!inner(" in self.selected_columns:
+            raise AssertionError("Search query must disambiguate the profiles relation")
+
         rows = [deepcopy(row) for row in self.rows]
 
         for operation, field, expected in self._filters:
             if operation == "ilike":
-                needle = str(expected).replace("%", "").lower()
+                needle = str(expected).replace("%", "").replace("*", "").lower()
                 rows = [
                     row for row in rows
                     if needle in str(self._field_value(row, field) or "").lower()
                 ]
+            elif operation == "or":
+                clauses = [clause.strip() for clause in str(expected).split(",") if clause.strip()]
+
+                def matches_clause(row: dict, clause: str) -> bool:
+                    column, operator, value = clause.split(".", 2)
+                    lookup_field = f"{field}.{column}" if field else column
+                    if operator == "ilike":
+                        needle = value.replace("%", "").replace("*", "").lower()
+                        return needle in str(self._field_value(row, lookup_field) or "").lower()
+                    raise AssertionError(f"Unsupported OR operator in test double: {operator}")
+
+                rows = [row for row in rows if any(matches_clause(row, clause) for clause in clauses)]
             elif operation == "eq":
                 rows = [row for row in rows if self._field_value(row, field) == expected]
             elif operation == "gte":
@@ -169,10 +190,12 @@ class _FakeSearchQuery:
 class _FakeSearchClient:
     def __init__(self, rows: list[dict]) -> None:
         self.rows = rows
+        self.last_query: _FakeSearchQuery | None = None
 
     def table(self, table_name: str):
         assert table_name == "fundi_profiles"
-        return _FakeSearchQuery(self.rows)
+        self.last_query = _FakeSearchQuery(self.rows)
+        return self.last_query
 
 
 def _make_bearer_token(secret: str, user_id: str = "user-123") -> str:
@@ -500,3 +523,5 @@ async def test_search_fundis_filters_sorts_and_paginates_embedded_profiles(monke
 
     assert second_page["total"] == 2
     assert [item["id"] for item in second_page["results"]] == ["fundi-1"]
+    assert fake_anon.last_query is not None
+    assert "profiles!id!inner(" in (fake_anon.last_query.selected_columns or "")
