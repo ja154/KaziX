@@ -45,20 +45,40 @@ def _serialize_fundi_details(row: dict[str, Any] | None) -> dict[str, Any] | Non
     return {field: row.get(field) for field in FUNDI_DETAILS_FIELDS}
 
 
+def _with_default_fundi_details(booking_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            **dict(row),
+            "fundi_details": dict(row).get("fundi_details"),
+        }
+        for row in booking_rows
+    ]
+
+
 def _attach_fundi_details(admin, booking_rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    base_rows = _with_default_fundi_details(booking_rows)
     fundi_ids = sorted({str(row.get("fundi_id")) for row in booking_rows if row.get("fundi_id")})
     if not fundi_ids:
-        return booking_rows
+        return base_rows
 
-    fundi_result = admin.table("fundi_profiles").select(FUNDI_DETAILS_SELECT).in_("id", fundi_ids).execute()
-    fundi_details_by_id = {
-        str(row["id"]): _serialize_fundi_details(row)
-        for row in (fundi_result.data or [])
-        if isinstance(row, dict) and row.get("id")
-    }
+    try:
+        fundi_result = admin.table("fundi_profiles").select(FUNDI_DETAILS_SELECT).in_("id", fundi_ids).execute()
+        fundi_details_by_id = {
+            str(row["id"]): _serialize_fundi_details(row)
+            for row in (fundi_result.data or [])
+            if isinstance(row, dict) and row.get("id")
+        }
+    except Exception as exc:
+        logger.warning(
+            "Failed to enrich booking fundi details",
+            fundi_count=len(fundi_ids),
+            booking_count=len(base_rows),
+            error=str(exc),
+        )
+        return base_rows
 
     enriched_rows: list[dict[str, Any]] = []
-    for row in booking_rows:
+    for row in base_rows:
         enriched = dict(row)
         enriched["fundi_details"] = fundi_details_by_id.get(str(row.get("fundi_id"))) if row.get("fundi_id") else None
         enriched_rows.append(enriched)
@@ -116,7 +136,15 @@ async def list_bookings(
                 )
 
         result = query.order("created_at", desc=True).execute()
-        return _attach_fundi_details(admin, result.data or [])
+        rows = _attach_fundi_details(admin, result.data or [])
+        if not rows:
+            logger.info(
+                "Bookings list returned zero rows",
+                user_id=user.user_id,
+                role=effective_role,
+                result_count=0,
+            )
+        return rows
     except HTTPException:
         raise
     except Exception as exc:

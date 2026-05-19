@@ -1,6 +1,10 @@
 (function () {
   const DEFAULT_REMOTE_API_BASE = 'https://kazix.onrender.com';
   const PROFILE_CACHE_KEY = 'kazix_profile';
+  const USER_ID_STORAGE_KEY = 'kazix_user_id';
+  const ROLE_STORAGE_KEY = 'kazix_role';
+  const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
+  const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
   const TOKEN_KEYS = ['kazix_access_token', 'sb-access-token', 'access_token'];
   const AUTH_STORAGE_KEYS = new Set([
     'kazix_access_token',
@@ -147,6 +151,12 @@
     return findTokenInStorage(window.localStorage) || findTokenInStorage(window.sessionStorage);
   }
 
+  function getStoredUserId() {
+    const value = window.localStorage.getItem(USER_ID_STORAGE_KEY);
+    const normalized = String(value || '').trim();
+    return normalized || null;
+  }
+
   function getRefreshToken() {
     return window.localStorage.getItem('kazix_refresh_token');
   }
@@ -203,6 +213,12 @@
       'kazix_token_type',
       payload.token_type || window.localStorage.getItem('kazix_token_type') || 'bearer'
     );
+    if (payload.user_id) {
+      window.localStorage.setItem(USER_ID_STORAGE_KEY, String(payload.user_id));
+    }
+    if (payload.role) {
+      window.localStorage.setItem(ROLE_STORAGE_KEY, String(payload.role));
+    }
 
     return payload.access_token;
   }
@@ -299,16 +315,60 @@
   }
 
   function getCachedProfile() {
-    return normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
+    const profile = normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
+    if (!profile) return null;
+    const currentUserId = getStoredUserId();
+    if (currentUserId && profile.id && String(profile.id) !== currentUserId) {
+      return null;
+    }
+    return profile;
+  }
+
+  function clearAccountScopedState() {
+    try {
+      window.localStorage.removeItem(PROFILE_CACHE_KEY);
+      window.sessionStorage.removeItem(DASHBOARD_STATE_STORAGE_KEY);
+      window.sessionStorage.removeItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
+    } catch (_error) {
+      // Ignore storage cleanup failures.
+    }
+    delete window.KaziXUser;
+  }
+
+  function syncAccountIdentity(profile) {
+    const normalized = normalizeProfile(profile);
+    if (!normalized?.id) return normalized;
+
+    const nextUserId = String(normalized.id).trim();
+    const previousUserId = getStoredUserId();
+    const cachedProfile = normalizeProfile(safeJson(window.localStorage.getItem(PROFILE_CACHE_KEY) || 'null'));
+    const previousProfileId = cachedProfile?.id ? String(cachedProfile.id).trim() : '';
+
+    if (
+      nextUserId
+      && (
+        (previousUserId && previousUserId !== nextUserId)
+        || (!previousUserId && previousProfileId && previousProfileId !== nextUserId)
+      )
+    ) {
+      clearAccountScopedState();
+    }
+
+    window.localStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+    if (normalized.role) {
+      window.localStorage.setItem(ROLE_STORAGE_KEY, normalized.role);
+    }
+
+    return normalized;
   }
 
   function cacheProfile(profile) {
-    const normalized = normalizeProfile(profile);
+    const normalized = syncAccountIdentity(profile);
     if (!normalized) return null;
 
     window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(normalized));
     if (normalized.role) {
-      window.localStorage.setItem('kazix_role', normalized.role);
+      window.localStorage.setItem(ROLE_STORAGE_KEY, normalized.role);
     }
     return normalized;
   }

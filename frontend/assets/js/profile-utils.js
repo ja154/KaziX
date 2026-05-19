@@ -60,6 +60,8 @@
     admin: 'admin-dashboard.html',
   };
   const PROFILE_CACHE_KEY = 'kazix_profile';
+  const USER_ID_STORAGE_KEY = 'kazix_user_id';
+  const ROLE_STORAGE_KEY = 'kazix_role';
   const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
   const DASHBOARD_STATE_MAX_AGE_MS = 60 * 1000;
   const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
@@ -92,9 +94,85 @@
   let notificationSummaryPromise = null;
   let refreshSessionPromise = null;
   let logoutPromise = null;
+  let lastIdentitySync = {
+    userChanged: false,
+    userId: null,
+    role: null,
+  };
 
   function getAccessToken() {
     return localStorage.getItem('kazix_access_token');
+  }
+
+  function getStoredUserId() {
+    const value = localStorage.getItem(USER_ID_STORAGE_KEY);
+    const normalized = String(value || '').trim();
+    return normalized || null;
+  }
+
+  function getCachedProfileId() {
+    const cached = safeJson(localStorage.getItem(PROFILE_CACHE_KEY) || 'null');
+    const value = cached && cached.id ? String(cached.id).trim() : '';
+    return value || null;
+  }
+
+  function clearAccountScopedState() {
+    myProfilePromise = null;
+    dashboardStatePromise = null;
+    notificationSummaryPromise = null;
+    try {
+      localStorage.removeItem(PROFILE_CACHE_KEY);
+    } catch (_error) {
+      // Ignore storage cleanup failures.
+    }
+    clearDashboardStateCache();
+    clearNotificationSummaryCache();
+    delete window.KaziXUser;
+  }
+
+  function syncResolvedIdentity(profile) {
+    if (!profile || typeof profile !== 'object' || !profile.id) {
+      lastIdentitySync = {
+        userChanged: false,
+        userId: null,
+        role: null,
+      };
+      return lastIdentitySync;
+    }
+
+    const nextUserId = String(profile.id).trim();
+    const nextRole = profile.role ? String(profile.role).trim() : '';
+    const previousUserId = getStoredUserId();
+    const previousProfileId = getCachedProfileId();
+    const userChanged = Boolean(
+      nextUserId
+      && (
+        (previousUserId && previousUserId !== nextUserId)
+        || (!previousUserId && previousProfileId && previousProfileId !== nextUserId)
+      )
+    );
+
+    if (userChanged) {
+      clearAccountScopedState();
+    }
+
+    if (nextUserId) {
+      localStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+    }
+    if (nextRole) {
+      localStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+    }
+
+    lastIdentitySync = {
+      userChanged,
+      userId: nextUserId || null,
+      role: nextRole || null,
+    };
+    return lastIdentitySync;
+  }
+
+  function getLastIdentitySync() {
+    return { ...lastIdentitySync };
   }
 
   function getRefreshToken() {
@@ -153,6 +231,12 @@
       'kazix_token_type',
       payload.token_type || localStorage.getItem('kazix_token_type') || 'bearer'
     );
+    if (payload.user_id) {
+      localStorage.setItem(USER_ID_STORAGE_KEY, String(payload.user_id));
+    }
+    if (payload.role) {
+      localStorage.setItem(ROLE_STORAGE_KEY, String(payload.role));
+    }
 
     return payload.access_token;
   }
@@ -538,9 +622,10 @@
     if (!profile || typeof profile !== 'object' || !profile.id) return;
 
     try {
+      syncResolvedIdentity(profile);
       window.localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
       if (profile.role) {
-        window.localStorage.setItem('kazix_role', profile.role);
+        window.localStorage.setItem(ROLE_STORAGE_KEY, profile.role);
       }
     } catch (_error) {
       // Ignore storage failures; the in-memory promise still stays valid.
@@ -685,6 +770,12 @@
     notificationSummaryPromise = null;
     refreshSessionPromise = null;
     logoutPromise = null;
+    lastIdentitySync = {
+      userChanged: false,
+      userId: null,
+      role: null,
+    };
+    delete window.KaziXUser;
     clearMatchingStorage(window.localStorage);
     clearMatchingStorage(window.sessionStorage);
   }
@@ -696,6 +787,12 @@
 
       const parsed = safeJson(raw);
       if (!parsed || !parsed.data || !parsed.saved_at) {
+        return null;
+      }
+
+      const cachedUserId = String(parsed.user_id || '').trim();
+      const currentUserId = getStoredUserId();
+      if (currentUserId && cachedUserId !== currentUserId) {
         return null;
       }
 
@@ -713,6 +810,7 @@
     try {
       window.sessionStorage.setItem(DASHBOARD_STATE_STORAGE_KEY, JSON.stringify({
         saved_at: Date.now(),
+        user_id: getStoredUserId(),
         data,
       }));
     } catch (_error) {
@@ -739,6 +837,12 @@
         return null;
       }
 
+      const cachedUserId = String(parsed.user_id || '').trim();
+      const currentUserId = getStoredUserId();
+      if (currentUserId && cachedUserId !== currentUserId) {
+        return null;
+      }
+
       if ((Date.now() - Number(parsed.saved_at)) > (maxAgeMs || NOTIFICATION_SUMMARY_MAX_AGE_MS)) {
         return null;
       }
@@ -753,6 +857,7 @@
     try {
       window.sessionStorage.setItem(NOTIFICATION_SUMMARY_STORAGE_KEY, JSON.stringify({
         saved_at: Date.now(),
+        user_id: getStoredUserId(),
         data,
       }));
     } catch (_error) {
@@ -1058,9 +1163,11 @@
     getAccessToken,
     getValidAccessToken,
     getDashboardState,
+    getLastIdentitySync,
     getMyProfile,
     getNotificationSummary,
     getProfileIdFromQuery,
+    getStoredUserId,
     hydrateDashboardState,
     hydrateNotificationSummary,
     hydrateShell,

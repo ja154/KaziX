@@ -214,6 +214,11 @@ const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
 const AUTH_WAITING_HEARTBEAT_KEY = 'kazix_auth_waiting_heartbeat';
 const AUTH_WAITING_STARTED_KEY = 'kazix_auth_waiting_started_at';
+const PROFILE_CACHE_KEY = 'kazix_profile';
+const USER_ID_STORAGE_KEY = 'kazix_user_id';
+const ROLE_STORAGE_KEY = 'kazix_role';
+const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
+const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
 const authWaiterId = sessionStorage.getItem(AUTH_WAITER_SESSION_KEY)
   || (window.crypto?.randomUUID?.() || `auth-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 let authWaitHeartbeatTimer = null;
@@ -246,6 +251,82 @@ function toDisplayError(err, fallback) {
     return `Cannot reach API at ${API_BASE_LABEL}. Start the FastAPI app and, if you are using a separate frontend origin, ensure ALLOWED_ORIGINS includes ${window.location.origin}.`;
   }
   return message || fallback;
+}
+
+function parseStoredProfileId(storage) {
+  try {
+    const raw = storage?.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const value = parsed?.id ? String(parsed.id).trim() : '';
+    return value || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function clearAccountScopedState(targetWindow = window) {
+  try {
+    targetWindow.localStorage?.removeItem(PROFILE_CACHE_KEY);
+  } catch (_error) {
+    // Ignore storage cleanup failures.
+  }
+  try {
+    targetWindow.sessionStorage?.removeItem(DASHBOARD_STATE_STORAGE_KEY);
+    targetWindow.sessionStorage?.removeItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
+  } catch (_error) {
+    // Ignore session cleanup failures.
+  }
+}
+
+function decodeJwtUserId(token) {
+  if (!token || typeof window.atob !== 'function') return null;
+  const parts = String(token).split('.');
+  if (parts.length < 2) return null;
+
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
+    const payload = JSON.parse(window.atob(padded));
+    const value = payload?.sub ? String(payload.sub).trim() : '';
+    return value || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function inferRoleFromRedirectTarget(redirectTo, fallbackRole = null) {
+  if (redirectTo === 'client-dashboard') return 'client';
+  if (redirectTo === 'fundi-dashboard') return 'fundi';
+  if (redirectTo === 'admin-dashboard') return 'admin';
+  return fallbackRole || null;
+}
+
+function syncStoredIdentity(targetWindow, options = {}) {
+  const targetLocalStorage = targetWindow?.localStorage;
+  if (!targetLocalStorage) return;
+
+  const nextUserId = String(options.userId || '').trim();
+  const nextRole = String(options.role || '').trim();
+  const previousUserId = String(targetLocalStorage.getItem(USER_ID_STORAGE_KEY) || '').trim();
+  const previousProfileId = parseStoredProfileId(targetLocalStorage) || '';
+
+  if (
+    nextUserId
+    && (
+      (previousUserId && previousUserId !== nextUserId)
+      || (!previousUserId && previousProfileId && previousProfileId !== nextUserId)
+    )
+  ) {
+    clearAccountScopedState(targetWindow);
+  }
+
+  if (nextUserId) {
+    targetLocalStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+  }
+  if (nextRole) {
+    targetLocalStorage.setItem(ROLE_STORAGE_KEY, nextRole);
+  }
 }
 
 function summarizeResponseText(text) {
@@ -456,7 +537,7 @@ function clearAuthTabWaiting() {
   localStorage.removeItem(AUTH_WAITING_STARTED_KEY);
 }
 
-function persistSession(payload) {
+function persistSession(payload, options = {}) {
   if (!payload?.access_token) return;
   const expiresIn = Number(payload.expires_in);
   const expiresAt = Number.isFinite(Number(payload.expires_at)) && Number(payload.expires_at) > 0
@@ -478,6 +559,11 @@ function persistSession(payload) {
     localStorage.removeItem('kazix_expires_at');
   }
   if (payload.token_type) localStorage.setItem('kazix_token_type', payload.token_type);
+
+  syncStoredIdentity(window, {
+    userId: options.userId || payload.user_id || decodeJwtUserId(payload.access_token),
+    role: options.role || payload.role || inferRoleFromRedirectTarget(payload.redirect_to, currentRole),
+  });
 }
 
 function getNextFromUrl() {

@@ -221,6 +221,11 @@ async def test_client_dashboard_state_summarizes_jobs_applications_and_spend(mon
     assert payload["nav"]["jobs"] == 2
     assert payload["nav"]["applications"] == 2
     assert payload["nav"]["hires"] == 1
+    assert payload["client"]["hires"]["active"] == 1
+    assert [item["id"] for item in payload["client"]["recent_hires"]] == [
+        "booking-1",
+        "booking-2",
+    ]
     assert payload["client"]["jobs"]["open"] == 1
     assert payload["client"]["jobs"]["completed"] == 1
     assert payload["client"]["applications"]["pending"] == 1

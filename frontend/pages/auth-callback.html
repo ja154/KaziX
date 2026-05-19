@@ -80,6 +80,11 @@ const AUTH_WAITING_OWNER_KEY = 'kazix_auth_waiting_owner';
 const AUTH_WAITING_FLOW_KEY = 'kazix_auth_waiting_flow';
 const AUTH_WAITING_HEARTBEAT_KEY = 'kazix_auth_waiting_heartbeat';
 const AUTH_WAITING_MAX_AGE_MS = 30000;
+const PROFILE_CACHE_KEY = 'kazix_profile';
+const USER_ID_STORAGE_KEY = 'kazix_user_id';
+const ROLE_STORAGE_KEY = 'kazix_role';
+const DASHBOARD_STATE_STORAGE_KEY = 'kazix_dashboard_state';
+const NOTIFICATION_SUMMARY_STORAGE_KEY = 'kazix_notification_summary';
 const SUPABASE_CONFIG_ERROR = !window.supabase
   ? 'Supabase browser client failed to load. Refresh the page and try again.'
   : (!SUPABASE_URL || !SUPABASE_ANON_KEY
@@ -116,6 +121,82 @@ async function readApiResponse(resp) {
       };
     }
     throw new Error('The server returned an unexpected response.');
+  }
+}
+
+function parseStoredProfileId(storage) {
+  try {
+    const raw = storage?.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const value = parsed?.id ? String(parsed.id).trim() : '';
+    return value || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function clearAccountScopedState(targetWindow = window) {
+  try {
+    targetWindow.localStorage?.removeItem(PROFILE_CACHE_KEY);
+  } catch (_error) {
+    // Ignore storage cleanup failures.
+  }
+  try {
+    targetWindow.sessionStorage?.removeItem(DASHBOARD_STATE_STORAGE_KEY);
+    targetWindow.sessionStorage?.removeItem(NOTIFICATION_SUMMARY_STORAGE_KEY);
+  } catch (_error) {
+    // Ignore session cleanup failures.
+  }
+}
+
+function decodeJwtUserId(token) {
+  if (!token || typeof window.atob !== 'function') return null;
+  const parts = String(token).split('.');
+  if (parts.length < 2) return null;
+
+  try {
+    const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4 || 4)) % 4);
+    const payload = JSON.parse(window.atob(padded));
+    const value = payload?.sub ? String(payload.sub).trim() : '';
+    return value || null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function inferRoleFromRedirectTarget(redirectTo, fallbackRole = null) {
+  if (redirectTo === 'client-dashboard') return 'client';
+  if (redirectTo === 'fundi-dashboard') return 'fundi';
+  if (redirectTo === 'admin-dashboard') return 'admin';
+  return fallbackRole || null;
+}
+
+function syncStoredIdentity(targetWindow, options = {}) {
+  const targetLocalStorage = targetWindow?.localStorage;
+  if (!targetLocalStorage) return;
+
+  const nextUserId = String(options.userId || '').trim();
+  const nextRole = String(options.role || '').trim();
+  const previousUserId = String(targetLocalStorage.getItem(USER_ID_STORAGE_KEY) || '').trim();
+  const previousProfileId = parseStoredProfileId(targetLocalStorage) || '';
+
+  if (
+    nextUserId
+    && (
+      (previousUserId && previousUserId !== nextUserId)
+      || (!previousUserId && previousProfileId && previousProfileId !== nextUserId)
+    )
+  ) {
+    clearAccountScopedState(targetWindow);
+  }
+
+  if (nextUserId) {
+    targetLocalStorage.setItem(USER_ID_STORAGE_KEY, nextUserId);
+  }
+  if (nextRole) {
+    targetLocalStorage.setItem(ROLE_STORAGE_KEY, nextRole);
   }
 }
 
@@ -235,7 +316,7 @@ async function resolveSessionFromCallback() {
   return waitForSession();
 }
 
-function persistSession(session) {
+function persistSession(session, options = {}) {
   const expiresIn = Number.isFinite(session.expires_in)
     ? session.expires_in
     : (typeof session.expires_at === 'number'
@@ -260,6 +341,11 @@ function persistSession(session) {
     localStorage.removeItem('kazix_expires_at');
   }
   localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
+
+  syncStoredIdentity(window, {
+    userId: options.userId || decodeJwtUserId(session.access_token),
+    role: options.role || inferRoleFromRedirectTarget(options.redirectTo, null),
+  });
 }
 
 async function bootstrapSession(session) {
@@ -342,6 +428,8 @@ function handOffViaWindowOpener(session, bootstrap, flow) {
       : (Number.isFinite(session.expires_in)
           ? Math.floor(Date.now() / 1000) + Math.floor(session.expires_in)
           : null);
+    const resolvedUserId = bootstrap?.profile?.id || decodeJwtUserId(session.access_token);
+    const resolvedRole = bootstrap?.profile?.role || bootstrap?.role || inferRoleFromRedirectTarget(bootstrap?.redirect_to, null);
     
     // Inject session and auth state into the opening window
     window.opener.localStorage.setItem('kazix_access_token', session.access_token);
@@ -353,6 +441,10 @@ function handOffViaWindowOpener(session, bootstrap, flow) {
       window.opener.localStorage.setItem('kazix_expires_at', String(expiresAt));
     }
     window.opener.localStorage.setItem('kazix_token_type', session.token_type || 'bearer');
+    syncStoredIdentity(window.opener, {
+      userId: resolvedUserId,
+      role: resolvedRole,
+    });
     
     // Signal the original tab to redirect
     window.opener.localStorage.setItem('kazix_magic_link_complete', '1');
@@ -415,9 +507,14 @@ async function handleCallback() {
   try {
     const session = await resolveSessionFromCallback();
     if (!session) throw new Error('No session returned. The link may be invalid or already used.');
-    persistSession(session);
-    
     const bootstrap = await bootstrapSession(session);
+    const resolvedUserId = bootstrap?.profile?.id || decodeJwtUserId(session.access_token);
+    const resolvedRole = bootstrap?.profile?.role || bootstrap?.role || inferRoleFromRedirectTarget(bootstrap?.redirect_to, null);
+    persistSession(session, {
+      userId: resolvedUserId,
+      role: resolvedRole,
+      redirectTo: bootstrap.redirect_to,
+    });
     const nextPage = mapRedirectToPage(bootstrap.redirect_to, authFlow);
 
     localStorage.setItem('kazix_magic_link_complete', '1');

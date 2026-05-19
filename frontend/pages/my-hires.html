@@ -197,6 +197,7 @@
 </nav>
 
 
+<script src="../env.js"></script>
 <script src="../assets/js/profile-utils.js"></script>
 <script src="../assets/js/mobile-nav.js"></script>
 
@@ -207,6 +208,7 @@ var hiresState = {
   loading: true,
   busyBookingId: null,
   source: 'api',
+  profile: null,
 };
 
 var hireHelpers = window.KazixProfile || {};
@@ -403,6 +405,46 @@ function emptyState(title, description, href, cta) {
     + '<div class="empty-state-sub">' + escapeHtml(description) + '</div>'
     + (href && cta ? '<a class="empty-state-action" href="' + escapeHtml(href) + '">' + escapeHtml(cta) + '</a>' : '')
     + '</div>';
+}
+
+function accountDisplayName() {
+  if (!hiresState.profile) return 'this client account';
+  return hiresState.profile.full_name
+    || hiresState.profile.email
+    || (hireHelpers.formatPhone ? hireHelpers.formatPhone(hiresState.profile.phone) : null)
+    || 'this client account';
+}
+
+function emptyAccountDescription() {
+  var accountName = accountDisplayName();
+  if (hiresState.profile && hiresState.profile.role && hiresState.profile.role !== 'client') {
+    return 'You are signed in as ' + accountName + '. This page only shows hires for client accounts.';
+  }
+  return 'You are signed in as ' + accountName + '. This client account has not hired a fundi yet. Once you confirm a worker from your applicants, the live booking will appear here.';
+}
+
+function shouldUseDashboardFallback(error) {
+  return !error || !error.status || error.status === 404 || error.status >= 500;
+}
+
+async function loadDashboardHireSnapshot(options) {
+  options = options || {};
+  var dashboardState = typeof hireHelpers.getDashboardState === 'function'
+    ? await hireHelpers.getDashboardState({ force: Boolean(options.force), silent: true })
+    : await hireHelpers.requestJson('/v1/dashboard/state', { auth: true, showError: false });
+  var clientState = dashboardState && dashboardState.client ? dashboardState.client : null;
+  var recentHires = Array.isArray(clientState && clientState.recent_hires)
+    ? clientState.recent_hires
+    : [];
+  return {
+    wrapper: dashboardState,
+    bookings: await enrichBookingsFromThreads(recentHires.map(normalizeDashboardBooking)),
+    hasHireSignal: Boolean(
+      recentHires.length
+      || Number(clientState && clientState.hires && clientState.hires.active || 0) > 0
+      || Number(dashboardState && dashboardState.nav && dashboardState.nav.hires || 0) > 0
+    ),
+  };
 }
 
 function normalizeDashboardBooking(item) {
@@ -630,8 +672,8 @@ function renderBookings() {
 
   if (!hiresState.bookings.length) {
     hireContainer.innerHTML = emptyState(
-      'No hires yet',
-      'You have not hired a fundi yet. Once you choose someone from your applicants, the live booking will appear here.',
+      'No hires for this account yet',
+      emptyAccountDescription(),
       'find-workers.html',
       'Find Fundis'
     );
@@ -671,10 +713,23 @@ async function refreshHires(options) {
     if (typeof hireHelpers.requestJson !== 'function') {
       throw new Error('Shared frontend helpers are unavailable on this page.');
     }
+    var shellData = null;
     if (hireHelpers.hydrateShell) {
-      await hireHelpers.hydrateShell({ silent: true });
+      shellData = await hireHelpers.hydrateShell({ silent: true });
+      hiresState.profile = shellData && shellData.profile ? shellData.profile : null;
+      if (hiresState.profile && hiresState.profile.role && hiresState.profile.role !== 'client') {
+        window.location.replace(
+          hireHelpers.roleHomePath
+            ? hireHelpers.roleHomePath(hiresState.profile.role)
+            : 'index.html'
+        );
+        return;
+      }
     }
+    var identitySync = hireHelpers.getLastIdentitySync ? hireHelpers.getLastIdentitySync() : null;
+    var shouldForceDashboard = Boolean(options.forceDashboard || (identitySync && identitySync.userChanged));
     var data;
+    var dashboardSnapshot = null;
     try {
       data = await hireHelpers.requestJson('/v1/bookings?role=client', {
         auth: true,
@@ -683,18 +738,22 @@ async function refreshHires(options) {
       hiresState.bookings = Array.isArray(data) ? data : [];
       hiresState.source = 'api';
     } catch (error) {
-      if (error && error.status !== 404) {
+      if (!shouldUseDashboardFallback(error)) {
         throw error;
       }
-
-      var dashboardState = typeof hireHelpers.getDashboardState === 'function'
-        ? await hireHelpers.getDashboardState({ force: Boolean(options.forceDashboard), silent: true })
-        : await hireHelpers.requestJson('/v1/dashboard/state', { auth: true, showError: false });
-      var recentHires = Array.isArray(dashboardState && dashboardState.client && dashboardState.client.recent_hires)
-        ? dashboardState.client.recent_hires
-        : [];
-      hiresState.bookings = await enrichBookingsFromThreads(recentHires.map(normalizeDashboardBooking));
+      dashboardSnapshot = await loadDashboardHireSnapshot({ force: true });
+      hiresState.bookings = dashboardSnapshot.bookings;
       hiresState.source = 'dashboard';
+    }
+
+    if (hiresState.source === 'api' && (shouldForceDashboard || !hiresState.bookings.length)) {
+      dashboardSnapshot = dashboardSnapshot || await loadDashboardHireSnapshot({
+        force: shouldForceDashboard || !hiresState.bookings.length,
+      });
+      if (!hiresState.bookings.length && dashboardSnapshot.hasHireSignal) {
+        hiresState.bookings = dashboardSnapshot.bookings;
+        hiresState.source = 'dashboard';
+      }
     }
 
     hiresState.loading = false;
@@ -702,14 +761,18 @@ async function refreshHires(options) {
     showHireNotice(
       hiresState.bookings.length
         ? (hiresState.source === 'dashboard'
-            ? 'Showing your recent live hires from dashboard data while the full bookings endpoint rolls out.'
+            ? 'Showing your recent hires from dashboard data while the live bookings feed resyncs.'
             : 'Showing live bookings for your client account.')
-        : 'Your hires page is connected. Post a job and hire a fundi to see bookings here.',
-      hiresState.bookings.length ? 'success' : 'info'
+        : (dashboardSnapshot && dashboardSnapshot.hasHireSignal
+            ? 'This client account has hire activity, but the live booking cards are still syncing. Refresh again in a moment.'
+            : 'You are signed in to a client account with no hires yet. Hire a fundi to see bookings here.'),
+      hiresState.bookings.length
+        ? (hiresState.source === 'dashboard' ? 'info' : 'success')
+        : 'info'
     );
 
     if (hireHelpers.hydrateDashboardState) {
-      hireHelpers.hydrateDashboardState({ force: Boolean(options.forceDashboard), silent: true }).catch(function () {});
+      hireHelpers.hydrateDashboardState({ force: shouldForceDashboard, silent: true }).catch(function () {});
     }
   } catch (error) {
     hiresState.loading = false;
