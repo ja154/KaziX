@@ -9,59 +9,84 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Find Jobs — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="../assets/css/error-components.css">
 
 <style>
 .jobs-layout{display:grid;grid-template-columns:240px 1fr;gap:1.5rem;align-items:start}
 .filters{position:sticky;top:80px;background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;animation:slideUp 0.4s ease both}
-.filter-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center}
-.filter-clear{font-size:0.78rem;color:var(--rust);cursor:pointer;font-weight:500}
+.filter-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;gap:0.75rem}
+.filter-clear{font-size:0.78rem;color:var(--rust);cursor:pointer;font-weight:500;background:none;border:none;padding:0}
 .filter-section{margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
 .filter-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.filter-section.is-disabled{opacity:0.58}
+.filter-section.is-disabled .filter-option{cursor:not-allowed}
+.filter-section.is-disabled input{pointer-events:none}
 .filter-label{font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem}
 .filter-option{display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.875rem;color:var(--ink);margin-bottom:0.4rem}
 .filter-option input{width:15px;height:15px;accent-color:var(--ink);cursor:pointer}
+.filter-note{font-size:0.72rem;color:var(--muted);line-height:1.5;margin-top:0.5rem}
 .range-row{display:flex;align-items:center;gap:0.5rem;margin-top:0.4rem}
 .range-input{flex:1;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:2px;font-size:0.82rem;font-family:'DM Sans',sans-serif;background:var(--cream);outline:none;color:var(--ink)}
 .range-input:focus{border-color:var(--ink)}
 .apply-filter-btn{width:100%;padding:0.7rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s;margin-top:0.5rem}
 .apply-filter-btn:hover{background:var(--green)}
-.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem}
+.results-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem}
 .results-count{font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem}
-.sort-sel{padding:0.45rem 0.75rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;cursor:pointer}
+.results-meta{font-size:0.78rem;color:var(--muted);line-height:1.5}
+.sort-sel{padding:0.45rem 0.75rem;border:1px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:white;color:var(--ink);outline:none;cursor:pointer;min-width:190px}
+.sort-sel:focus{border-color:var(--ink)}
 .active-filters{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.active-filters:empty{display:none}
 .active-tag{display:inline-flex;align-items:center;gap:0.4rem;background:var(--ink);color:#F5F0E8;font-size:0.72rem;padding:0.25rem 0.65rem;border-radius:2px}
-.active-tag button{background:none;border:none;color:#F5F0E8;cursor:pointer;font-size:0.85rem;opacity:0.7;line-height:1;padding:0}
+.active-tag.static{background:rgba(13,13,13,0.08);color:var(--ink)}
+.active-tag button{background:none;border:none;color:inherit;cursor:pointer;font-size:0.85rem;opacity:0.7;line-height:1;padding:0}
 .active-tag button:hover{opacity:1}
+.page-status{display:none;padding:0.8rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:0.82rem;line-height:1.6}
+.page-status.show{display:block}
+.page-status[data-tone="info"]{background:rgba(13,13,13,0.05);color:var(--ink);border:1px solid rgba(13,13,13,0.08)}
+.page-status[data-tone="success"]{background:rgba(27,107,58,0.08);color:var(--green);border:1px solid rgba(27,107,58,0.18)}
+.page-status[data-tone="error"]{background:rgba(192,57,43,0.08);color:var(--rust);border:1px solid rgba(192,57,43,0.18)}
+.page-status a{color:inherit;font-weight:700}
 .jobs-list{display:flex;flex-direction:column;gap:0.85rem}
-.job-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.4rem;transition:box-shadow 0.2s,transform 0.2s;position:relative;overflow:hidden;cursor:pointer;animation:slideUp 0.4s ease both}
+.job-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.4rem;transition:box-shadow 0.2s,transform 0.2s;position:relative;overflow:hidden;animation:slideUp 0.4s ease both}
 .job-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06);transform:translateX(3px)}
 .job-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:var(--border);transition:background 0.2s}
 .job-card:hover::before{background:var(--ink)}
 .job-card.urgent::before{background:var(--rust)}
+.job-card.applied{background:linear-gradient(180deg,rgba(27,107,58,0.04),white)}
+.job-card.applied::before{background:var(--green)}
 .jc-top{display:flex;align-items:flex-start;gap:1rem;margin-bottom:0.85rem}
 .jc-icon{width:42px;height:42px;border-radius:4px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
 .jc-info{flex:1;min-width:0}
 .jc-title{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;margin-bottom:0.2rem}
 .jc-meta{font-size:0.75rem;color:var(--muted);display:flex;gap:0.75rem;flex-wrap:wrap}
 .jc-right{display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0}
-.jc-budget{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem}
-.jc-budget-sub{font-size:0.65rem;color:var(--muted)}
+.jc-budget{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;text-align:right}
+.jc-budget-sub{font-size:0.65rem;color:var(--muted);text-transform:capitalize}
 .utag{font-size:0.58rem;font-weight:700;padding:0.15rem 0.4rem;border-radius:2px;text-transform:uppercase;margin-left:0.4rem}
 .utag-urgent{background:var(--rust);color:white}
 .utag-new{background:var(--saffron);color:var(--ink)}
 .jc-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:0.85rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .jc-footer{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
 .jc-client{display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:var(--muted)}
-.jc-client-av{width:20px;height:20px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.65rem;border:1px solid var(--border)}
+.jc-client-av{width:20px;height:20px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:0.65rem;border:1px solid var(--border);overflow:hidden}
 .apply-btn{padding:0.45rem 1rem;background:var(--ink);color:#F5F0E8;font-family:'Syne',sans-serif;font-weight:700;font-size:0.78rem;border:none;border-radius:2px;cursor:pointer;transition:background 0.2s}
 .apply-btn:hover{background:var(--green)}
-.jc-posted{font-size:0.72rem;color:var(--muted);margin-left:auto}
+.apply-btn:disabled{cursor:default;opacity:0.75}
+.apply-btn.applied{background:var(--green)}
+.empty-state{background:white;border:1px solid var(--border);border-radius:6px;padding:2rem;text-align:center}
+.empty-state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.4rem}
+.empty-state-sub{font-size:0.84rem;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 1.25rem}
+.empty-state-actions{display:flex;align-items:center;justify-content:center;gap:0.75rem;flex-wrap:wrap}
+.empty-state-btn{padding:0.7rem 1rem;border-radius:2px;border:1px solid var(--border);background:white;color:var(--ink);font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;text-decoration:none}
+.empty-state-btn.primary{background:var(--ink);border-color:var(--ink);color:#F5F0E8}
+.loading-card{background:white;border:1px solid var(--border);border-radius:6px;padding:1.5rem;color:var(--muted);font-size:0.84rem}
 .pagination{display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-top:2rem}
-.pg-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:var(--ink)}
+.pagination[hidden]{display:none}
+.pg-btn{min-width:34px;height:34px;border:1px solid var(--border);border-radius:2px;background:white;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:0.82rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;color:var(--ink);padding:0 0.55rem}
 .pg-btn.active{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
 .pg-btn:hover:not(.active):not(:disabled){background:var(--cream)}
 .pg-btn:disabled{opacity:0.35;cursor:default}
-/* APPLY MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,13,13,0.6);z-index:1000;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:white;border-radius:6px;padding:2rem;max-width:460px;width:92%;animation:slideUp 0.3s ease both}
@@ -75,6 +100,7 @@ textarea.field-input{resize:vertical;min-height:80px;line-height:1.6}
 .btn-cancel{flex:1;padding:0.85rem;background:var(--cream);border:1px solid var(--border);border-radius:2px;font-family:'Syne',sans-serif;font-weight:600;font-size:0.875rem;cursor:pointer;color:var(--ink)}
 .btn-submit{flex:2;padding:0.85rem;background:var(--ink);color:#F5F0E8;border:none;border-radius:2px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.875rem;cursor:pointer;transition:background 0.2s}
 .btn-submit:hover{background:var(--green)}
+.btn-submit:disabled{opacity:0.7;cursor:wait}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}.jobs-layout{grid-template-columns:1fr}.filters{display:none}}
 </style>
@@ -87,8 +113,8 @@ window.KazixAuthGuard.requireAuthPage();
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
-    <button class="notif-btn">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">JK</div><span class="user-name">James Kamau</span></div>
+    <button class="notif-btn" type="button">🔔<span class="notif-dot"></span></button>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
@@ -104,157 +130,86 @@ window.KazixAuthGuard.requireAuthPage();
     <a class="nav-item" href="worker-reviews.html"><span class="ni-icon">⭐</span>My Reviews</a>
     <a class="nav-item" href="worker-profile-edit.html"><span class="ni-icon">👤</span>My Profile</a>
     <div class="sidebar-bottom">
-      <div class="sidebar-profile"><div class="sp-avatar">🔧</div><div><div class="sp-name">James Kamau</div><div class="sp-role">Pro Account · Plumber</div></div></div>
+      <div class="sidebar-profile"><div class="sp-avatar">KX</div><div><div class="sp-name">My account</div><div class="sp-role">Pro account</div></div></div>
     </div>
   </aside>
   <main class="main">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;animation:slideUp 0.4s ease both">
-      <div><div class="page-title">Find Jobs</div><div class="page-sub">Open plumbing jobs near Westlands, Nairobi</div></div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;animation:slideUp 0.4s ease both">
+      <div>
+        <div class="page-title">Find Jobs</div>
+        <div class="page-sub" id="pageSubtitle">Loading live jobs for your worker profile…</div>
+      </div>
     </div>
+    <div class="page-status" id="pageStatus" aria-live="polite"></div>
     <div class="jobs-layout">
       <aside class="filters">
-        <div class="filter-title">Filters <span class="filter-clear">Clear all</span></div>
-        <div class="filter-section">
+        <div class="filter-title">Filters <button class="filter-clear" id="clearFiltersBtn" type="button">Clear all</button></div>
+        <div class="filter-section is-disabled" aria-disabled="true">
           <div class="filter-label">Distance</div>
-          <label class="filter-option"><input type="radio" name="dist" checked> Within 5 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Within 10 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Within 25 km</label>
-          <label class="filter-option"><input type="radio" name="dist"> Any distance</label>
+          <label class="filter-option"><input type="radio" name="dist" checked disabled> Within 5 km</label>
+          <label class="filter-option"><input type="radio" name="dist" disabled> Within 10 km</label>
+          <label class="filter-option"><input type="radio" name="dist" disabled> Within 25 km</label>
+          <label class="filter-option"><input type="radio" name="dist" disabled> Any distance</label>
+          <div class="filter-note">Distance is visible here for layout consistency, but this page does not have real distance data yet.</div>
         </div>
         <div class="filter-section">
           <div class="filter-label">Budget (KES)</div>
           <div class="range-row">
-            <input class="range-input" type="number" placeholder="Min">
+            <input class="range-input" type="number" id="budgetMin" min="0" inputmode="numeric" placeholder="Min">
             <span style="font-size:0.75rem;color:var(--muted)">–</span>
-            <input class="range-input" type="number" placeholder="Max">
+            <input class="range-input" type="number" id="budgetMax" min="0" inputmode="numeric" placeholder="Max">
           </div>
         </div>
         <div class="filter-section">
           <div class="filter-label">Job Type</div>
-          <label class="filter-option"><input type="checkbox" checked> 🔴 Urgent only</label>
-          <label class="filter-option"><input type="checkbox" checked> 🆕 Posted today</label>
+          <label class="filter-option"><input type="checkbox" id="urgentOnly"> 🔴 Urgent only</label>
+          <label class="filter-option"><input type="checkbox" id="postedToday"> 🆕 Posted today</label>
         </div>
-        <div class="filter-section">
+        <div class="filter-section is-disabled" aria-disabled="true">
           <div class="filter-label">Applications</div>
-          <label class="filter-option"><input type="checkbox" checked> Few applicants (0–3)</label>
-          <label class="filter-option"><input type="checkbox"> Under 8</label>
+          <label class="filter-option"><input type="checkbox" disabled> Few applicants (0–3)</label>
+          <label class="filter-option"><input type="checkbox" disabled> Under 8</label>
+          <div class="filter-note">Applicant counts are not part of the live jobs payload yet, so these controls stay disabled.</div>
         </div>
-        <button class="apply-filter-btn">Apply Filters</button>
+        <button class="apply-filter-btn" id="applyFiltersBtn" type="button">Apply Filters</button>
       </aside>
       <div>
         <div class="results-header">
-          <div class="results-count">42 plumbing jobs near Westlands</div>
-          <select class="sort-sel"><option>Nearest first</option><option>Highest budget</option><option>Newest first</option><option>Fewest applicants</option></select>
+          <div>
+            <div class="results-count" id="resultsCount">Loading jobs…</div>
+            <div class="results-meta" id="resultsMeta">We are pulling current open jobs from KaziX.</div>
+          </div>
+          <select class="sort-sel" id="sortSelect" aria-label="Sort jobs">
+            <option value="newest">Newest first</option>
+            <option value="highest_budget">Highest budget</option>
+            <option value="nearest" disabled>Nearest first (unavailable)</option>
+            <option value="fewest_applicants" disabled>Fewest applicants (unavailable)</option>
+          </select>
         </div>
-        <div class="active-filters">
-          <span class="active-tag">Plumber <button onclick="this.parentElement.remove()">✕</button></span>
-          <span class="active-tag">Within 5km <button onclick="this.parentElement.remove()">✕</button></span>
+        <div class="active-filters" id="activeFilters"></div>
+        <div class="jobs-list" id="jobsList">
+          <div class="loading-card">Loading live jobs…</div>
         </div>
-        <div class="jobs-list">
-          <div class="job-card urgent" style="animation-delay:0.05s">
-            <div class="jc-top">
-              <div class="jc-icon">🚿</div>
-              <div class="jc-info"><div class="jc-title">Burst pipe emergency — kitchen <span class="utag utag-urgent">Urgent</span></div><div class="jc-meta"><span>📍 Kilimani · 1.8km</span><span>12 min ago</span><span>0 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 1,500</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Kitchen sink pipe burst — water leaking under the cabinet. Need someone today urgently.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏠</div>Private client · ★★★★★ 4.9</div>
-              <button class="apply-btn" onclick="openApply('Burst pipe — Kilimani')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.1s">
-            <div class="jc-top">
-              <div class="jc-icon">🚿</div>
-              <div class="jc-info"><div class="jc-title">Install bathroom fixtures — Westlands <span class="utag utag-new">New</span></div><div class="jc-meta"><span>📍 Westlands · 0.9km</span><span>2 hrs ago</span><span>1 applicant</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 3,500</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Install new toilet, shower and basin fittings in a newly renovated bathroom. Materials ready on site.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏡</div>Homeowner · ★★★★★ 5.0</div>
-              <button class="apply-btn" onclick="openApply('Bathroom fixtures — Westlands')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.15s">
-            <div class="jc-top">
-              <div class="jc-icon">💧</div>
-              <div class="jc-info"><div class="jc-title">Water tank repair — Parklands</div><div class="jc-meta"><span>📍 Parklands · 3.1km</span><span>4 hrs ago</span><span>2 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 2,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">10,000L polyethylene tank has a small crack near the outlet pipe. Need it repaired or outlet connection replaced.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏠</div>Alex K. · ★★★★★ 4.8 · 15 jobs posted</div>
-              <button class="apply-btn" onclick="openApply('Water tank — Parklands')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.2s">
-            <div class="jc-top">
-              <div class="jc-icon">☀️</div>
-              <div class="jc-info"><div class="jc-title">Solar water heater installation — Karen</div><div class="jc-meta"><span>📍 Karen · 8.4km</span><span>Yesterday</span><span>3 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 8,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">Installation of a 200L Solahart solar water heater. Client has the unit. Need piping and full setup.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏡</div>Homeowner · ★★★★★ 4.7</div>
-              <button class="apply-btn" onclick="openApply('Solar heater — Karen')">Apply →</button>
-            </div>
-          </div>
-          <div class="job-card" style="animation-delay:0.25s">
-            <div class="jc-top">
-              <div class="jc-icon">🏗️</div>
-              <div class="jc-info"><div class="jc-title">Commercial plumbing — CBD office block</div><div class="jc-meta"><span>📍 CBD · 5.1km</span><span>3 days ago</span><span>2 applicants</span></div></div>
-              <div class="jc-right"><div class="jc-budget">KES 18,000</div><div class="jc-budget-sub">fixed price</div></div>
-            </div>
-            <div class="jc-desc">3-storey office block, floors 2 and 3. Approx 3–4 days. NCA certification preferred.</div>
-            <div class="jc-footer">
-              <div class="jc-client"><div class="jc-client-av">🏢</div>FutureBuilds Ltd · ★★★★★ 4.9 · 8 jobs</div>
-              <button class="apply-btn" onclick="openApply('Commercial piping — CBD')">Apply →</button>
-            </div>
-          </div>
-        </div>
-        <div class="pagination">
-          <button class="pg-btn" disabled>←</button>
-          <button class="pg-btn active">1</button>
-          <button class="pg-btn">2</button>
-          <button class="pg-btn">3</button>
-          <button class="pg-btn">→</button>
-        </div>
+        <div class="pagination" id="pagination" hidden></div>
       </div>
     </div>
   </main>
 </div>
+
 <div class="modal-overlay" id="applyModal">
   <div class="modal">
     <div class="modal-title">Apply: <span id="applyJobName"></span></div>
-    <div class="modal-sub">Your profile and 4.9★ rating will be shared with the client.</div>
-    <label class="field-label">Your Bid (KES) *</label>
-    <input class="field-input" type="number" id="bidInput" placeholder="e.g. 1200">
-    <label class="field-label">Cover Note (optional)</label>
-    <textarea class="field-input" id="coverInput" placeholder="Tell the client why you're the best fundi for this job…"></textarea>
+    <div class="modal-sub">Your worker profile and bid will be shared with the client after you submit.</div>
+    <label class="field-label" for="bidInput">Your Bid (KES) *</label>
+    <input class="field-input" type="number" id="bidInput" min="1" inputmode="numeric" placeholder="e.g. 1200">
+    <label class="field-label" for="coverInput">Cover Note (optional)</label>
+    <textarea class="field-input" id="coverInput" placeholder="Tell the client why you're the right fundi for this job…"></textarea>
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="document.getElementById('applyModal').classList.remove('open')">Cancel</button>
-      <button class="btn-submit" onclick="submitApply()">Submit Application →</button>
+      <button class="btn-cancel" type="button" id="cancelApplyBtn">Cancel</button>
+      <button class="btn-submit" type="button" id="submitApplyBtn">Submit Application →</button>
     </div>
   </div>
 </div>
-<script>
-var currentBtn=null;
-function openApply(title){document.getElementById('applyJobName').textContent=title;document.getElementById('applyModal').classList.add('open')}
-function submitApply(){
-  var bid=document.getElementById('bidInput').value;
-  if(!bid){
-    var inp=document.getElementById('bidInput');
-    inp.style.borderColor='#C0392B';inp.placeholder='Enter your bid to continue';inp.focus();
-    setTimeout(function(){inp.style.borderColor='';inp.placeholder='e.g. 800';},3000);
-    return;
-  }
-  document.getElementById('applyModal').classList.remove('open');
-  document.getElementById('bidInput').value='';
-  document.getElementById('coverInput').value='';
-}
-document.getElementById('applyModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})
-document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventListener('click',function(){if(this.textContent==='←'||this.textContent==='→')return;document.querySelectorAll('.pg-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')})})
-</script>
 
 <nav class="mobile-nav" aria-label="Primary">
   <a class="mobile-nav-item" href="worker-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
@@ -273,7 +228,748 @@ document.querySelectorAll('.pg-btn:not([disabled])').forEach(btn=>{btn.addEventL
   </div>
 </nav>
 
+<script src="../assets/js/error-messages.js"></script>
+<script src="../assets/js/error-handler.js"></script>
+<script src="../assets/js/profile-utils.js"></script>
+<script>
+(function () {
+  const JOBS_PER_PAGE = 6;
+  const TRADE_ICONS = {
+    plumber: '🚿',
+    electrician: '⚡',
+    mason: '🧱',
+    mama_fua: '👗',
+    carpenter: '🪚',
+    painter: '🎨',
+    roofer: '🏠',
+    gardener: '🌿',
+    driver_mover: '🛻',
+    security: '🔒',
+    other: '🛠️',
+  };
+  const NON_FUNDI_REDIRECTS = {
+    client: 'client-dashboard.html',
+    admin: 'admin-dashboard.html',
+  };
+  const state = {
+    profile: null,
+    fundiProfile: null,
+    jobs: [],
+    filteredJobs: [],
+    appliedJobIds: new Set(),
+    applicationsByJob: new Map(),
+    currentPage: 1,
+    selectedJobId: null,
+    filters: {
+      urgentOnly: false,
+      postedToday: false,
+      budgetMin: '',
+      budgetMax: '',
+      sort: 'newest',
+    },
+  };
 
+  function helpers() {
+    return window.KazixProfile || {};
+  }
+
+  function escapeHtml(value) {
+    if (helpers().escapeHtml) {
+      return helpers().escapeHtml(value);
+    }
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatTrade(trade) {
+    if (helpers().formatTrade) {
+      return helpers().formatTrade(trade || 'other');
+    }
+    return 'Skilled Worker';
+  }
+
+  function initials(name) {
+    if (helpers().initials) {
+      return helpers().initials(name || 'KX');
+    }
+    return 'KX';
+  }
+
+  function requestJson(path, options) {
+    return helpers().requestJson(path, options);
+  }
+
+  function getMyProfile() {
+    return helpers().getMyProfile();
+  }
+
+  function hydrateShell(options) {
+    return helpers().hydrateShell(options);
+  }
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function pageStatusEl() {
+    return el('pageStatus');
+  }
+
+  function pluralize(count, singular, plural) {
+    return Number(count) === 1 ? singular : plural;
+  }
+
+  function setStatus(message, tone) {
+    const root = pageStatusEl();
+    if (!root) return;
+    if (!message) {
+      root.classList.remove('show');
+      root.textContent = '';
+      root.removeAttribute('data-tone');
+      return;
+    }
+    root.textContent = message;
+    root.setAttribute('data-tone', tone || 'info');
+    root.classList.add('show');
+  }
+
+  function setStatusHtml(html, tone) {
+    const root = pageStatusEl();
+    if (!root) return;
+    if (!html) {
+      setStatus('', tone);
+      return;
+    }
+    root.innerHTML = html;
+    root.setAttribute('data-tone', tone || 'info');
+    root.classList.add('show');
+  }
+
+  function tradeIcon(trade) {
+    return TRADE_ICONS[trade] || TRADE_ICONS.other;
+  }
+
+  function profileLocationLabel() {
+    if (!state.profile) return 'your area';
+    return [state.profile.area, state.profile.county].filter(Boolean).join(', ') || 'your area';
+  }
+
+  function pageSubtitle() {
+    const trade = state.fundiProfile?.trade;
+    const county = state.profile?.county;
+    if (trade && county) {
+      return `Live ${formatTrade(trade).toLowerCase()} jobs in ${county}`;
+    }
+    if (trade) {
+      return `Live ${formatTrade(trade).toLowerCase()} jobs from KaziX clients`;
+    }
+    if (county) {
+      return `Open jobs in ${county}`;
+    }
+    return 'Live open jobs from KaziX clients';
+  }
+
+  function normalizeProfileQuery() {
+    const params = new URLSearchParams();
+    params.set('limit', '100');
+    if (state.fundiProfile?.trade) {
+      params.set('trade', state.fundiProfile.trade);
+    }
+    if (state.profile?.county) {
+      params.set('county', state.profile.county);
+    }
+    return params.toString();
+  }
+
+  function unwrapClientProfile(job) {
+    const profile = job?.profiles;
+    if (Array.isArray(profile)) {
+      return profile[0] || {};
+    }
+    return profile || {};
+  }
+
+  function budgetBounds(job) {
+    const min = Number(job?.budget_min || 0);
+    const max = Number(job?.budget_max || 0);
+    if (min > 0 && max > 0) {
+      return { min, max };
+    }
+    if (min > 0) {
+      return { min, max: min };
+    }
+    if (max > 0) {
+      return { min: max, max };
+    }
+    return null;
+  }
+
+  function formatBudget(job) {
+    const bounds = budgetBounds(job);
+    if (!bounds) return 'Budget open';
+    if (bounds.min === bounds.max) {
+      return `KES ${bounds.min.toLocaleString()}`;
+    }
+    return `KES ${bounds.min.toLocaleString()} - ${bounds.max.toLocaleString()}`;
+  }
+
+  function budgetSortValue(job) {
+    const bounds = budgetBounds(job);
+    return bounds ? Math.max(bounds.min, bounds.max) : 0;
+  }
+
+  function paymentTypeLabel(type) {
+    const normalized = String(type || 'negotiable').toLowerCase();
+    if (normalized === 'fixed') return 'Fixed price';
+    if (normalized === 'hourly') return 'Hourly';
+    if (normalized === 'daily') return 'Daily rate';
+    return 'Negotiable';
+  }
+
+  function locationLabel(job) {
+    return [job?.area, job?.county].filter(Boolean).join(', ') || 'Location pending';
+  }
+
+  function relativeTime(value) {
+    if (!value) return 'Just posted';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Just posted';
+    const diffMs = Date.now() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffHours < 1) return 'Just posted';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-KE', { month: 'short', day: 'numeric' });
+  }
+
+  function isPostedToday(value) {
+    if (!value) return false;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return false;
+    const now = new Date();
+    return date.getFullYear() === now.getFullYear()
+      && date.getMonth() === now.getMonth()
+      && date.getDate() === now.getDate();
+  }
+
+  function applicationStatusLabel(jobId) {
+    const application = state.applicationsByJob.get(jobId);
+    const status = String(application?.status || '').toLowerCase();
+    if (status === 'shortlisted') return 'Shortlisted';
+    if (status === 'hired') return 'Hired';
+    if (status === 'rejected') return 'Not selected';
+    if (status === 'withdrawn') return 'Withdrawn';
+    return 'Applied';
+  }
+
+  function updatePageCopy() {
+    el('pageSubtitle').textContent = pageSubtitle();
+  }
+
+  function syncFilterStateFromInputs() {
+    const minValue = String(el('budgetMin').value || '').trim();
+    const maxValue = String(el('budgetMax').value || '').trim();
+    state.filters.urgentOnly = Boolean(el('urgentOnly').checked);
+    state.filters.postedToday = Boolean(el('postedToday').checked);
+    state.filters.budgetMin = minValue;
+    state.filters.budgetMax = maxValue;
+    state.filters.sort = el('sortSelect').value || 'newest';
+  }
+
+  function resetFilterInputs() {
+    el('urgentOnly').checked = false;
+    el('postedToday').checked = false;
+    el('budgetMin').value = '';
+    el('budgetMax').value = '';
+  }
+
+  function buildActiveFilters() {
+    const tags = [];
+    if (state.fundiProfile?.trade) {
+      tags.push(`<span class="active-tag static">${escapeHtml(formatTrade(state.fundiProfile.trade))}</span>`);
+    }
+    if (state.profile?.county) {
+      tags.push(`<span class="active-tag static">${escapeHtml(state.profile.county)}</span>`);
+    }
+    if (state.filters.urgentOnly) {
+      tags.push('<span class="active-tag">Urgent only <button type="button" data-filter="urgentOnly" aria-label="Remove urgent filter">✕</button></span>');
+    }
+    if (state.filters.postedToday) {
+      tags.push('<span class="active-tag">Posted today <button type="button" data-filter="postedToday" aria-label="Remove posted today filter">✕</button></span>');
+    }
+    if (state.filters.budgetMin) {
+      tags.push(`<span class="active-tag">Min KES ${escapeHtml(Number(state.filters.budgetMin).toLocaleString())} <button type="button" data-filter="budgetMin" aria-label="Remove minimum budget filter">✕</button></span>`);
+    }
+    if (state.filters.budgetMax) {
+      tags.push(`<span class="active-tag">Max KES ${escapeHtml(Number(state.filters.budgetMax).toLocaleString())} <button type="button" data-filter="budgetMax" aria-label="Remove maximum budget filter">✕</button></span>`);
+    }
+    el('activeFilters').innerHTML = tags.join('');
+  }
+
+  function applyClientFilters() {
+    let rows = state.jobs.slice();
+    if (state.filters.urgentOnly) {
+      rows = rows.filter((job) => String(job?.urgency || '').toLowerCase() === 'urgent');
+    }
+    if (state.filters.postedToday) {
+      rows = rows.filter((job) => isPostedToday(job?.created_at));
+    }
+
+    const minBudget = state.filters.budgetMin ? Number(state.filters.budgetMin) : null;
+    const maxBudget = state.filters.budgetMax ? Number(state.filters.budgetMax) : null;
+    if (minBudget !== null || maxBudget !== null) {
+      rows = rows.filter((job) => {
+        const bounds = budgetBounds(job);
+        if (!bounds) return false;
+        if (minBudget !== null && bounds.max < minBudget) return false;
+        if (maxBudget !== null && bounds.min > maxBudget) return false;
+        return true;
+      });
+    }
+
+    if (state.filters.sort === 'highest_budget') {
+      rows.sort(function (a, b) {
+        const delta = budgetSortValue(b) - budgetSortValue(a);
+        if (delta !== 0) return delta;
+        return new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime();
+      });
+    } else {
+      rows.sort(function (a, b) {
+        return new Date(b?.created_at || 0).getTime() - new Date(a?.created_at || 0).getTime();
+      });
+    }
+
+    state.filteredJobs = rows;
+    const totalPages = Math.max(1, Math.ceil(rows.length / JOBS_PER_PAGE));
+    if (state.currentPage > totalPages) {
+      state.currentPage = totalPages;
+    }
+  }
+
+  function renderResultsSummary() {
+    const currentCount = currentPageJobs().length;
+    const totalCount = state.filteredJobs.length;
+    const loadedCount = state.jobs.length;
+    const countLabel = totalCount === 0
+      ? 'Showing 0 jobs'
+      : totalCount === currentCount
+        ? `Showing ${currentCount} ${pluralize(currentCount, 'job', 'jobs')}`
+        : `Showing ${currentCount} of ${totalCount} loaded ${pluralize(totalCount, 'job', 'jobs')}`;
+
+    const scopeBits = [];
+    if (state.fundiProfile?.trade) {
+      scopeBits.push(formatTrade(state.fundiProfile.trade));
+    }
+    if (state.profile?.county) {
+      scopeBits.push(state.profile.county);
+    }
+    const scope = scopeBits.length ? `Matched to ${scopeBits.join(' · ')}` : 'Loaded from live open jobs';
+    const pageCount = totalCount > 0
+      ? `Page ${state.currentPage} of ${Math.max(1, Math.ceil(totalCount / JOBS_PER_PAGE))}`
+      : 'No matching jobs';
+
+    el('resultsCount').textContent = countLabel;
+    el('resultsMeta').textContent = `${scope}. ${pageCount}. ${loadedCount} loaded ${pluralize(loadedCount, 'job', 'jobs')} available from this fetch.`;
+  }
+
+  function currentPageJobs() {
+    const start = (state.currentPage - 1) * JOBS_PER_PAGE;
+    return state.filteredJobs.slice(start, start + JOBS_PER_PAGE);
+  }
+
+  function renderLoadingState() {
+    el('resultsCount').textContent = 'Loading jobs…';
+    el('resultsMeta').textContent = 'We are pulling current open jobs from KaziX.';
+    el('jobsList').innerHTML = [
+      '<div class="loading-card">Loading live jobs…</div>',
+      '<div class="loading-card">Checking your existing applications…</div>',
+    ].join('');
+    el('pagination').hidden = true;
+  }
+
+  function emptyState(title, body, withReset) {
+    const actions = [];
+    if (withReset) {
+      actions.push('<button class="empty-state-btn primary" type="button" data-action="clear-filters">Clear Filters</button>');
+    }
+    actions.push('<a class="empty-state-btn" href="worker-profile-edit.html">Update Profile</a>');
+    return `
+      <div class="empty-state">
+        <div class="empty-state-title">${escapeHtml(title)}</div>
+        <div class="empty-state-sub">${escapeHtml(body)}</div>
+        <div class="empty-state-actions">${actions.join('')}</div>
+      </div>
+    `;
+  }
+
+  function renderJobs() {
+    const root = el('jobsList');
+    const rows = currentPageJobs();
+
+    if (!state.jobs.length) {
+      const tradeLabel = state.fundiProfile?.trade ? formatTrade(state.fundiProfile.trade).toLowerCase() : 'open';
+      root.innerHTML = emptyState(
+        `No ${tradeLabel} jobs right now`,
+        `We checked live KaziX job posts for ${profileLocationLabel()}. New client jobs will appear here automatically as they open.`,
+        false
+      );
+      return;
+    }
+
+    if (!state.filteredJobs.length) {
+      root.innerHTML = emptyState(
+        'No jobs match these filters',
+        'Try clearing one or more filters to see other live jobs from this loaded results set.',
+        true
+      );
+      return;
+    }
+
+    root.innerHTML = rows.map(function (job, index) {
+      const applied = state.appliedJobIds.has(job.id);
+      const urgent = String(job?.urgency || '').toLowerCase() === 'urgent';
+      const isNew = !urgent && isPostedToday(job?.created_at);
+      const clientProfile = unwrapClientProfile(job);
+      const clientName = clientProfile?.full_name || 'Private client';
+      const titleTags = urgent
+        ? '<span class="utag utag-urgent">Urgent</span>'
+        : isNew
+          ? '<span class="utag utag-new">New</span>'
+          : '';
+      return `
+        <div class="job-card ${urgent ? 'urgent' : ''} ${applied ? 'applied' : ''}" style="animation-delay:${(index + 1) * 0.05}s">
+          <div class="jc-top">
+            <div class="jc-icon">${escapeHtml(tradeIcon(job?.trade))}</div>
+            <div class="jc-info">
+              <div class="jc-title">${escapeHtml(job?.title || 'Untitled job')}${titleTags}</div>
+              <div class="jc-meta">
+                <span>📍 ${escapeHtml(locationLabel(job))}</span>
+                <span>${escapeHtml(relativeTime(job?.created_at))}</span>
+              </div>
+            </div>
+            <div class="jc-right">
+              <div class="jc-budget">${escapeHtml(formatBudget(job))}</div>
+              <div class="jc-budget-sub">${escapeHtml(paymentTypeLabel(job?.payment_type))}</div>
+            </div>
+          </div>
+          <div class="jc-desc">${escapeHtml(job?.description || 'No description provided yet.')}</div>
+          <div class="jc-footer">
+            <div class="jc-client">
+              <div class="jc-client-av">${escapeHtml(initials(clientName))}</div>
+              ${escapeHtml(clientName)}
+            </div>
+            <button
+              class="apply-btn ${applied ? 'applied' : ''}"
+              type="button"
+              data-action="apply"
+              data-job-id="${escapeHtml(job.id)}"
+              ${applied ? 'disabled' : ''}
+            >${escapeHtml(applied ? applicationStatusLabel(job.id) : 'Apply →')}</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderPagination() {
+    const root = el('pagination');
+    const totalPages = Math.max(1, Math.ceil(state.filteredJobs.length / JOBS_PER_PAGE));
+    if (state.filteredJobs.length <= JOBS_PER_PAGE) {
+      root.hidden = true;
+      root.innerHTML = '';
+      return;
+    }
+
+    const buttons = [];
+    buttons.push(`<button class="pg-btn" type="button" data-page="prev" ${state.currentPage === 1 ? 'disabled' : ''}>←</button>`);
+    for (let page = 1; page <= totalPages; page += 1) {
+      buttons.push(`<button class="pg-btn ${page === state.currentPage ? 'active' : ''}" type="button" data-page="${page}">${page}</button>`);
+    }
+    buttons.push(`<button class="pg-btn" type="button" data-page="next" ${state.currentPage === totalPages ? 'disabled' : ''}>→</button>`);
+
+    root.hidden = false;
+    root.innerHTML = buttons.join('');
+  }
+
+  function renderAll() {
+    updatePageCopy();
+    buildActiveFilters();
+    renderResultsSummary();
+    renderJobs();
+    renderPagination();
+  }
+
+  function markApplied(jobId, application) {
+    if (!jobId) return;
+    state.appliedJobIds.add(jobId);
+    if (!state.applicationsByJob.has(jobId)) {
+      state.applicationsByJob.set(jobId, application || { job_id: jobId, status: 'pending' });
+    }
+  }
+
+  function normalizeApplications(rows) {
+    state.appliedJobIds = new Set();
+    state.applicationsByJob = new Map();
+    (Array.isArray(rows) ? rows : []).forEach(function (application) {
+      const jobId = application?.job_id || application?.jobs?.id;
+      if (!jobId) return;
+      state.appliedJobIds.add(jobId);
+      if (!state.applicationsByJob.has(jobId)) {
+        state.applicationsByJob.set(jobId, application);
+      }
+    });
+  }
+
+  function applyFilters() {
+    syncFilterStateFromInputs();
+    const minBudget = state.filters.budgetMin ? Number(state.filters.budgetMin) : null;
+    const maxBudget = state.filters.budgetMax ? Number(state.filters.budgetMax) : null;
+    if (minBudget !== null && maxBudget !== null && minBudget > maxBudget) {
+      setStatus('Minimum budget cannot be higher than maximum budget.', 'error');
+      return;
+    }
+    setStatus('', 'info');
+    state.currentPage = 1;
+    applyClientFilters();
+    renderAll();
+  }
+
+  function resetFilters() {
+    resetFilterInputs();
+    el('sortSelect').value = 'newest';
+    state.filters.sort = 'newest';
+    setStatus('', 'info');
+    applyFilters();
+  }
+
+  function removeFilter(key) {
+    if (key === 'urgentOnly') {
+      el('urgentOnly').checked = false;
+    }
+    if (key === 'postedToday') {
+      el('postedToday').checked = false;
+    }
+    if (key === 'budgetMin') {
+      el('budgetMin').value = '';
+    }
+    if (key === 'budgetMax') {
+      el('budgetMax').value = '';
+    }
+    applyFilters();
+  }
+
+  function findJob(jobId) {
+    return state.jobs.find(function (job) {
+      return job?.id === jobId;
+    }) || null;
+  }
+
+  function openApply(jobId) {
+    const job = findJob(jobId);
+    if (!job || state.appliedJobIds.has(jobId)) return;
+    state.selectedJobId = jobId;
+    el('applyJobName').textContent = job.title || 'Selected job';
+    el('bidInput').value = '';
+    el('coverInput').value = '';
+    el('applyModal').classList.add('open');
+    el('bidInput').focus();
+  }
+
+  function closeApply() {
+    state.selectedJobId = null;
+    el('applyModal').classList.remove('open');
+    el('bidInput').value = '';
+    el('coverInput').value = '';
+    el('submitApplyBtn').disabled = false;
+    el('submitApplyBtn').textContent = 'Submit Application →';
+  }
+
+  async function refreshDashboardCache() {
+    if (typeof helpers().clearDashboardStateCache === 'function') {
+      helpers().clearDashboardStateCache();
+    }
+    if (typeof helpers().hydrateDashboardState === 'function') {
+      try {
+        await helpers().hydrateDashboardState({ silent: true, force: true });
+      } catch (_error) {
+        // Ignore background refresh failures on this page.
+      }
+    }
+  }
+
+  async function submitApply() {
+    const jobId = state.selectedJobId;
+    if (!jobId) return;
+    const bid = Number(el('bidInput').value);
+    if (!Number.isFinite(bid) || bid <= 0) {
+      el('bidInput').focus();
+      setStatus('Enter a valid bid amount before submitting your application.', 'error');
+      return;
+    }
+
+    const submitButton = el('submitApplyBtn');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting…';
+
+    try {
+      const payload = await requestJson('/v1/applications/', {
+        auth: true,
+        method: 'POST',
+        body: {
+          job_id: jobId,
+          bid_amount: bid,
+          cover_note: String(el('coverInput').value || '').trim() || null,
+        },
+        showError: false,
+      });
+
+      markApplied(jobId, payload || { job_id: jobId, status: 'pending' });
+      closeApply();
+      renderAll();
+      await refreshDashboardCache();
+      setStatusHtml('Application sent. <a href="my-applications.html">View My Applications</a>.', 'success');
+    } catch (error) {
+      if (error?.status === 409) {
+        markApplied(jobId, { job_id: jobId, status: 'pending' });
+        closeApply();
+        renderAll();
+        await refreshDashboardCache();
+        setStatusHtml('You already applied to this job. <a href="my-applications.html">Open My Applications</a>.', 'info');
+        return;
+      }
+
+      submitButton.disabled = false;
+      submitButton.textContent = 'Submit Application →';
+      setStatus(error?.message || 'Could not submit your application right now.', 'error');
+    }
+  }
+
+  function bindEvents() {
+    el('applyFiltersBtn').addEventListener('click', applyFilters);
+    el('clearFiltersBtn').addEventListener('click', resetFilters);
+    el('sortSelect').addEventListener('change', function () {
+      state.currentPage = 1;
+      applyFilters();
+    });
+    ['budgetMin', 'budgetMax'].forEach(function (id) {
+      el(id).addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          applyFilters();
+        }
+      });
+    });
+
+    el('activeFilters').addEventListener('click', function (event) {
+      const button = event.target.closest('button[data-filter]');
+      if (!button) return;
+      removeFilter(button.dataset.filter);
+    });
+
+    el('jobsList').addEventListener('click', function (event) {
+      const applyButton = event.target.closest('button[data-action="apply"]');
+      if (applyButton) {
+        openApply(applyButton.dataset.jobId);
+        return;
+      }
+      const clearButton = event.target.closest('button[data-action="clear-filters"]');
+      if (clearButton) {
+        resetFilters();
+      }
+    });
+
+    el('pagination').addEventListener('click', function (event) {
+      const button = event.target.closest('button[data-page]');
+      if (!button || button.disabled) return;
+      const totalPages = Math.max(1, Math.ceil(state.filteredJobs.length / JOBS_PER_PAGE));
+      if (button.dataset.page === 'prev') {
+        state.currentPage = Math.max(1, state.currentPage - 1);
+      } else if (button.dataset.page === 'next') {
+        state.currentPage = Math.min(totalPages, state.currentPage + 1);
+      } else {
+        state.currentPage = Number(button.dataset.page) || 1;
+      }
+      renderAll();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    el('cancelApplyBtn').addEventListener('click', closeApply);
+    el('submitApplyBtn').addEventListener('click', submitApply);
+    el('applyModal').addEventListener('click', function (event) {
+      if (event.target === el('applyModal')) {
+        closeApply();
+      }
+    });
+  }
+
+  async function loadApplicationsWithFallback() {
+    try {
+      return await requestJson('/v1/applications/mine', {
+        auth: true,
+        showError: false,
+      });
+    } catch (error) {
+      console.warn('Failed to load existing worker applications', error);
+      setStatus('Live jobs loaded, but we could not confirm your previous applications yet.', 'info');
+      return { data: [] };
+    }
+  }
+
+  async function initPage() {
+    bindEvents();
+    renderLoadingState();
+
+    const api = helpers();
+    if (typeof api.requestJson !== 'function' || typeof api.getMyProfile !== 'function' || typeof api.hydrateShell !== 'function') {
+      setStatus('This page is missing the shared KaziX frontend helpers needed to load live jobs.', 'error');
+      return;
+    }
+
+    try {
+      const profileData = await getMyProfile();
+      const profile = profileData?.profile || null;
+      const fundiProfile = profileData?.fundi_profile || {};
+
+      if (!profile || !profile.id) {
+        throw new Error('Could not load your worker profile.');
+      }
+
+      if (profile.role !== 'fundi') {
+        const target = NON_FUNDI_REDIRECTS[profile.role] || 'index.html';
+        window.location.replace(target);
+        return;
+      }
+
+      state.profile = profile;
+      state.fundiProfile = fundiProfile;
+      await hydrateShell({ data: profileData, silent: false });
+
+      const [jobsPayload, applicationsPayload] = await Promise.all([
+        requestJson(`/v1/jobs?${normalizeProfileQuery()}`, { showError: false }),
+        loadApplicationsWithFallback(),
+      ]);
+
+      state.jobs = Array.isArray(jobsPayload?.data) ? jobsPayload.data : [];
+      normalizeApplications(applicationsPayload?.data || []);
+      applyClientFilters();
+      renderAll();
+    } catch (error) {
+      console.error('Failed to initialize worker jobs page', error);
+      state.jobs = [];
+      state.filteredJobs = [];
+      renderAll();
+      setStatus(error?.message || 'Could not load live jobs right now. Please refresh and try again.', 'error');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initPage);
+})();
+</script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>
