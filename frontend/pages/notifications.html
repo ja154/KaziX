@@ -10,48 +10,55 @@
 <title>Notifications — KaziX</title>
 <link rel="stylesheet" href="../assets/css/styles.css">
 <style>
+.notice{padding:0.95rem 1rem;border-radius:4px;font-size:0.84rem;line-height:1.55;border:1px solid transparent;margin-bottom:1.25rem}
+.notice[hidden]{display:none}
+.notice.info{background:rgba(13,13,13,0.04);border-color:var(--border);color:var(--steel)}
+.notice.error{background:rgba(192,57,43,0.08);border-color:rgba(192,57,43,0.2);color:var(--rust)}
+.notice.success{background:rgba(27,107,58,0.08);border-color:rgba(27,107,58,0.18);color:var(--green)}
 
-/* CONTROLS */
 .notif-controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;animation:up .4s ease both}
-.notif-filters{display:flex;gap:.4rem}
-.nf-btn{padding:.45rem 1rem;border-radius:2px;border:1.5px solid var(--border);background:white;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;transition:all .2s;color:var(--muted)}
+.notif-filters{display:flex;gap:.4rem;flex-wrap:wrap}
+.nf-btn{padding:.45rem 1rem;border-radius:2px;border:1.5px solid var(--border);background:white;font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;cursor:pointer;transition:all .2s;color:var(--muted);display:inline-flex;align-items:center;gap:.35rem}
 .nf-btn:hover{border-color:var(--ink);color:var(--ink)}
 .nf-btn.active{background:var(--ink);color:#F5F0E8;border-color:var(--ink)}
+.nf-count{background:var(--cream);padding:.1rem .35rem;border-radius:10px;font-size:.62rem;color:var(--muted)}
+.nf-btn.active .nf-count{background:rgba(245,240,232,0.18);color:#F5F0E8}
 .mark-all-btn{font-size:.78rem;color:var(--rust);background:none;border:none;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif}
 .mark-all-btn:hover{text-decoration:underline}
+.mark-all-btn:disabled{opacity:.45;cursor:not-allowed;text-decoration:none}
 
-/* NOTIFICATION GROUPS */
 .notif-group{margin-bottom:2rem;animation:up .4s .05s ease both}
 .group-label{font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;padding-left:.25rem}
 
-/* NOTIFICATION ITEMS */
-.notif-item{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.25rem;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.notif-item:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateX(3px)}
+.notif-item{display:flex;align-items:flex-start;gap:1rem;padding:1rem 1.25rem;background:white;border:1px solid var(--border);border-radius:6px;margin-bottom:.5rem;transition:all .2s;position:relative;overflow:hidden}
+.notif-item.is-actionable{cursor:pointer}
+.notif-item.is-actionable:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateX(3px)}
 .notif-item.unread{border-left:3px solid var(--saffron);background:rgba(245,166,35,.03)}
-.notif-item.unread::before{content:'';position:absolute;top:.95rem;left:-.1rem;display:none}
-/* icon bubble */
+.notif-item.muted{opacity:.72}
 .ni-bubble{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;border:1px solid var(--border)}
 .nib-saffron{background:rgba(245,166,35,.12)}
 .nib-green{background:rgba(27,107,58,.1)}
 .nib-ink{background:rgba(13,13,13,.07)}
 .nib-rust{background:rgba(192,57,43,.08)}
-/* content */
 .ni-content{flex:1;min-width:0}
 .ni-title{font-size:.875rem;font-weight:600;color:var(--ink);margin-bottom:.2rem;line-height:1.4}
-.ni-title strong{color:var(--ink)}
-.ni-sub{font-size:.775rem;color:var(--muted);line-height:1.5}
+.ni-sub{font-size:.775rem;color:var(--muted);line-height:1.5;white-space:pre-wrap}
 .ni-time{font-size:.68rem;color:var(--muted);margin-top:.3rem}
-.ni-actions{display:flex;gap:.4rem;margin-top:.6rem}
-.nia-btn{padding:.3rem .75rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.7rem;border-radius:2px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.ni-actions{display:flex;gap:.4rem;margin-top:.6rem;flex-wrap:wrap}
+.nia-btn{padding:.3rem .75rem;font-family:'Syne',sans-serif;font-weight:700;font-size:.7rem;border-radius:2px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:.3rem}
 .nia-primary{background:var(--ink);color:#F5F0E8;border:none}
 .nia-primary:hover{background:var(--green)}
-.nia-secondary{background:transparent;color:var(--ink);border:1px solid var(--border)}
-.nia-secondary:hover{border-color:var(--ink)}
-/* unread dot */
+.nia-primary[aria-disabled="true"]{pointer-events:none;opacity:.65}
 .unread-indicator{width:8px;height:8px;border-radius:50%;background:var(--saffron);flex-shrink:0;margin-top:6px}
-/* dismiss btn */
 .dismiss-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem;flex-shrink:0;opacity:.5;transition:opacity .2s}
 .dismiss-btn:hover{opacity:1;color:var(--rust)}
+.dismiss-btn:disabled{cursor:not-allowed;opacity:.3}
+
+.empty-state{display:none;text-align:center;padding:4rem 2rem;color:var(--muted);background:white;border:1px dashed var(--border);border-radius:6px}
+.empty-state.show{display:block}
+.empty-state-icon{font-size:3rem;opacity:.3;margin-bottom:1rem}
+.empty-state-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:.5rem}
+.empty-state-sub{font-size:.875rem;line-height:1.6}
 
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:900px){.sidebar{display:none}}
@@ -65,249 +72,736 @@ window.KazixAuthGuard.requireAuthPage();
 <nav class="topnav">
   <a href="index.html" class="logo">Kazi<span>X</span></a>
   <div class="topnav-right">
-    <button class="notif-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
-    <div class="user-chip"><div class="user-avatar">AK</div><span class="user-name">Alex Kuria</span></div>
+    <button class="notif-btn" type="button">🔔<span class="notif-dot"></span></button>
+    <div class="user-chip"><div class="user-avatar">KX</div><span class="user-name">My account</span></div>
   </div>
 </nav>
 <div class="app-shell">
-  <aside class="sidebar">
-    <div class="sidebar-section">Main</div>
-    <a class="nav-item" href="client-dashboard.html"><span class="ni-icon">📊</span>Dashboard</a>
-    <a class="nav-item" href="my-jobs.html"><span class="ni-icon">📋</span>My Jobs</a>
-    <a class="nav-item" href="job-applicants.html"><span class="ni-icon">👥</span>Applications</a>
-    <a class="nav-item" href="my-hires.html"><span class="ni-icon">🤝</span>My Hires</a>
-    <div class="sidebar-section">Discover</div>
-    <a class="nav-item" href="find-workers.html"><span class="ni-icon">🔍</span>Find Fundis</a>
-    <a class="nav-item" href="saved-workers.html"><span class="ni-icon">❤️</span>Saved Fundis</a>
-    <a class="nav-item" href="post-job.html"><span class="ni-icon">➕</span>Post a Job</a>
-    <div class="sidebar-section">Account</div>
-    <a class="nav-item active" href="notifications.html"><span class="ni-icon">🔔</span>Notifications</a>
-    <a class="nav-item" href="messages.html"><span class="ni-icon">💬</span>Messages</a>
-    <a class="nav-item" href="payments.html"><span class="ni-icon">💳</span>Payments</a>
-    <a class="nav-item" href="client-profile.html"><span class="ni-icon">👤</span>My Profile</a>
-    <div class="sidebar-bottom">
-      <a class="sidebar-profile" href="client-profile.html">
-        <div class="sp-avatar">🏠</div>
-        <div><div class="sp-name">Alex Kuria</div><div class="sp-role">Client Account</div></div>
-      </a>
-    </div>
+  <aside class="sidebar" id="roleSidebar">
+    <div class="sidebar-placeholder">Loading navigation…</div>
   </aside>
 
   <main class="main">
     <div style="margin-bottom:2rem;animation:up .4s ease both">
       <div class="page-title">Notifications</div>
-      <div class="page-sub">Stay on top of your jobs, hires, and payments</div>
+      <div class="page-sub" id="notificationsSubhead">Stay on top of your jobs, hires, and payments</div>
     </div>
+
+    <div class="notice info" id="pageStatus" hidden></div>
 
     <div class="notif-controls">
-      <div class="notif-filters">
-        <button class="nf-btn active" onclick="filterNotifs('all',this)">All <span style="background:var(--cream);padding:.1rem .35rem;border-radius:10px;font-size:.62rem">12</span></button>
-        <button class="nf-btn" onclick="filterNotifs('applications',this)">Applications</button>
-        <button class="nf-btn" onclick="filterNotifs('jobs',this)">Jobs</button>
-        <button class="nf-btn" onclick="filterNotifs('payments',this)">Payments</button>
-        <button class="nf-btn" onclick="filterNotifs('messages',this)">Messages</button>
+      <div class="notif-filters" id="notificationFilters">
+        <button class="nf-btn active" type="button" data-filter="all">All <span class="nf-count" id="countAll">0</span></button>
+        <button class="nf-btn" type="button" data-filter="applications">Applications</button>
+        <button class="nf-btn" type="button" data-filter="updates">Updates</button>
+        <button class="nf-btn" type="button" data-filter="payments">Payments</button>
+        <button class="nf-btn" type="button" data-filter="messages">Messages</button>
       </div>
-      <button class="mark-all-btn" onclick="markAllRead()">Mark all as read</button>
+      <button class="mark-all-btn" id="markAllButton" type="button">Mark all as read</button>
     </div>
 
-    <!-- TODAY -->
     <div class="notif-group" id="notifList">
       <div class="group-label">Today</div>
-
-      <div class="notif-item unread" data-type="applications">
-        <div class="ni-bubble nib-saffron">👥</div>
+      <div class="notif-item">
+        <div class="ni-bubble nib-ink">🔔</div>
         <div class="ni-content">
-          <div class="ni-title"><strong>5 fundis applied</strong> to your CCTV installation job</div>
-          <div class="ni-sub">Install CCTV cameras — Kilimani · Average bid: KES 4,200 · Top rated: Faith Njeri 4.8★</div>
-          <div class="ni-time">2 minutes ago</div>
-          <div class="ni-actions">
-            <a href="job-applicants.html" class="nia-btn nia-primary">👥 Review Applicants</a>
-            <a href="my-jobs.html" class="nia-btn nia-secondary">View Job</a>
-          </div>
+          <div class="ni-title">Loading your notifications…</div>
+          <div class="ni-sub">Fetching the latest activity from your KaziX account.</div>
         </div>
-        <div class="unread-indicator"></div>
-        <button class="dismiss-btn" onclick="dismiss(this)" title="Dismiss">✕</button>
       </div>
-
-      <div class="notif-item unread" data-type="messages">
-        <div class="ni-bubble nib-ink">💬</div>
-        <div class="ni-content">
-          <div class="ni-title"><strong>James Kamau</strong> sent you a message</div>
-          <div class="ni-sub">"Nimewasili Westlands, niko njiani kwako sasa. Nitafika dakika 5–10."</div>
-          <div class="ni-time">5 minutes ago</div>
-          <div class="ni-actions">
-            <a href="messages.html" class="nia-btn nia-primary">💬 Reply</a>
-          </div>
-        </div>
-        <div class="unread-indicator"></div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item unread" data-type="payments">
-        <div class="ni-bubble nib-green">💳</div>
-        <div class="ni-content">
-          <div class="ni-title"><strong>M-Pesa escrow confirmed</strong> for Faith Njeri booking</div>
-          <div class="ni-sub">KES 4,500 held in escrow · Install CCTV cameras · Receipt: QST7GHJK2P</div>
-          <div class="ni-time">14 minutes ago</div>
-          <div class="ni-actions">
-            <a href="my-hires.html" class="nia-btn nia-primary">View Booking</a>
-            <a href="payments.html" class="nia-btn nia-secondary">📄 Receipt</a>
-          </div>
-        </div>
-        <div class="unread-indicator"></div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item unread" data-type="messages">
-        <div class="ni-bubble nib-ink">💬</div>
-        <div class="ni-content">
-          <div class="ni-title"><strong>Mary Akinyi</strong> sent you a message</div>
-          <div class="ni-sub">"Nimekamilisha chumba cha kwanza. Ninahitaji paint zaidi — 2 tins za off-white."</div>
-          <div class="ni-time">1 hour ago</div>
-          <div class="ni-actions">
-            <a href="messages.html" class="nia-btn nia-primary">💬 Reply</a>
-          </div>
-        </div>
-        <div class="unread-indicator"></div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item unread" data-type="jobs">
-        <div class="ni-bubble nib-rust">⚠️</div>
-        <div class="ni-content">
-          <div class="ni-title">Your CCTV job closes in <strong>24 hours</strong></div>
-          <div class="ni-sub">Install CCTV cameras — Kilimani · 5 applications pending review · Hire now to avoid expiry</div>
-          <div class="ni-time">2 hours ago</div>
-          <div class="ni-actions">
-            <a href="job-applicants.html" class="nia-btn nia-primary">👥 Review & Hire</a>
-            <a href="my-jobs.html" class="nia-btn nia-secondary">Extend Job</a>
-          </div>
-        </div>
-        <div class="unread-indicator"></div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item" data-type="jobs">
-        <div class="ni-bubble nib-saffron">⭐</div>
-        <div class="ni-content">
-          <div class="ni-title">Leave a review for <strong>Peter Odhiambo</strong></div>
-          <div class="ni-sub">Repair wooden fence — Kilimani · Completed 3 days ago · Your review helps the KaziX community</div>
-          <div class="ni-time">3 days ago</div>
-          <div class="ni-actions">
-            <a href="reviews.html" class="nia-btn nia-primary">⭐ Write Review</a>
-          </div>
-        </div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="group-label" style="margin-top:1.5rem">Earlier This Week</div>
-
-      <div class="notif-item" data-type="payments">
-        <div class="ni-bubble nib-green">✅</div>
-        <div class="ni-content">
-          <div class="ni-title"><strong>KES 3,500 paid</strong> to Peter Odhiambo</div>
-          <div class="ni-sub">Fence repair job complete · M-Pesa escrow released · Receipt: QHJ4MKPL8R</div>
-          <div class="ni-time">3 days ago</div>
-          <div class="ni-actions">
-            <a href="payments.html" class="nia-btn nia-secondary">📄 View Receipt</a>
-          </div>
-        </div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item" data-type="applications">
-        <div class="ni-bubble nib-saffron">👥</div>
-        <div class="ni-content">
-          <div class="ni-title"><strong>2 new applications</strong> on your plumbing job</div>
-          <div class="ni-sub">Fix leaking pipe — Westlands · Grace Wanjiku (4.8★) and Samuel Otieno (4.5★) applied</div>
-          <div class="ni-time">4 days ago</div>
-          <div class="ni-actions">
-            <a href="job-applicants.html" class="nia-btn nia-primary">Review</a>
-          </div>
-        </div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
-      <div class="notif-item" data-type="jobs">
-        <div class="ni-bubble nib-green">📋</div>
-        <div class="ni-content">
-          <div class="ni-title">Job posted successfully — <strong>Fix leaking pipe — Westlands</strong></div>
-          <div class="ni-sub">Your job is live · Nearby plumbers within 10km have been notified by SMS</div>
-          <div class="ni-time">4 days ago</div>
-          <div class="ni-actions">
-            <a href="my-jobs.html" class="nia-btn nia-secondary">View Job</a>
-          </div>
-        </div>
-        <button class="dismiss-btn" onclick="dismiss(this)">✕</button>
-      </div>
-
     </div>
 
-    <!-- EMPTY STATE (hidden) -->
-    <div id="emptyState" style="display:none;text-align:center;padding:4rem 2rem;color:var(--muted)">
-      <div style="font-size:3rem;opacity:.3;margin-bottom:1rem">🔔</div>
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;color:var(--ink);margin-bottom:.5rem">All caught up!</div>
-      <div style="font-size:.875rem">No notifications in this category</div>
+    <div class="empty-state" id="emptyState">
+      <div class="empty-state-icon">🔔</div>
+      <div class="empty-state-title" id="emptyStateTitle">All caught up!</div>
+      <div class="empty-state-sub" id="emptyStateSub">No notifications in this category.</div>
     </div>
-
   </main>
 </div>
 
-<script>
-function filterNotifs(type, el) {
-  document.querySelectorAll('.nf-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  const items = document.querySelectorAll('.notif-item');
-  let visible = 0;
-  items.forEach(item => {
-    const show = type === 'all' || item.dataset.type === type;
-    item.style.display = show ? 'flex' : 'none';
-    if (show) visible++;
-  });
-  document.getElementById('emptyState').style.display = visible === 0 ? 'block' : 'none';
-}
-function dismiss(btn) {
-  const item = btn.closest('.notif-item');
-  item.style.transition = 'all .3s';
-  item.style.opacity = '0';
-  item.style.maxHeight = item.offsetHeight + 'px';
-  setTimeout(() => {
-    item.style.maxHeight = '0';
-    item.style.padding = '0';
-    item.style.margin = '0';
-    item.style.border = 'none';
-  }, 200);
-  setTimeout(() => item.remove(), 500);
-}
-function markAllRead() {
-  document.querySelectorAll('.notif-item.unread').forEach(item => {
-    item.classList.remove('unread');
-    item.querySelector('.unread-indicator')?.remove();
-  });
-  document.querySelector('.ni-badge').textContent = '0';
-}
-</script>
-
 <nav class="mobile-nav" aria-label="Primary">
-  <a class="mobile-nav-item" href="client-dashboard.html"><span class="mn-icon">📊</span><span class="mn-label">Dashboard</span></a>
-  <a class="mobile-nav-item" href="my-jobs.html"><span class="mn-icon">📋</span><span class="mn-label">Jobs</span></a>
-  <a class="mobile-nav-item" href="find-workers.html"><span class="mn-icon">🔍</span><span class="mn-label">Find</span></a>
-  <a class="mobile-nav-item" href="messages.html"><span class="mn-icon">💬</span><span class="mn-label">Messages</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary1" href="client-dashboard.html"><span class="mn-icon" id="mobilePrimary1Icon">📊</span><span class="mn-label" id="mobilePrimary1Label">Dashboard</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary2" href="my-jobs.html"><span class="mn-icon" id="mobilePrimary2Icon">📋</span><span class="mn-label" id="mobilePrimary2Label">Jobs</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary3" href="find-workers.html"><span class="mn-icon" id="mobilePrimary3Icon">🔍</span><span class="mn-label" id="mobilePrimary3Label">Find</span></a>
+  <a class="mobile-nav-item" id="mobilePrimary4" href="messages.html"><span class="mn-icon" id="mobilePrimary4Icon">💬</span><span class="mn-label" id="mobilePrimary4Label">Messages</span></a>
   <div class="mobile-nav-more active">
     <button class="mobile-nav-item mobile-nav-more-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" aria-label="Open navigation menu">
       <span class="mn-icon">⋯</span><span class="mn-label">More</span>
     </button>
     <div class="mobile-nav-drawer" id="mobile-drawer" role="navigation" aria-label="Secondary pages" aria-hidden="true">
-      <a class="mobile-nav-drawer-item" href="client-profile.html">👤 Profile</a>
-      <a class="mobile-nav-drawer-item active" href="notifications.html">🔔 Notifications</a>
-      <a class="mobile-nav-drawer-item" href="payments.html">💳 Payments</a>
-      <a class="mobile-nav-drawer-item" href="reviews.html">⭐ Reviews</a>
-      <a class="mobile-nav-drawer-item" href="saved-workers.html">❤️ Saved Fundis</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer1" href="client-profile.html">👤 Profile</a>
+      <a class="mobile-nav-drawer-item active" id="mobileDrawer2" href="notifications.html">🔔 Notifications</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer3" href="payments.html">💳 Payments</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer4" href="reviews.html">⭐ Reviews</a>
+      <a class="mobile-nav-drawer-item" id="mobileDrawer5" href="saved-workers.html">❤️ Saved Fundis</a>
     </div>
   </div>
 </nav>
 
+<script src="../env.js"></script>
+<script src="../assets/js/profile-utils.js"></script>
+<script>
+const {
+  escapeHtml,
+  getAccessToken,
+  getMyProfile,
+  hydrateNotificationSummary,
+  hydrateShell,
+  requestJson,
+  syncNotificationSummaryFromNotifications,
+} = window.KazixProfile;
 
+const ROLE_NAV = {
+  client: {
+    subtitle: 'Stay on top of your jobs, hires, and payments',
+    sidebar: [
+      {
+        title: 'Main',
+        links: [
+          { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
+          { href: 'my-jobs.html', icon: '📋', label: 'My Jobs' },
+          { href: 'job-applicants.html', icon: '👥', label: 'Applications' },
+          { href: 'my-hires.html', icon: '🤝', label: 'My Hires' },
+        ],
+      },
+      {
+        title: 'Discover',
+        links: [
+          { href: 'find-workers.html', icon: '🔍', label: 'Find Fundis' },
+          { href: 'saved-workers.html', icon: '❤️', label: 'Saved Fundis' },
+          { href: 'post-job.html', icon: '➕', label: 'Post a Job' },
+        ],
+      },
+      {
+        title: 'Account',
+        links: [
+          { href: 'notifications.html', icon: '🔔', label: 'Notifications', active: true },
+          { href: 'messages.html', icon: '💬', label: 'Messages' },
+          { href: 'payments.html', icon: '💳', label: 'Payments' },
+          { href: 'client-profile.html', icon: '👤', label: 'My Profile' },
+        ],
+      },
+    ],
+    mobile: {
+      primary: [
+        { href: 'client-dashboard.html', icon: '📊', label: 'Dashboard' },
+        { href: 'my-jobs.html', icon: '📋', label: 'Jobs' },
+        { href: 'find-workers.html', icon: '🔍', label: 'Find' },
+        { href: 'messages.html', icon: '💬', label: 'Messages' },
+      ],
+      drawer: [
+        { href: 'client-profile.html', label: '👤 Profile' },
+        { href: 'notifications.html', label: '🔔 Notifications', active: true },
+        { href: 'payments.html', label: '💳 Payments' },
+        { href: 'reviews.html', label: '⭐ Reviews' },
+        { href: 'saved-workers.html', label: '❤️ Saved Fundis' },
+      ],
+    },
+  },
+  fundi: {
+    subtitle: 'Stay on top of your applications, contracts, and payments',
+    sidebar: [
+      {
+        title: 'Work',
+        links: [
+          { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
+          { href: 'worker-jobs.html', icon: '🔍', label: 'Find Jobs' },
+          { href: 'my-applications.html', icon: '📋', label: 'My Applications' },
+          { href: 'worker-hires.html', icon: '🤝', label: 'Active Contracts' },
+        ],
+      },
+      {
+        title: 'Account',
+        links: [
+          { href: 'notifications.html', icon: '🔔', label: 'Notifications', active: true },
+          { href: 'messages.html', icon: '💬', label: 'Messages' },
+          { href: 'worker-earnings.html', icon: '💳', label: 'Earnings' },
+          { href: 'worker-reviews.html', icon: '⭐', label: 'My Reviews' },
+          { href: 'worker-profile-edit.html', icon: '👤', label: 'My Profile' },
+        ],
+      },
+    ],
+    mobile: {
+      primary: [
+        { href: 'worker-dashboard.html', icon: '📊', label: 'Dashboard' },
+        { href: 'worker-jobs.html', icon: '🔍', label: 'Find Jobs' },
+        { href: 'my-applications.html', icon: '📋', label: 'Applications' },
+        { href: 'messages.html', icon: '💬', label: 'Messages' },
+      ],
+      drawer: [
+        { href: 'worker-hires.html', label: '🤝 Contracts' },
+        { href: 'worker-earnings.html', label: '💳 Earnings' },
+        { href: 'worker-reviews.html', label: '⭐ Reviews' },
+        { href: 'worker-profile-edit.html', label: '👤 Profile' },
+        { href: 'notifications.html', label: '🔔 Notifications', active: true },
+      ],
+    },
+  },
+};
+
+const CATEGORY_CONFIG = {
+  applications: {
+    icon: '👥',
+    bubbleClass: 'nib-saffron',
+    cta: 'Review',
+  },
+  updates: {
+    icon: '📌',
+    bubbleClass: 'nib-rust',
+    cta: 'Open',
+  },
+  payments: {
+    icon: '💳',
+    bubbleClass: 'nib-green',
+    cta: 'View Payment',
+  },
+  messages: {
+    icon: '💬',
+    bubbleClass: 'nib-ink',
+    cta: 'Reply',
+  },
+};
+
+const FILTER_LABELS = {
+  all: 'All',
+  applications: 'Applications',
+  updates: 'Updates',
+  payments: 'Payments',
+  messages: 'Messages',
+};
+
+const state = {
+  profile: null,
+  role: 'client',
+  notifications: [],
+  filter: 'all',
+  loading: true,
+  busyAll: false,
+  busyIds: new Set(),
+};
+
+function setStatus(message, tone) {
+  const el = document.getElementById('pageStatus');
+  if (!el) return;
+  if (!message) {
+    el.hidden = true;
+    el.className = 'notice';
+    el.textContent = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `notice ${tone || 'info'}`;
+  el.textContent = message;
+}
+
+function getRoleConfig(role) {
+  return ROLE_NAV[role] || ROLE_NAV.client;
+}
+
+function renderSidebar(role) {
+  const config = getRoleConfig(role);
+  const root = document.getElementById('roleSidebar');
+  if (!root) return;
+
+  root.innerHTML = `
+    ${config.sidebar.map((section) => `
+      <div class="sidebar-section">${escapeHtml(section.title)}</div>
+      ${section.links.map((link) => `
+        <a class="nav-item ${link.active ? 'active' : ''}" href="${escapeHtml(link.href)}">
+          <span class="ni-icon">${escapeHtml(link.icon)}</span>${escapeHtml(link.label)}
+        </a>
+      `).join('')}
+    `).join('')}
+    <div class="sidebar-bottom">
+      <div class="sidebar-profile">
+        <div class="sp-avatar">KX</div>
+        <div>
+          <div class="sp-name">My account</div>
+          <div class="sp-role">Loading account…</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMobileNav(role) {
+  const config = getRoleConfig(role).mobile;
+
+  config.primary.forEach((item, index) => {
+    const slot = index + 1;
+    const link = document.getElementById(`mobilePrimary${slot}`);
+    const icon = document.getElementById(`mobilePrimary${slot}Icon`);
+    const label = document.getElementById(`mobilePrimary${slot}Label`);
+    if (!link || !icon || !label) return;
+
+    link.href = item.href;
+    link.classList.toggle('active', Boolean(item.active));
+    icon.textContent = item.icon;
+    label.textContent = item.label;
+  });
+
+  config.drawer.forEach((item, index) => {
+    const link = document.getElementById(`mobileDrawer${index + 1}`);
+    if (!link) return;
+    link.href = item.href;
+    link.textContent = item.label;
+    link.classList.toggle('active', Boolean(item.active));
+  });
+}
+
+function normalizeCategory(type) {
+  const value = String(type || '').trim().toLowerCase();
+  if (value === 'application' || value === 'application_update') return 'applications';
+  if (value === 'message') return 'messages';
+  if (value === 'payment') return 'payments';
+  return 'updates';
+}
+
+function notificationCounts() {
+  const counts = {
+    all: state.notifications.length,
+    applications: 0,
+    updates: 0,
+    payments: 0,
+    messages: 0,
+  };
+
+  state.notifications.forEach((notification) => {
+    counts[normalizeCategory(notification?.type)] += 1;
+  });
+
+  return counts;
+}
+
+function unreadCount() {
+  return state.notifications.filter((notification) => !notification?.read).length;
+}
+
+function visibleNotifications() {
+  if (state.filter === 'all') {
+    return state.notifications.slice();
+  }
+  return state.notifications.filter((notification) => normalizeCategory(notification?.type) === state.filter);
+}
+
+function formatRelativeTime(value) {
+  const date = new Date(value || '');
+  if (Number.isNaN(date.getTime())) return 'Just now';
+
+  const diffMs = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs < minute) return 'Just now';
+
+  const diffMinutes = Math.floor(diffMs / minute);
+  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+
+  const diffHours = Math.floor(diffMs / hour);
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+
+  const diffDays = Math.floor(diffMs / day);
+  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+  });
+}
+
+function groupLabelForDate(value) {
+  const date = new Date(value || '');
+  if (Number.isNaN(date.getTime())) return 'Earlier';
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const diffDays = Math.floor((startOfToday - startOfDate) / (24 * 60 * 60 * 1000));
+
+  if (diffDays <= 0) return 'Today';
+  if (diffDays < 7) return 'Earlier This Week';
+  return 'Earlier';
+}
+
+function notificationActionLabel(notification) {
+  const category = normalizeCategory(notification?.type);
+  return CATEGORY_CONFIG[category]?.cta || 'Open';
+}
+
+function notificationActionHref(notification) {
+  const href = String(notification?.action_url || '').trim();
+  return href || '';
+}
+
+function syncNotificationBadges() {
+  syncNotificationSummaryFromNotifications(state.notifications);
+}
+
+function compareNotifications(left, right) {
+  return new Date(right?.created_at || 0).getTime() - new Date(left?.created_at || 0).getTime();
+}
+
+function renderCounts() {
+  const counts = notificationCounts();
+  const allCount = document.getElementById('countAll');
+  if (allCount) {
+    allCount.textContent = String(counts.all);
+  }
+
+  Array.from(document.querySelectorAll('#notificationFilters [data-filter]')).forEach((button) => {
+    const filter = button.getAttribute('data-filter') || 'all';
+    button.classList.toggle('active', filter === state.filter);
+    if (filter === 'all') return;
+    button.title = `${counts[filter] || 0} ${FILTER_LABELS[filter] || filter}`;
+  });
+
+  const markAllButton = document.getElementById('markAllButton');
+  if (markAllButton) {
+    markAllButton.disabled = state.busyAll || unreadCount() === 0 || state.loading;
+  }
+}
+
+function renderEmptyState(rows) {
+  const emptyState = document.getElementById('emptyState');
+  const list = document.getElementById('notifList');
+  const title = document.getElementById('emptyStateTitle');
+  const sub = document.getElementById('emptyStateSub');
+  if (!emptyState || !list || !title || !sub) return;
+
+  const hasAnyNotifications = state.notifications.length > 0;
+  const showEmpty = !state.loading && rows.length === 0;
+  list.style.display = showEmpty ? 'none' : '';
+  emptyState.classList.toggle('show', showEmpty);
+
+  if (!showEmpty) return;
+
+  if (!hasAnyNotifications) {
+    title.textContent = 'All caught up!';
+    sub.textContent = 'New notifications from jobs, hires, payments, and messages will appear here.';
+    return;
+  }
+
+  title.textContent = 'Nothing in this category yet';
+  sub.textContent = `No ${String(FILTER_LABELS[state.filter] || state.filter).toLowerCase()} notifications match the current filter.`;
+}
+
+function renderNotifications() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+
+  renderCounts();
+
+  if (state.loading) {
+    list.innerHTML = `
+      <div class="group-label">Today</div>
+      <div class="notif-item">
+        <div class="ni-bubble nib-ink">🔔</div>
+        <div class="ni-content">
+          <div class="ni-title">Loading your notifications…</div>
+          <div class="ni-sub">Fetching the latest activity from your KaziX account.</div>
+        </div>
+      </div>
+    `;
+    renderEmptyState([]);
+    return;
+  }
+
+  const rows = visibleNotifications();
+  renderEmptyState(rows);
+  if (!rows.length) {
+    list.innerHTML = '';
+    return;
+  }
+
+  const grouped = rows.reduce((acc, notification) => {
+    const label = groupLabelForDate(notification?.created_at);
+    if (!acc[label]) acc[label] = [];
+    acc[label].push(notification);
+    return acc;
+  }, {});
+
+  const order = ['Today', 'Earlier This Week', 'Earlier'];
+
+  list.innerHTML = order
+    .filter((label) => Array.isArray(grouped[label]) && grouped[label].length > 0)
+    .map((label) => `
+      <div class="group-label">${escapeHtml(label)}</div>
+      ${grouped[label].map(renderNotificationCard).join('')}
+    `)
+    .join('');
+}
+
+function renderNotificationCard(notification) {
+  const category = normalizeCategory(notification?.type);
+  const categoryConfig = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.updates;
+  const href = notificationActionHref(notification);
+  const isBusy = state.busyIds.has(notification?.id);
+  const actionable = Boolean(href);
+
+  return `
+    <article
+      class="notif-item ${notification?.read ? '' : 'unread'} ${actionable ? 'is-actionable' : ''} ${isBusy ? 'muted' : ''}"
+      data-notification-id="${escapeHtml(notification?.id || '')}"
+      data-action-href="${escapeHtml(href)}"
+    >
+      <div class="ni-bubble ${escapeHtml(categoryConfig.bubbleClass)}">${escapeHtml(categoryConfig.icon)}</div>
+      <div class="ni-content">
+        <div class="ni-title">${escapeHtml(notification?.title || 'Notification')}</div>
+        <div class="ni-sub">${escapeHtml(notification?.body || 'No details provided.')}</div>
+        <div class="ni-time">${escapeHtml(formatRelativeTime(notification?.created_at))}</div>
+        ${href ? `
+          <div class="ni-actions">
+            <a
+              href="${escapeHtml(href)}"
+              class="nia-btn nia-primary"
+              data-action-link="true"
+              ${isBusy ? 'aria-disabled="true"' : ''}
+            >${escapeHtml(notificationActionLabel(notification))}</a>
+          </div>
+        ` : ''}
+      </div>
+      ${notification?.read ? '' : '<div class="unread-indicator"></div>'}
+      <button
+        class="dismiss-btn"
+        type="button"
+        data-dismiss="true"
+        title="Delete notification"
+        ${isBusy ? 'disabled' : ''}
+      >✕</button>
+    </article>
+  `;
+}
+
+function updateNotificationInState(notificationId, updates) {
+  state.notifications = state.notifications.map((notification) => {
+    if (notification?.id !== notificationId) return notification;
+    return {
+      ...notification,
+      ...updates,
+    };
+  });
+}
+
+function removeNotificationFromState(notificationId) {
+  state.notifications = state.notifications.filter((notification) => notification?.id !== notificationId);
+}
+
+async function fetchNotifications() {
+  state.loading = true;
+  renderNotifications();
+
+  const payload = await requestJson('/v1/notifications', {
+    auth: true,
+    showError: false,
+  });
+
+  state.notifications = Array.isArray(payload?.data) ? payload.data.slice().sort(compareNotifications) : [];
+  state.loading = false;
+  renderNotifications();
+  syncNotificationBadges();
+}
+
+async function markNotificationRead(notificationId, options = {}) {
+  const { silent = false } = options;
+  const existing = state.notifications.find((notification) => notification?.id === notificationId);
+  if (!existing || existing.read) {
+    return true;
+  }
+
+  try {
+    await requestJson(`/v1/notifications/${encodeURIComponent(notificationId)}`, {
+      auth: true,
+      method: 'PATCH',
+      body: { read: true },
+      showError: false,
+    });
+    updateNotificationInState(notificationId, { read: true });
+    renderNotifications();
+    syncNotificationBadges();
+    return true;
+  } catch (error) {
+    if (!silent) {
+      setStatus(error?.message || 'Could not update this notification right now.', 'error');
+    }
+    return false;
+  }
+}
+
+async function openNotification(notificationId, href) {
+  const notification = state.notifications.find((entry) => entry?.id === notificationId);
+  if (!notification) return;
+
+  const targetHref = String(href || '').trim();
+  if (!notification.read) {
+    await markNotificationRead(notificationId, { silent: Boolean(targetHref) });
+  }
+
+  if (targetHref) {
+    window.location.href = targetHref;
+  }
+}
+
+async function deleteNotification(notificationId) {
+  if (!notificationId || state.busyIds.has(notificationId)) return;
+
+  state.busyIds.add(notificationId);
+  renderNotifications();
+
+  try {
+    const notification = state.notifications.find((entry) => entry?.id === notificationId);
+    if (notification && !notification.read) {
+      const markedRead = await markNotificationRead(notificationId, { silent: true });
+      if (!markedRead) {
+        throw new Error('Could not mark this notification as read before deleting it.');
+      }
+    }
+
+    await requestJson(`/v1/notifications/${encodeURIComponent(notificationId)}`, {
+      auth: true,
+      method: 'DELETE',
+      showError: false,
+    });
+    removeNotificationFromState(notificationId);
+    renderNotifications();
+    syncNotificationBadges();
+    setStatus('Notification deleted.', 'success');
+  } catch (error) {
+    setStatus(error?.message || 'Could not delete this notification right now.', 'error');
+  } finally {
+    state.busyIds.delete(notificationId);
+    renderNotifications();
+  }
+}
+
+async function markAllAsRead() {
+  if (state.busyAll || unreadCount() === 0) return;
+
+  state.busyAll = true;
+  renderCounts();
+
+  try {
+    await requestJson('/v1/notifications/read-all', {
+      auth: true,
+      method: 'POST',
+      showError: false,
+    });
+
+    state.notifications = state.notifications.map((notification) => ({
+      ...notification,
+      read: true,
+    }));
+
+    renderNotifications();
+    syncNotificationBadges();
+    setStatus('All notifications marked as read.', 'success');
+  } catch (error) {
+    setStatus(error?.message || 'Could not mark all notifications as read.', 'error');
+  } finally {
+    state.busyAll = false;
+    renderCounts();
+  }
+}
+
+function bindEvents() {
+  const filters = document.getElementById('notificationFilters');
+  if (filters) {
+    filters.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-filter]');
+      if (!button) return;
+      state.filter = button.getAttribute('data-filter') || 'all';
+      renderNotifications();
+    });
+  }
+
+  const list = document.getElementById('notifList');
+  if (list) {
+    list.addEventListener('click', async (event) => {
+      const dismissButton = event.target.closest('[data-dismiss="true"]');
+      if (dismissButton) {
+        event.preventDefault();
+        const card = dismissButton.closest('[data-notification-id]');
+        if (!card) return;
+        await deleteNotification(card.getAttribute('data-notification-id'));
+        return;
+      }
+
+      const actionLink = event.target.closest('[data-action-link="true"]');
+      if (actionLink) {
+        event.preventDefault();
+        const card = actionLink.closest('[data-notification-id]');
+        if (!card) return;
+        await openNotification(
+          card.getAttribute('data-notification-id'),
+          card.getAttribute('data-action-href')
+        );
+        return;
+      }
+
+      const card = event.target.closest('[data-notification-id]');
+      if (!card) return;
+      await openNotification(
+        card.getAttribute('data-notification-id'),
+        card.getAttribute('data-action-href')
+      );
+    });
+  }
+
+  const markAllButton = document.getElementById('markAllButton');
+  if (markAllButton) {
+    markAllButton.addEventListener('click', markAllAsRead);
+  }
+}
+
+async function initNotificationsPage() {
+  if (!getAccessToken()) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`login.html?next=${next}`);
+    return;
+  }
+
+  bindEvents();
+
+  try {
+    const profileData = await getMyProfile();
+    const profile = profileData?.profile || null;
+
+    if (!profile) {
+      throw new Error('Please sign in to access your notifications.');
+    }
+
+    if (profile.role === 'admin') {
+      window.location.replace('admin-dashboard.html');
+      return;
+    }
+
+    state.profile = profile;
+    state.role = profile.role === 'fundi' ? 'fundi' : 'client';
+
+    renderSidebar(state.role);
+    renderMobileNav(state.role);
+
+    const subhead = document.getElementById('notificationsSubhead');
+    if (subhead) {
+      subhead.textContent = getRoleConfig(state.role).subtitle;
+    }
+
+    await hydrateShell({ data: profileData, silent: false });
+    await fetchNotifications();
+    await hydrateNotificationSummary({ silent: true, force: true }).catch(() => null);
+    setStatus('', 'info');
+  } catch (error) {
+    console.error('Failed to initialize notifications page', error);
+    state.loading = false;
+    state.notifications = [];
+    renderNotifications();
+    setStatus(error?.message || 'Could not load your notifications.', 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initNotificationsPage);
+</script>
 <script src="../assets/js/mobile-nav.js"></script>
 </body>
 </html>
